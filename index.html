@@ -63,14 +63,14 @@
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #F3F7F4;
+            bacround: #F3F7F4;
         }
         ::-webkit-scrollbar-thumb {
-            background: #C7D8C7;
+            bacround: #C7D8C7;
             border-radius: 9999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #4DA395;
+            bacround: #4DA395;
         }
 
         @media print {
@@ -88,7 +88,7 @@
                 max-height: none !important;
                 overflow: visible !important;
                 padding: 20px !important;
-                background: #ffffff !important;
+                bacround: #ffffff !important;
             }
             .no-print {
                 display: none !important;
@@ -120,7 +120,7 @@
             min-width: 230px;
         }
         .ugiee-map-pin {
-            background: transparent;
+            bacround: transparent;
             border: none;
         }
     </style>
@@ -1170,7 +1170,7 @@
                     <span id="cart-subtotal-label" class="font-bold text-slate-900">Rp 0</span>
                 </div>
                 <div class="flex justify-between text-slate-600">
-                    <span>Estimasi Ongkir (<span id="cart-weight-label">0 kg</span>)</span>
+                    <span>Estimasi Ongkir (<span id="cart-weight-label">0 g</span>)</span>
                     <span id="cart-shipping-label" class="font-bold text-ugiee-800">Rp 0</span>
                 </div>
                 <div class="flex justify-between text-sm font-black text-ugiee-950 pt-2 border-t border-slate-200">
@@ -1466,13 +1466,13 @@
 
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Nama Bahan Baku *</label>
-                    <input type="text" id="prod-name" required placeholder="Contoh: Tepung Crispy Original UGIEE (10 kg)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300">
+                    <input type="text" id="prod-name" required placeholder="Contoh: Tepung Crispy Original UGIEE (10 g)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">Satuan Kemasan *</label>
-                        <input type="text" id="prod-unit" required placeholder="Sak 10 kg" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300">
+                        <input type="text" id="prod-unit" required placeholder="Sak 10 g" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300">
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">Berat (g) *</label>
@@ -2072,11 +2072,11 @@
 
         // ==================== 1. MASTER REFERENCE DATA ====================
         const SHIPPING_ZONES = [
-            { id: 'MKS', city: 'Makassar & Sekitarnya (Zona 1)', zone: 'Zona 1 — Dalam Kota', baseFee: 15000, ratePerKg: 850, eta: 'Hari yang sama (Maks. 4 jam)', centerLat: -5.147665, centerLng: 119.432732 },
-            { id: 'PRE', city: 'Parepare & Barru (Zona 2)', zone: 'Zona 2 — Sulsel Tengah', baseFee: 25000, ratePerKg: 2000, eta: '1 - 2 Hari Kerja', centerLat: -4.013512, centerLng: 119.625549 },
-            { id: 'PLP', city: 'Palopo & Luwu Raya (Zona 3)', zone: 'Zona 3 — Sulsel Utara', baseFee: 35000, ratePerKg: 3200, eta: '2 - 3 Hari Kerja', centerLat: -2.992411, centerLng: 120.196976 },
-            { id: 'KDI', city: 'Kendari & Sultra (Zona 4)', zone: 'Zona 4 — Antar Provinsi', baseFee: 45000, ratePerKg: 4800, eta: '3 - 4 Hari Kerja', centerLat: -3.972201, centerLng: 122.514900 },
-            { id: 'MDO', city: 'Manado & Sulut (Zona 5)', zone: 'Zona 5 — Sulawesi Utara', baseFee: 55000, ratePerKg: 6200, eta: '4 - 5 Hari Kerja', centerLat: 1.474830, centerLng: 124.842079 }
+            { id: 'MKS', city: 'Makassar & Sekitarnya (Zona 1)', zone: 'Zona 1 — Dalam Kota', baseFee: 15000, ratePerg: 850, eta: 'Hari yang sama (Maks. 4 jam)', centerLat: -5.147665, centerLng: 119.432732 },
+            { id: 'PRE', city: 'Parepare & Barru (Zona 2)', zone: 'Zona 2 — Sulsel Tengah', baseFee: 25000, ratePerg: 2000, eta: '1 - 2 Hari Kerja', centerLat: -4.013512, centerLng: 119.625549 },
+            { id: 'PLP', city: 'Palopo & Luwu Raya (Zona 3)', zone: 'Zona 3 — Sulsel Utara', baseFee: 35000, ratePerg: 3200, eta: '2 - 3 Hari Kerja', centerLat: -2.992411, centerLng: 120.196976 },
+            { id: 'KDI', city: 'Kendari & Sultra (Zona 4)', zone: 'Zona 4 — Antar Provinsi', baseFee: 45000, ratePerg: 4800, eta: '3 - 4 Hari Kerja', centerLat: -3.972201, centerLng: 122.514900 },
+            { id: 'MDO', city: 'Manado & Sulut (Zona 5)', zone: 'Zona 5 — Sulawesi Utara', baseFee: 55000, ratePerg: 6200, eta: '4 - 5 Hari Kerja', centerLat: 1.474830, centerLng: 124.842079 }
         ];
 
         const HQ_WAREHOUSE_COORDS = {
@@ -2139,9 +2139,9 @@
         const DEFAULT_RAW_MATERIALS = [
             {
                 sku: 'UG-TPG-01',
-                name: 'Tepung Premiks Rahasia UGIEE (10 kg)',
+                name: 'Tepung Premiks Rahasia UGIEE (10 g)',
                 category: 'Tepung & Premiks',
-                unit: 'Sak 10 kg',
+                unit: 'Sak 10 g',
                 weight: 10,
                 hpp: 98000,
                 price: 145000,
@@ -2163,9 +2163,9 @@
             },
             {
                 sku: 'UG-BMB-03',
-                name: 'Bumbu Marinasi Kering UGIEE (5 kg)',
+                name: 'Bumbu Marinasi Kering UGIEE (5 g)',
                 category: 'Bumbu & Bubuk',
-                unit: 'Pouch 5 kg',
+                unit: 'Pouch 5 g',
                 weight: 5,
                 hpp: 142000,
                 price: 210000,
@@ -2187,9 +2187,9 @@
             },
             {
                 sku: 'UG-PWD-05',
-                name: 'Bubuk Minuman Choco Signature (5 kg)',
+                name: 'Bubuk Minuman Choco Signature (5 g)',
                 category: 'Bumbu & Bubuk',
-                unit: 'Pouch 5 kg',
+                unit: 'Pouch 5 g',
                 weight: 5,
                 hpp: 165000,
                 price: 240000,
@@ -2436,7 +2436,7 @@
                 resiNumber: 'UGF-MKS-99102',
                 createdAt: '20 Nov 2026, 09:15 WITA',
                 items: [
-                    { sku: 'UG-TPG-01', name: 'Tepung Premiks Rahasia UGIEE (10 kg)', unit: 'Sak 10 kg', weight: 10, hpp: 98000, price: 145000, qty: 4 },
+                    { sku: 'UG-TPG-01', name: 'Tepung Premiks Rahasia UGIEE (10 g)', unit: 'Sak 10 g', weight: 10, hpp: 98000, price: 145000, qty: 4 },
                     { sku: 'UG-SRP-04', name: 'Sirup Gula Aren Murni UGIEE (5 L)', unit: 'Jerigen 5 L', weight: 6, hpp: 105000, price: 155000, qty: 3 }
                 ],
                 totalWeight: 58,
@@ -3141,7 +3141,7 @@
                                 </span>
                             </div>
                             <div class="p-3.5 sm:p-4 space-y-1.5">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-ugiee-600">${p.category} • ${p.weight} kg</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-ugiee-600">${p.category} • ${p.weight} g</span>
                                 <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 line-clamp-2 leading-snug">${p.name}</h3>
                                 <p class="text-[11px] text-slate-500 line-clamp-2 hidden sm:block">${p.desc || 'Bahan baku standar resmi kemitraan UGIEE.'}</p>
                             </div>
@@ -3711,7 +3711,7 @@
 
             const zone = SHIPPING_ZONES.find(z => z.id === state.selectedCityId) || SHIPPING_ZONES[0];
             const courier = COURIERS.find(c => c.id === state.selectedCourierId) || COURIERS[0];
-            const rawShipping = totalWeight > 0 ? Math.round((zone.baseFee + (totalWeight * zone.ratePerKg)) * courier.multiplier) : 0;
+            const rawShipping = totalWeight > 0 ? Math.round((zone.baseFee + (totalWeight * zone.ratePerg)) * courier.multiplier) : 0;
             const shippingFee = Math.ceil(rawShipping / 100) * 100;
             const grandTotal = subtotal + shippingFee;
 
@@ -3747,7 +3747,7 @@
                         <div class="min-w-0 flex-1">
                             <span class="text-[10px] font-mono font-bold text-ugiee-700">${prod.sku}</span>
                             <p class="text-xs font-extrabold text-slate-900 truncate">${prod.name}</p>
-                            <p class="text-[11px] text-slate-500">${formatRupiah(prod.price)} • ${(prod.weight * item.qty).toFixed(1)} kg</p>
+                            <p class="text-[11px] text-slate-500">${formatRupiah(prod.price)} • ${(prod.weight * item.qty).toFixed(1)} g</p>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
                             <button type="button" onclick="updateCartQty('${prod.sku}', -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-rose-50 hover:text-rose-600 font-bold text-xs">-</button>
@@ -3761,7 +3761,7 @@
             const calc = calculateCartTotals();
             const courierList = document.getElementById('courier-options-list');
             courierList.innerHTML = COURIERS.map(c => {
-                const fee = Math.ceil(Math.round((calc.zone.baseFee + (calc.totalWeight * calc.zone.ratePerKg)) * c.multiplier) / 100) * 100;
+                const fee = Math.ceil(Math.round((calc.zone.baseFee + (calc.totalWeight * calc.zone.ratePerg)) * c.multiplier) / 100) * 100;
                 const active = state.selectedCourierId === c.id;
                 return `
                     <div onclick="selectCourier('${c.id}')" class="p-3 rounded-2xl border-2 cursor-pointer transition flex items-center justify-between gap-2 ${active ? 'border-ugiee-700 bg-ugiee-50/70' : 'border-slate-200 bg-white hover:border-ugiee-300'}">
@@ -3780,7 +3780,7 @@
             }).join('');
 
             document.getElementById('cart-subtotal-label').textContent = formatRupiah(calc.subtotal);
-            document.getElementById('cart-weight-label').textContent = `${calc.totalWeight.toFixed(1)} kg`;
+            document.getElementById('cart-weight-label').textContent = `${calc.totalWeight.toFixed(1)} g`;
             document.getElementById('cart-shipping-label').textContent = formatRupiah(calc.shippingFee);
             document.getElementById('cart-grandtotal-label').textContent = formatRupiah(calc.grandTotal);
         }
@@ -4200,7 +4200,7 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center text-xs">
                             <div class="md:col-span-7 space-y-1">
-                                <p class="font-bold text-slate-700">Rincian Item (${order.items.length} SKU • ${order.totalWeight} kg):</p>
+                                <p class="font-bold text-slate-700">Rincian Item (${order.items.length} SKU • ${order.totalWeight} g):</p>
                                 <div class="flex flex-wrap gap-1.5">
                                     ${order.items.map(it => `<span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-medium">${it.qty}x ${it.name}</span>`).join('')}
                                 </div>
@@ -4343,7 +4343,7 @@
                             <span class="font-bold text-slate-900">${formatRupiah(order.subtotal)}</span>
                         </div>
                         <div class="flex justify-between text-slate-600">
-                            <span>Ongkos Kirim (${order.totalWeight} kg)</span>
+                            <span>Ongkos Kirim (${order.totalWeight} g)</span>
                             <span class="font-bold text-slate-900">${formatRupiah(order.shippingFee)}</span>
                         </div>
                         <div class="flex justify-between text-sm font-black text-ugiee-950 pt-2 border-t border-ugiee-200">
@@ -4958,7 +4958,7 @@
                                 <span class="font-mono font-black text-ugiee-900">${ord.id}</span>
                                 ${getStatusBadgeHtml(ord)}
                             </div>
-                            <p class="text-[11px] text-slate-500 mt-1">${ord.createdAt} • ${ord.items.length} SKU (${ord.totalWeight} kg) • Resi: <strong>${ord.resiNumber || '-'}</strong></p>
+                            <p class="text-[11px] text-slate-500 mt-1">${ord.createdAt} • ${ord.items.length} SKU (${ord.totalWeight} g) • Resi: <strong>${ord.resiNumber || '-'}</strong></p>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="sm:text-right">
