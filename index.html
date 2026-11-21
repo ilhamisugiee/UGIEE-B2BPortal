@@ -4983,22 +4983,6 @@
         };
 
         window.submitHqNewPartner = function(e) {
-            window.deleteHqPartner = function(partnerId) {
-    const partner = state.users.find(u => u.id === partnerId && u.role === 'MITRA');
-    if (!partner) return;
-
-    const yakin = confirm(`Hapus data mitra "${partner.outletName}" (${partner.id})? Data akan dihapus dari aplikasi & Firebase Realtime Database.`);
-    if (!yakin) return;
-
-    state.users = state.users.filter(u => u.id !== partnerId);
-    if (state.currentUser && state.currentUser.id === partnerId) {
-        state.currentUser = null;
-    }
-    saveLocalData();
-    deleteDocFromCloud('users', partnerId);
-    refreshActiveScreenUI();
-    showToast(`Mitra ${partner.outletName} (${partner.id}) berhasil dihapus.`, 'info');
-};
             e.preventDefault();
             const outletName = document.getElementById('hq-np-outlet').value.trim();
             const ownerName = document.getElementById('hq-np-owner').value.trim();
