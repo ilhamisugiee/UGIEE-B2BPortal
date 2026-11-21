@@ -482,7 +482,7 @@
                         <i class="fa-solid fa-user-shield text-sm"></i> Kelola Akun Pusat
                     </button>
                     <button onclick="openWaSettingsModal()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold border border-emerald-400/50 transition flex items-center justify-center gap-2 shadow-sm">
-                        <i class="fa-brands fa-whatsapp text-sm"></i> Gateway WA: <span id="hq-wa-number-badge">08114000999</span>
+                        <i class="fa-brands fa-whatsapp text-sm"></i> Gateway WA: <span id="hq-wa-number-badge">081333555114</span>
                     </button>
                     <button onclick="switchHqTab('partners'); openHqNewPartnerModal();" class="px-4 py-2.5 rounded-xl bg-ugiee-700 hover:bg-ugiee-600 text-white text-xs font-bold border border-ugiee-500 transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-user-plus text-amberbrand-400"></i> Daftarkan Mitra Baru
@@ -1024,7 +1024,7 @@
                                 <i class="fa-regular fa-copy mr-1"></i>Salin
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-500">Atas Nama: <strong>PT UGIEE PMabbarakka Indonesia</strong></p>
+                        <p class="text-[11px] text-slate-500">Atas Nama: <strong>PT UGIEE Mabbarakka Indonesia</strong></p>
                     </div>
                 </div>
 
@@ -1239,7 +1239,7 @@
             <form onsubmit="saveWaSettings(event)" class="p-6 space-y-4 text-xs">
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Nomor WhatsApp Admin Logistik Pusat UGIEE *</label>
-                    <input type="tel" id="wa-hq-phone-input" required placeholder="08114000999" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono font-bold text-sm">
+                    <input type="tel" id="wa-hq-phone-input" required placeholder="081333555114" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono font-bold text-sm">
                     <p class="text-[11px] text-slate-500 mt-1">Nomor ini menjadi tujuan otomatis saat Mitra menekan tombol konfirmasi pembayaran via WhatsApp.</p>
                 </div>
                 <div>
@@ -1482,7 +1482,7 @@
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">Nomor WhatsApp Admin *</label>
-                        <input type="tel" id="hq-adm-phone" required placeholder="08114000999" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-ugiee-700">
+                        <input type="tel" id="hq-adm-phone" required placeholder="081333555114" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-ugiee-700">
                     </div>
                 </div>
 
@@ -1864,7 +1864,7 @@ const MANUAL_FIREBASE_CONFIG = {
             users: [],
             orders: [],
             waLogs: [],
-            waSettings: { hqPhone: '08114000999', hqName: 'Admin Logistik & Finance UGIEE Pusat' }
+            waSettings: { hqPhone: '081333555114', hqName: 'Admin Logistik & Finance UGIEE Pusat' }
         };
 
         function updateCloudStatusBadge(connected, labelText) {
@@ -2056,7 +2056,7 @@ const MANUAL_FIREBASE_CONFIG = {
                 return cloudCache.waSettings;
             }
             const defaults = {
-                hqPhone: '08114000999',
+                hqPhone: '081333555114',
                 hqName: 'Admin Logistik & Finance UGIEE Pusat'
             };
             cloudCache.waSettings = defaults;
@@ -2268,7 +2268,7 @@ const MANUAL_FIREBASE_CONFIG = {
                         outletName: 'Kantor Pusat UGIEE (Dashboard Induk)',
                         ownerName: 'Direktur Operasional & Finance',
                         email: 'pusat@ugiee.id',
-                        phone: '08114000999',
+                        phone: '081333555114',
                         password: '123',
                         cityId: 'MKS',
                         address: 'Jl. Perintis Kemerdekaan KM 10, Tamalanrea, Makassar'
@@ -2484,7 +2484,7 @@ const MANUAL_FIREBASE_CONFIG = {
                         orderId: 'INV-UG-2611-4250',
                         direction: 'MITRA_TO_HQ',
                         recipientName: 'Admin Logistik & Finance UGIEE Pusat',
-                        recipientPhone: '08114000999',
+                        recipientPhone: '081333555114',
                         eventType: 'Konfirmasi Pembayaran QRIS Otomatis',
                         messageText: '*KONFIRMASI PEMBAYARAN MITRA*\nOrder INV-UG-2611-4250 dari UGIEE Outlet Boulevard Makassar sebesar Rp 1.161.500 telah LUNAS via QRIS.',
                         timestamp: '19 Nov 2026, 11.07',
@@ -4007,7 +4007,7 @@ const MANUAL_FIREBASE_CONFIG = {
                             </div>
                             <div>
                                 <h2 class="text-xl font-extrabold text-ugiee-950 leading-none">UGIEE SUPPLY CHAIN</h2>
-                                <p class="text-xs text-slate-500">PT UGIEE Pangan Nusantara — Pusat Distribusi Bahan Baku</p>
+                                <p class="text-xs text-slate-500">PT UGIEE Mabbarakka Indonesia — Pusat Distribusi Bahan Baku</p>
                             </div>
                         </div>
                     </div>
