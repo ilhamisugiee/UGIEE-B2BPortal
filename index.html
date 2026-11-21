@@ -4887,15 +4887,10 @@
                             <span class="text-[11px] font-bold text-ugiee-800 block">${zoneObj.zone}</span>
                             <p class="text-slate-500 truncate">${m.address}</p>
                         </td>
-                      <td class="py-3.5 px-4 text-center">
-    <div class="flex items-center justify-center gap-1.5">
-        <button type="button" onclick="openPartnerDetailModal('${m.id}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition">
-            Detail & Riwayat
-        </button>
-        <button type="button" onclick="deleteHqPartner('${m.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold text-[11px] transition" title="Hapus Mitra">
-            <i class="fa-solid fa-trash"></i>
-        </button>
-    </div>
+<td class="py-3.5 px-4 text-center">
+    <button type="button" onclick="openPartnerDetailModal('${m.id}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition">
+        Detail & Riwayat
+    </button>
 </td>
                     </tr>
                 `;
