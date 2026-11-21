@@ -1671,6 +1671,9 @@
                     <a id="pdm-wa-btn" href="#" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 transition">
                         <i class="fa-brands fa-whatsapp text-sm"></i> Chat WA Mitra
                     </a>
+                    <button id="pdm-delete-btn" type="button" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs flex items-center gap-1.5 transition shadow-xs" title="Hapus Mitra & Seluruh Transaksinya">
+                        <i class="fa-solid fa-trash"></i> Hapus Mitra
+                    </button>
                     <button onclick="closePartnerDetailModal()" class="p-2 rounded-xl bg-ugiee-700 hover:bg-ugiee-600 text-white">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
@@ -1804,6 +1807,57 @@
                     <button type="submit" id="hq-np-submit-btn" class="px-5 py-2.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold shadow-sm">Simpan ke Database &amp; Peta</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ==================== 11B. MODAL KONFIRMASI HAPUS MITRA & RIWAYAT TRANSAKSI ==================== -->
+    <div id="delete-partner-confirm-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[72] hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-rose-200 overflow-hidden my-auto">
+            <div class="px-6 py-4 bg-rose-600 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center font-black">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-extrabold">Konfirmasi Hapus Data Mitra</h3>
+                        <p id="dpm-partner-id" class="text-[11px] font-mono text-rose-100">UG-MTR-000</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeDeletePartnerConfirmModal()" class="p-2 rounded-xl bg-rose-700 hover:bg-rose-800 text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+                <input type="hidden" id="dpm-target-id">
+
+                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 space-y-1.5">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 block">Outlet Mitra yang Akan Dihapus</span>
+                    <p id="dpm-outlet-name" class="text-base font-black text-slate-900">-</p>
+                    <p id="dpm-owner-info" class="text-slate-600 font-medium">-</p>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 space-y-1.5">
+                    <p class="font-extrabold flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-exclamation text-amber-600"></i> Peringatan Penghapusan Permanen:
+                    </p>
+                    <ul class="list-disc pl-4 space-y-1 text-[11px] leading-relaxed">
+                        <li>Akun login &amp; profil outlet mitra ini akan dihapus secara permanen.</li>
+                        <li>Sebanyak <strong id="dpm-orders-count" class="text-rose-700 font-black">0 riwayat transaksi</strong> pesanan beserta bukti bayar &amp; log WhatsApp terkait akan ikut terhapus permanen dari sistem lokal maupun Cloud Firebase.</li>
+                        <li>Data yang sudah dihapus tidak dapat dikembalikan.</li>
+                    </ul>
+                </div>
+
+                <div class="pt-2 flex flex-col sm:flex-row justify-end gap-2">
+                    <button type="button" onclick="closeDeletePartnerConfirmModal()" class="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition">
+                        Batal
+                    </button>
+                    <button type="button" onclick="confirmDeletePartnerAndTransactions()" class="py-2.5 px-5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold shadow-lg shadow-rose-600/25 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-trash"></i>
+                        <span>Ya, Hapus Mitra &amp; Semua Transaksi</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -3529,18 +3583,20 @@
             const tools = document.getElementById('hq-rec-tools').value.split('\n').map(t => t.trim()).filter(Boolean);
             const tip = document.getElementById('hq-rec-tip').value.trim();
 
-            const ingRows = Array.from(document.querySelectorAll('#hq-rec-ingredients-container .rec-ing-row'));
-            const ingredients = ingRows.map(row => ({
+            const ingredients = Array.from(document.querySelectorAll('#hq-rec-ingredients-container .rec-ing-row')).map(row => ({
                 name: row.querySelector('.rec-ing-name').value.trim(),
                 qty: row.querySelector('.rec-ing-qty').value.trim(),
                 sku: row.querySelector('.rec-ing-sku').value.trim()
             })).filter(i => i.name && i.qty);
 
-            const stepRows = Array.from(document.querySelectorAll('#hq-rec-steps-container .rec-step-row'));
-            const steps = stepRows.map(row => row.querySelector('.rec-step-text').value.trim()).filter(Boolean);
+            const steps = Array.from(document.querySelectorAll('#hq-rec-steps-container .rec-step-text')).map(t => t.value.trim()).filter(Boolean);
 
+            if (!editId && state.recipes.some(r => r.id === id)) {
+                showToast(`Kode SOP "${id}" sudah digunakan! Gunakan kode berbeda.`, 'error');
+                return;
+            }
             if (ingredients.length === 0 || steps.length === 0) {
-                showToast('Minimal harus ada 1 bahan baku dan 1 langkah penyajian!', 'warning');
+                showToast('Minimal masukkan 1 bahan baku dan 1 langkah penyajian!', 'warning');
                 return;
             }
 
@@ -3550,50 +3606,40 @@
                 const idx = state.recipes.findIndex(r => r.id === editId);
                 if (idx !== -1) state.recipes[idx] = recipeObj;
             } else {
-                if (state.recipes.some(r => r.id === id)) {
-                    showToast(`Kode SOP ${id} sudah digunakan! Gunakan kode lain.`, 'warning');
-                    return;
-                }
-                state.recipes.unshift(recipeObj);
+                state.recipes.push(recipeObj);
             }
 
             saveLocalData();
             syncDocToCloud('recipes', recipeObj.id, recipeObj);
             closeHqRecipeModal();
             refreshActiveScreenUI();
-            showToast(`SOP "${name}" berhasil disimpan & otomatis tayang di Portal Mitra!`, 'success');
+            showToast(`SOP Resep "${name}" disimpan & otomatis tayang di seluruh Portal Mitra!`, 'success');
         };
 
         window.deleteHqRecipe = function(recipeId) {
-            state.recipes = state.recipes.filter(r => r.id !== recipeId);
+            const idx = state.recipes.findIndex(r => r.id === recipeId);
+            if (idx === -1) return;
+            const deletedName = state.recipes[idx].name;
+            state.recipes.splice(idx, 1);
             saveLocalData();
             deleteDocFromCloud('recipes', recipeId);
             refreshActiveScreenUI();
-            showToast(`Resep SOP ${recipeId} telah dihapus dari sistem.`, 'info');
+            showToast(`Resep SOP "${deletedName}" dihapus dari pusat & mitra.`, 'info');
         };
 
-        // ==================== 9. CART, SHIPPING CALCULATOR & CHECKOUT (MITRA) ====================
-        window.toggleCartDrawer = function(open) {
-            const backdrop = document.getElementById('cart-drawer-backdrop');
-            const drawer = document.getElementById('cart-drawer');
-            if (open) {
-                backdrop.classList.remove('hidden');
-                drawer.classList.remove('translate-x-full');
-                renderCartDrawer();
-            } else {
-                backdrop.classList.add('hidden');
-                drawer.classList.add('translate-x-full');
-            }
-        };
-
+        // ==================== 9. CART, SHIPPING CALCULATOR & CHECKOUT ====================
         window.addToCart = function(sku, qty = 1, silent = false) {
-            const prod = state.products.find(p => p.sku === sku);
-            if (!prod || prod.stock <= 0) return;
+            const product = state.products.find(p => p.sku === sku);
+            if (!product) return;
+            if (product.stock <= 0) {
+                if (!silent) showToast('Stok bahan baku sedang habis!', 'warning');
+                return;
+            }
 
             const existing = state.cart.find(c => c.sku === sku);
             if (existing) {
-                if (existing.qty + qty > prod.stock) {
-                    showToast(`Stok maksimal ${prod.name} adalah ${prod.stock} unit.`, 'warning');
+                if (existing.qty + qty > product.stock) {
+                    if (!silent) showToast(`Maksimal stok tersedia: ${product.stock} ${product.unit}`, 'warning');
                     return;
                 }
                 existing.qty += qty;
@@ -3602,39 +3648,46 @@
             }
 
             saveLocalData();
-            updateBadgesAndCounters();
-            renderProducts();
-            if (!silent) showToast(`${prod.name} ditambahkan ke keranjang.`, 'success');
+            refreshActiveScreenUI();
+            if (!silent) showToast(`"${product.name}" ditambahkan ke keranjang.`, 'success');
         };
 
         window.updateCartQty = function(sku, delta) {
             const idx = state.cart.findIndex(c => c.sku === sku);
             if (idx === -1) return;
-            const prod = state.products.find(p => p.sku === sku);
+            const product = state.products.find(p => p.sku === sku);
             const nextQty = state.cart[idx].qty + delta;
 
             if (nextQty <= 0) {
                 state.cart.splice(idx, 1);
-            } else if (prod && nextQty > prod.stock) {
-                showToast(`Stok gudang hanya tersedia ${prod.stock} unit.`, 'warning');
+            } else if (product && nextQty > product.stock) {
+                showToast(`Stok gudang hanya tersedia ${product.stock} unit.`, 'warning');
                 return;
             } else {
                 state.cart[idx].qty = nextQty;
             }
-
             saveLocalData();
-            updateBadgesAndCounters();
-            renderProducts();
-            renderCartDrawer();
+            refreshActiveScreenUI();
         };
 
         window.clearCart = function() {
             state.cart = [];
             saveLocalData();
-            updateBadgesAndCounters();
-            renderProducts();
-            renderCartDrawer();
-            showToast('Keranjang belanja telah dikosongkan.', 'info');
+            refreshActiveScreenUI();
+            showToast('Keranjang belanja dikosongkan.', 'info');
+        };
+
+        window.toggleCartDrawer = function(open) {
+            const backdrop = document.getElementById('cart-drawer-backdrop');
+            const drawer = document.getElementById('cart-drawer');
+            if (open) {
+                renderCartDrawer();
+                backdrop.classList.remove('hidden');
+                setTimeout(() => drawer.classList.remove('translate-x-full'), 10);
+            } else {
+                drawer.classList.add('translate-x-full');
+                setTimeout(() => backdrop.classList.add('hidden'), 280);
+            }
         };
 
         function calculateCartTotals() {
@@ -3646,8 +3699,8 @@
                 const prod = state.products.find(p => p.sku === item.sku);
                 if (prod) {
                     subtotal += prod.price * item.qty;
-                    totalHpp += (prod.hpp || Math.round(prod.price * 0.65)) * item.qty;
-                    totalWeight += (prod.weight || 1) * item.qty;
+                    totalHpp += prod.hpp * item.qty;
+                    totalWeight += prod.weight * item.qty;
                 }
             });
 
@@ -3655,16 +3708,76 @@
             const courier = COURIERS.find(c => c.id === state.selectedCourierId) || COURIERS[0];
             const rawShipping = totalWeight > 0 ? Math.round((zone.baseFee + (totalWeight * zone.ratePerKg)) * courier.multiplier) : 0;
             const shippingFee = Math.ceil(rawShipping / 100) * 100;
+            const grandTotal = subtotal + shippingFee;
 
-            return {
-                subtotal,
-                totalHpp,
-                totalWeight: Number(totalWeight.toFixed(1)),
-                shippingFee,
-                grandTotal: subtotal + shippingFee,
-                zone,
-                courier
-            };
+            return { subtotal, totalHpp, totalWeight, shippingFee, grandTotal, zone, courier };
+        }
+
+        function renderCartDrawer() {
+            const container = document.getElementById('cart-items-container');
+            const shippingBox = document.getElementById('checkout-shipping-box');
+            const footerBox = document.getElementById('checkout-footer-box');
+            if (!container) return;
+
+            if (state.cart.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center space-y-2">
+                        <i class="fa-solid fa-basket-shopping text-3xl text-slate-300"></i>
+                        <p class="text-xs font-bold text-slate-700">Keranjang bahan baku masih kosong</p>
+                        <p class="text-[11px] text-slate-500">Pilih bahan baku dari katalog atau langsung dari menu SOP Resep Minuman.</p>
+                    </div>`;
+                shippingBox.classList.add('hidden');
+                footerBox.classList.add('hidden');
+                return;
+            }
+
+            shippingBox.classList.remove('hidden');
+            footerBox.classList.remove('hidden');
+
+            container.innerHTML = state.cart.map(item => {
+                const prod = state.products.find(p => p.sku === item.sku);
+                if (!prod) return '';
+                return `
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <span class="text-[10px] font-mono font-bold text-ugiee-700">${prod.sku}</span>
+                            <p class="text-xs font-extrabold text-slate-900 truncate">${prod.name}</p>
+                            <p class="text-[11px] text-slate-500">${formatRupiah(prod.price)} • ${(prod.weight * item.qty).toFixed(1)} kg</p>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button type="button" onclick="updateCartQty('${prod.sku}', -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-rose-50 hover:text-rose-600 font-bold text-xs">-</button>
+                            <span class="w-6 text-center font-black text-xs">${item.qty}</span>
+                            <button type="button" onclick="updateCartQty('${prod.sku}', 1)" class="w-7 h-7 rounded-lg bg-ugiee-600 text-white font-bold text-xs">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const calc = calculateCartTotals();
+            const courierList = document.getElementById('courier-options-list');
+            courierList.innerHTML = COURIERS.map(c => {
+                const fee = Math.ceil(Math.round((calc.zone.baseFee + (calc.totalWeight * calc.zone.ratePerKg)) * c.multiplier) / 100) * 100;
+                const active = state.selectedCourierId === c.id;
+                return `
+                    <div onclick="selectCourier('${c.id}')" class="p-3 rounded-2xl border-2 cursor-pointer transition flex items-center justify-between gap-2 ${active ? 'border-ugiee-700 bg-ugiee-50/70' : 'border-slate-200 bg-white hover:border-ugiee-300'}">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl ${active ? 'bg-ugiee-600 text-white' : 'bg-slate-100 text-slate-500'} flex items-center justify-center text-xs">
+                                <i class="fa-solid ${c.icon}"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-extrabold text-slate-900">${c.name}</p>
+                                <p class="text-[10px] text-slate-500">${c.desc} • ${calc.zone.eta}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-black text-ugiee-900 whitespace-nowrap">${formatRupiah(fee)}</span>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('cart-subtotal-label').textContent = formatRupiah(calc.subtotal);
+            document.getElementById('cart-weight-label').textContent = `${calc.totalWeight.toFixed(1)} kg`;
+            document.getElementById('cart-shipping-label').textContent = formatRupiah(calc.shippingFee);
+            document.getElementById('cart-grandtotal-label').textContent = formatRupiah(calc.grandTotal);
         }
 
         window.handleShippingInputChange = function() {
@@ -3680,122 +3793,46 @@
         window.selectPaymentMethod = function(method) {
             state.selectedPaymentMethod = method;
             const qrisBtn = document.getElementById('pay-method-qris');
-            const tfBtn = document.getElementById('pay-method-transfer');
+            const trfBtn = document.getElementById('pay-method-transfer');
             const bankBox = document.getElementById('bank-selector-box');
 
             if (method === 'QRIS') {
                 qrisBtn.className = 'p-3 rounded-2xl border-2 border-ugiee-700 bg-ugiee-50 text-left transition';
-                tfBtn.className = 'p-3 rounded-2xl border border-slate-200 bg-white text-left transition';
+                trfBtn.className = 'p-3 rounded-2xl border border-slate-200 bg-white text-left transition';
                 bankBox.classList.add('hidden');
             } else {
-                tfBtn.className = 'p-3 rounded-2xl border-2 border-ugiee-700 bg-ugiee-50 text-left transition';
+                trfBtn.className = 'p-3 rounded-2xl border-2 border-ugiee-700 bg-ugiee-50 text-left transition';
                 qrisBtn.className = 'p-3 rounded-2xl border border-slate-200 bg-white text-left transition';
                 bankBox.classList.remove('hidden');
             }
         };
 
-        function renderCartDrawer() {
-            const container = document.getElementById('cart-items-container');
-            const shipBox = document.getElementById('checkout-shipping-box');
-            const footBox = document.getElementById('checkout-footer-box');
-            if (!container) return;
-
-            if (state.cart.length === 0) {
-                container.innerHTML = `
-                    <div class="p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center space-y-2">
-                        <i class="fa-solid fa-basket-shopping text-3xl text-slate-300"></i>
-                        <p class="text-xs font-bold text-slate-700">Keranjang bahan baku masih kosong</p>
-                        <p class="text-[11px] text-slate-500">Pilih bahan baku dari katalog atau dari menu SOP Resep.</p>
-                    </div>`;
-                shipBox.classList.add('hidden');
-                footBox.classList.add('hidden');
-                return;
-            }
-
-            shipBox.classList.remove('hidden');
-            footBox.classList.remove('hidden');
-
-            container.innerHTML = state.cart.map(item => {
-                const prod = state.products.find(p => p.sku === item.sku);
-                if (!prod) return '';
-                return `
-                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
-                        <div class="min-w-0">
-                            <span class="text-[10px] font-mono font-bold text-ugiee-700">${prod.sku} • ${prod.weight * item.qty} kg</span>
-                            <p class="text-xs font-extrabold text-slate-900 truncate">${prod.name}</p>
-                            <p class="text-[11px] font-bold text-ugiee-800 mt-0.5">${formatRupiah(prod.price * item.qty)}</p>
-                        </div>
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <button type="button" onclick="updateCartQty('${prod.sku}', -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 text-slate-700 font-bold text-xs">-</button>
-                            <span class="w-6 text-center text-xs font-black">${item.qty}</span>
-                            <button type="button" onclick="updateCartQty('${prod.sku}', 1)" class="w-7 h-7 rounded-lg bg-ugiee-600 text-white font-bold text-xs">+</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            const totals = calculateCartTotals();
-
-            const courierList = document.getElementById('courier-options-list');
-            if (courierList) {
-                courierList.innerHTML = COURIERS.map(c => {
-                    const active = state.selectedCourierId === c.id;
-                    const estFee = totals.totalWeight > 0
-                        ? Math.ceil(Math.round((totals.zone.baseFee + (totals.totalWeight * totals.zone.ratePerKg)) * c.multiplier) / 100) * 100
-                        : 0;
-                    return `
-                        <button type="button" onclick="selectCourier('${c.id}')" class="w-full p-3 rounded-2xl border ${active ? 'border-2 border-ugiee-700 bg-ugiee-50' : 'border-slate-200 bg-white'} text-left flex items-center justify-between gap-3 transition">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-8 h-8 rounded-xl ${active ? 'bg-ugiee-600 text-white' : 'bg-slate-100 text-slate-600'} flex items-center justify-center shrink-0">
-                                    <i class="fa-solid ${c.icon} text-xs"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-xs font-extrabold text-slate-900 truncate">${c.name}</p>
-                                    <p class="text-[10px] text-slate-500 truncate">${c.desc} • ${totals.zone.eta}</p>
-                                </div>
-                            </div>
-                            <span class="text-xs font-black ${active ? 'text-ugiee-900' : 'text-slate-700'} shrink-0">${formatRupiah(estFee)}</span>
-                        </button>
-                    `;
-                }).join('');
-            }
-
-            document.getElementById('cart-subtotal-label').textContent = formatRupiah(totals.subtotal);
-            document.getElementById('cart-weight-label').textContent = `${totals.totalWeight} kg`;
-            document.getElementById('cart-shipping-label').textContent = formatRupiah(totals.shippingFee);
-            document.getElementById('cart-grandtotal-label').textContent = formatRupiah(totals.grandTotal);
-        }
-
         window.submitCheckoutOrder = function() {
             if (!state.currentUser || state.cart.length === 0) return;
-
-            const addressInput = document.getElementById('checkout-address-input').value.trim();
-            if (!addressInput) {
-                showToast('Harap isi alamat lengkap penerima outlet terlebih dahulu!', 'warning');
+            const address = document.getElementById('checkout-address-input').value.trim();
+            if (!address) {
+                showToast('Harap isi alamat lengkap pengiriman outlet!', 'warning');
                 return;
             }
 
-            const totals = calculateCartTotals();
-            const orderItems = [];
+            const calc = calculateCartTotals();
+            const orderNum = 2601 + state.orders.length + Math.floor(Math.random() * 90);
+            const newOrderId = `INV-UG-${orderNum}`;
 
-            for (const cItem of state.cart) {
-                const prod = state.products.find(p => p.sku === cItem.sku);
-                if (!prod || prod.stock < cItem.qty) {
-                    showToast(`Stok ${prod ? prod.name : cItem.sku} tidak mencukupi!`, 'error');
-                    return;
-                }
-                orderItems.push({
-                    sku: prod.sku,
-                    name: prod.name,
-                    unit: prod.unit,
-                    weight: prod.weight,
-                    hpp: prod.hpp,
-                    price: prod.price,
-                    qty: cItem.qty
-                });
-            }
+            const orderItems = state.cart.map(c => {
+                const p = state.products.find(prod => prod.sku === c.sku);
+                return {
+                    sku: p.sku,
+                    name: p.name,
+                    unit: p.unit,
+                    weight: p.weight,
+                    hpp: p.hpp,
+                    price: p.price,
+                    qty: c.qty
+                };
+            });
 
-            // Deduct warehouse stock
+            // Kurangi stok gudang pusat
             orderItems.forEach(item => {
                 const prod = state.products.find(p => p.sku === item.sku);
                 if (prod) {
@@ -3804,38 +3841,37 @@
                 }
             });
 
-            const orderNum = 2601 + state.orders.length + Math.floor(Math.random() * 90);
-            const newOrderId = `INV-UG-${orderNum}`;
-
             const newOrder = {
                 id: newOrderId,
                 partnerId: state.currentUser.id,
                 outletName: state.currentUser.outletName,
                 ownerName: state.currentUser.ownerName,
                 partnerPhone: state.currentUser.phone,
-                cityId: totals.zone.id,
-                cityName: totals.zone.city,
-                address: addressInput,
-                courierId: totals.courier.id,
-                courierName: totals.courier.name,
+                cityId: calc.zone.id,
+                cityName: calc.zone.city,
+                address,
+                courierId: calc.courier.id,
+                courierName: calc.courier.name,
                 paymentMethod: state.selectedPaymentMethod,
                 bankCode: state.selectedPaymentMethod === 'QRIS' ? 'QRIS' : state.selectedBankCode,
-                paymentStatus: 'BELUM_BAYAR',
+                paymentStatus: 'MENUNGGU PEMBAYARAN',
                 orderStatus: 'Menunggu Pembayaran',
-                resiNumber: 'Menunggu Verifikasi',
-                isoDate: new Date().toISOString(),
+                resiNumber: '-',
                 createdAt: getFormattedNow(),
                 items: orderItems,
-                totalWeight: totals.totalWeight,
-                subtotal: totals.subtotal,
-                totalHpp: totals.totalHpp,
-                shippingFee: totals.shippingFee,
-                grandTotal: totals.grandTotal,
+                totalWeight: Number(calc.totalWeight.toFixed(1)),
+                subtotal: calc.subtotal,
+                totalHpp: calc.totalHpp,
+                shippingFee: calc.shippingFee,
+                grandTotal: calc.grandTotal,
+                proofImage: '',
+                proofNote: '',
+                proofUploadedAt: '',
                 trackingLogs: [
                     {
                         time: getFormattedNow(),
-                        title: 'Pesanan Dibuat oleh Mitra',
-                        note: `Menunggu pembayaran & upload bukti via ${state.selectedPaymentMethod}`
+                        title: 'Pesanan Dibuat oleh Outlet Mitra',
+                        note: `Menunggu pembayaran via ${state.selectedPaymentMethod === 'QRIS' ? 'QRIS UGIEE' : BANK_ACCOUNTS[state.selectedBankCode].name}`
                     }
                 ]
             };
@@ -3846,125 +3882,52 @@
             syncDocToCloud('orders', newOrder.id, newOrder);
 
             toggleCartDrawer(false);
-            refreshActiveScreenUI();
+            switchMainView('orders');
             openPaymentModal(newOrder.id);
-            showToast(`Pesanan ${newOrder.id} berhasil dibuat! Silakan lakukan pembayaran & upload bukti.`, 'success');
+            showToast(`Pesanan ${newOrder.id} berhasil dibuat! Silakan lakukan pembayaran & unggah bukti.`, 'success');
         };
 
-        // ==================== 10. PAYMENT GATEWAY, UPLOAD BUKTI & VERIFIKASI ADMIN PUSAT ====================
-        function compressProofImage(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const maxDim = 760;
-                        let w = img.width;
-                        let h = img.height;
-                        if (w > maxDim || h > maxDim) {
-                            if (w > h) {
-                                h = Math.round((h * maxDim) / w);
-                                w = maxDim;
-                            } else {
-                                w = Math.round((w * maxDim) / h);
-                                h = maxDim;
-                            }
-                        }
-                        canvas.width = w;
-                        canvas.height = h;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.72));
-                    };
-                    img.onerror = reject;
-                    img.src = ev.target.result;
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        window.handleProofFileChange = async function(e) {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            try {
-                const compressedDataUrl = await compressProofImage(file);
-                state.uploadedProofDataUrl = compressedDataUrl;
-                const previewBox = document.getElementById('payment-proof-preview-box');
-                const previewImg = document.getElementById('payment-proof-preview-img');
-                if (previewImg && previewBox) {
-                    previewImg.src = compressedDataUrl;
-                    previewBox.classList.remove('hidden');
-                }
-            } catch (err) {
-                showToast('Gagal membaca file gambar bukti transfer. Coba pilih gambar lain.', 'error');
-            }
-        };
-
-        window.switchPaymentBank = function(bankCode) {
-            state.selectedBankCode = bankCode;
-            const jagoCard = document.getElementById('bank-card-JAGO');
-            const briCard = document.getElementById('bank-card-BRI');
-            if (jagoCard && briCard) {
-                if (bankCode === 'JAGO') {
-                    jagoCard.className = 'p-3.5 rounded-2xl border-2 border-ugiee-700 bg-amber-50/60 cursor-pointer transition space-y-1.5';
-                    briCard.className = 'p-3.5 rounded-2xl border border-slate-200 bg-sky-50/40 cursor-pointer transition space-y-1.5';
-                } else {
-                    briCard.className = 'p-3.5 rounded-2xl border-2 border-sky-700 bg-sky-50/70 cursor-pointer transition space-y-1.5';
-                    jagoCard.className = 'p-3.5 rounded-2xl border border-slate-200 bg-amber-50/30 cursor-pointer transition space-y-1.5';
-                }
-            }
-            const order = state.orders.find(o => o.id === state.activePaymentOrderId);
-            if (order) {
-                order.bankCode = bankCode;
-                const bankInfo = BANK_ACCOUNTS[bankCode] || BANK_ACCOUNTS.JAGO;
-                document.getElementById('pay-modal-method-badge').textContent = bankInfo.name;
-            }
-        };
-
-        window.copyBankAccount = function(accNum, bankLabel) {
-            const temp = document.createElement('textarea');
-            temp.value = accNum;
-            document.body.appendChild(temp);
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
-            showToast(`Nomor rekening ${bankLabel} (${accNum}) berhasil disalin!`, 'success');
-        };
-
+        // ==================== 10. PAYMENT MODAL, UPLOAD BUKTI & VERIFIKASI ADMIN ====================
         window.openPaymentModal = function(orderId) {
             const order = state.orders.find(o => o.id === orderId);
             if (!order) return;
 
-            state.activePaymentOrderId = orderId;
+            state.activePaymentOrderId = order.id;
             state.uploadedProofDataUrl = '';
-            const fileInput = document.getElementById('payment-proof-file');
-            if (fileInput) fileInput.value = '';
-            const previewBox = document.getElementById('payment-proof-preview-box');
-            if (previewBox) previewBox.classList.add('hidden');
-            const noteInput = document.getElementById('payment-proof-note');
-            if (noteInput) noteInput.value = '';
+            document.getElementById('payment-proof-file').value = '';
+            document.getElementById('payment-proof-note').value = '';
+            document.getElementById('payment-proof-preview-box').classList.add('hidden');
 
             document.getElementById('pay-modal-order-id').textContent = order.id;
             document.getElementById('pay-modal-amount').textContent = formatRupiah(order.grandTotal);
 
             const qrisView = document.getElementById('pay-qris-view');
             const vaView = document.getElementById('pay-va-view');
-            const methodBadge = document.getElementById('pay-modal-method-badge');
+            const badge = document.getElementById('pay-modal-method-badge');
 
             if (order.paymentMethod === 'QRIS') {
+                badge.textContent = 'QRIS OFFICIAL UGIEE';
                 qrisView.classList.remove('hidden');
                 vaView.classList.add('hidden');
-                methodBadge.textContent = 'QRIS UGIEE SIGNATURE';
             } else {
+                const bankCode = order.bankCode && BANK_ACCOUNTS[order.bankCode] ? order.bankCode : 'JAGO';
+                badge.textContent = `TRANSFER ${bankCode}`;
                 qrisView.classList.add('hidden');
                 vaView.classList.remove('hidden');
-                const initialBank = BANK_ACCOUNTS[order.bankCode] ? order.bankCode : 'JAGO';
-                switchPaymentBank(initialBank);
+                switchPaymentBank(bankCode);
             }
 
-            startPaymentCountdown(899);
+            // Countdown 15 Menit
+            if (state.countdownTimer) clearInterval(state.countdownTimer);
+            let secondsLeft = 14 * 60 + 59;
+            state.countdownTimer = setInterval(() => {
+                secondsLeft = Math.max(0, secondsLeft - 1);
+                const mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+                const ss = String(secondsLeft % 60).padStart(2, '0');
+                const cdEl = document.getElementById('pay-countdown');
+                if (cdEl) cdEl.textContent = `${mm}:${ss}`;
+            }, 1000);
+
             const modal = document.getElementById('payment-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -3975,42 +3938,68 @@
             const modal = document.getElementById('payment-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            switchMainView('orders');
         };
 
-        function startPaymentCountdown(seconds) {
-            if (state.countdownTimer) clearInterval(state.countdownTimer);
-            let remaining = seconds;
-            const el = document.getElementById('pay-countdown');
-            state.countdownTimer = setInterval(() => {
-                remaining--;
-                if (remaining <= 0) {
-                    clearInterval(state.countdownTimer);
-                    el.textContent = '00:00';
-                    return;
-                }
-                const m = String(Math.floor(remaining / 60)).padStart(2, '0');
-                const s = String(remaining % 60).padStart(2, '0');
-                el.textContent = `${m}:${s}`;
-            }, 1000);
-        }
+        window.switchPaymentBank = function(code) {
+            state.selectedBankCode = code;
+            const jagoCard = document.getElementById('bank-card-JAGO');
+            const briCard = document.getElementById('bank-card-BRI');
+            if (jagoCard && briCard) {
+                jagoCard.className = code === 'JAGO'
+                    ? 'p-3.5 rounded-2xl border-2 border-ugiee-700 bg-amber-50/60 cursor-pointer transition space-y-1.5'
+                    : 'p-3.5 rounded-2xl border border-slate-200 bg-white cursor-pointer transition space-y-1.5';
+                briCard.className = code === 'BRI'
+                    ? 'p-3.5 rounded-2xl border-2 border-ugiee-700 bg-sky-50/60 cursor-pointer transition space-y-1.5'
+                    : 'p-3.5 rounded-2xl border border-slate-200 bg-white cursor-pointer transition space-y-1.5';
+            }
+            const badge = document.getElementById('pay-modal-method-badge');
+            if (badge) badge.textContent = `TRANSFER ${code}`;
+        };
 
-        function logWhatsAppNotification(direction, recipientName, recipientPhone, orderId, messageText) {
-            const logItem = {
-                id: 'WA-' + Date.now(),
-                time: getFormattedNow(),
-                direction,
-                recipientName,
-                recipientPhone,
-                orderId,
-                message: messageText
+        window.copyBankAccount = function(rawNum, bankLabel) {
+            const tempInput = document.createElement('input');
+            tempInput.value = rawNum;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast(`Nomor rekening ${bankLabel} (${rawNum}) berhasil disalin!`, 'success');
+        };
+
+        window.handleProofFileChange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const img = new Image();
+                img.onload = function() {
+                    // Kompres gambar agar ringan disimpan & tersinkron cepat ke Cloud RTDB
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 760;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) {
+                            h = Math.round((h * maxDim) / w);
+                            w = maxDim;
+                        } else {
+                            w = Math.round((w * maxDim) / h);
+                            h = maxDim;
+                        }
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    state.uploadedProofDataUrl = canvas.toDataURL('image/jpeg', 0.72);
+
+                    document.getElementById('payment-proof-preview-img').src = state.uploadedProofDataUrl;
+                    document.getElementById('payment-proof-preview-box').classList.remove('hidden');
+                };
+                img.src = evt.target.result;
             };
-            state.waLogs.unshift(logItem);
-            if (state.waLogs.length > 50) state.waLogs.pop();
-            saveLocalData();
-            syncDocToCloud('settings', 'waLogs', { logs: state.waLogs });
-            return logItem;
-        }
+            reader.readAsDataURL(file);
+        };
 
         window.submitPaymentProof = function(e) {
             e.preventDefault();
@@ -4018,58 +4007,155 @@
             if (!order) return;
 
             if (!state.uploadedProofDataUrl) {
-                showToast('Harap pilih dan upload foto/screenshot bukti transaksi terlebih dahulu!', 'warning');
+                showToast('Harap pilih foto bukti transfer / screenshot QRIS terlebih dahulu!', 'warning');
                 return;
             }
 
-            const senderNote = document.getElementById('payment-proof-note')?.value.trim() || '';
-            const bankDetail = order.paymentMethod === 'QRIS'
-                ? `QRIS ${QRIS_MERCHANT_INFO.merchantName} (NMID: ${QRIS_MERCHANT_INFO.nmid})`
-                : `${(BANK_ACCOUNTS[order.bankCode] || BANK_ACCOUNTS.JAGO).name} - ${(BANK_ACCOUNTS[order.bankCode] || BANK_ACCOUNTS.JAGO).accountNumber} a.n. ILHAM ISMAIL`;
+            const note = document.getElementById('payment-proof-note').value.trim();
+            const methodLabel = order.paymentMethod === 'QRIS'
+                ? 'QRIS UGIEE Signature'
+                : `${BANK_ACCOUNTS[state.selectedBankCode]?.name || 'Transfer Bank'} a.n. ILHAM ISMAIL`;
 
-            order.paymentStatus = 'MENUNGGU_VERIFIKASI';
-            order.orderStatus = 'Menunggu Verifikasi Admin Pusat';
-            order.paymentProofImage = state.uploadedProofDataUrl;
-            order.paymentProofNote = senderNote;
-            order.paymentProofUploadedAt = getFormattedNow();
-            order.paymentDestinationDetail = bankDetail;
-
+            order.bankCode = order.paymentMethod === 'QRIS' ? 'QRIS' : state.selectedBankCode;
+            order.paymentStatus = 'MENUNGGU VERIFIKASI';
+            order.orderStatus = 'Menunggu Verifikasi Pusat';
+            order.proofImage = state.uploadedProofDataUrl;
+            order.proofNote = note;
+            order.proofUploadedAt = getFormattedNow();
+            order.trackingLogs = order.trackingLogs || [];
             order.trackingLogs.push({
                 time: getFormattedNow(),
-                title: 'Bukti Transaksi Diupload Mitra',
-                note: `Metode: ${bankDetail}${senderNote ? ' • Catatan: ' + senderNote : ''} — Menunggu pengecekan & persetujuan Admin Pusat`
+                title: 'Bukti Transaksi Diunggah Mitra',
+                note: `Metode: ${methodLabel}${note ? ` • Catatan: ${note}` : ''}`
             });
 
             saveLocalData();
             syncDocToCloud('orders', order.id, order);
             closePaymentModal();
-
-            const itemSummary = order.items.map(i => `• ${i.name} (${i.qty}x)`).join('\n');
-            const waText = `Halo *${state.waConfig.hqName}*,\n\nSaya telah melakukan pembayaran & *upload bukti transaksi* pada Portal Mitra UGIEE:\n*No. Invoice:* ${order.id}\n*Outlet Mitra:* ${order.outletName} (${order.partnerId})\n*PIC:* ${order.ownerName}\n*Total Tagihan:* ${formatRupiah(order.grandTotal)}\n*Tujuan Pembayaran:* ${bankDetail}\n${senderNote ? `*Catatan Pengirim:* ${senderNote}\n` : ''}\n*Rincian Item:*\n${itemSummary}\n\nMohon dicek dan disetujui pada Dashboard Pusat agar pesanan segera diproses. Terima kasih!`;
-
-            logWhatsAppNotification('MITRA -> PUSAT', state.waConfig.hqName, state.waConfig.hqPhone, order.id, waText);
-
-            const waUrl = `https://wa.me/${formatWaInternational(state.waConfig.hqPhone)}?text=${encodeURIComponent(waText)}`;
-            document.getElementById('wa-banner-title').textContent = 'Bukti Transaksi Berhasil Diupload!';
-            document.getElementById('wa-banner-desc').textContent = `Bukti pembayaran untuk ${order.id} telah masuk ke antrean verifikasi Admin Pusat. Pesanan akan diproses setelah dicek & disetujui.`;
-            document.getElementById('wa-banner-preview').textContent = waText;
-            document.getElementById('wa-banner-direct-link').href = waUrl;
-            document.getElementById('wa-banner-cta-text').textContent = `Konfirmasi ke WA Admin Pusat (${state.waConfig.hqPhone})`;
-
-            const bannerModal = document.getElementById('wa-confirm-banner-modal');
-            bannerModal.classList.remove('hidden');
-            bannerModal.classList.add('flex');
-
             refreshActiveScreenUI();
+
+            // Siapkan pesan WhatsApp otomatis ke Admin Pusat
+            const waText = `Halo Admin Logistik UGIEE Pusat,\n\nSaya dari *${order.outletName}* (${order.ownerName}) telah melakukan pembayaran & mengunggah bukti transaksi untuk pesanan:\n• No. Invoice: *${order.id}*\n• Total Tagihan: *${formatRupiah(order.grandTotal)}*\n• Metode Bayar: *${methodLabel}*\n${note ? `• Catatan: ${note}\n` : ''}\nMohon diverifikasi & diproses pengiriman bahan bakunya. Terima kasih!`;
+
+            logWhatsAppGateway(order.id, order.outletName, state.waConfig.hqPhone, 'Konfirmasi Bukti Bayar Mitra -> Pusat', waText);
+            openWaConfirmBanner(
+                'Bukti Pembayaran Terkirim!',
+                `Bukti transaksi ${order.id} telah tercatat di sistem Pusat. Klik tombol di bawah untuk mengirim notifikasi langsung ke WhatsApp Admin Pusat (${state.waConfig.hqPhone}).`,
+                waText,
+                state.waConfig.hqPhone,
+                'Kirim Konfirmasi ke WA Admin Pusat'
+            );
         };
 
-        window.closeWaConfirmBanner = function() {
-            const bannerModal = document.getElementById('wa-confirm-banner-modal');
-            bannerModal.classList.add('hidden');
-            bannerModal.classList.remove('flex');
+        // Verifikasi Bukti Pembayaran oleh Admin Pusat
+        window.openHqVerifyProofModal = function(orderId) {
+            const order = state.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            document.getElementById('hq-vp-order-id').value = order.id;
+            document.getElementById('hq-vp-subtitle').textContent = `${order.id} • ${order.createdAt}`;
+            document.getElementById('hq-vp-outlet').textContent = order.outletName;
+            document.getElementById('hq-vp-pic').textContent = `${order.ownerName} (${order.partnerPhone})`;
+            document.getElementById('hq-vp-amount').textContent = formatRupiah(order.grandTotal);
+            document.getElementById('hq-vp-method').textContent = order.paymentMethod === 'QRIS'
+                ? 'QRIS UGIEE Signature'
+                : `${BANK_ACCOUNTS[order.bankCode]?.name || order.bankCode || 'Transfer Bank'}`;
+            document.getElementById('hq-vp-upload-time').textContent = order.proofUploadedAt ? `Diunggah: ${order.proofUploadedAt}` : 'Belum ada waktu unggah';
+            document.getElementById('hq-vp-admin-note').value = '';
+
+            const imgContainer = document.getElementById('hq-vp-image-container');
+            if (order.proofImage) {
+                imgContainer.innerHTML = `<img src="${order.proofImage}" alt="Bukti Transfer ${order.id}" class="max-h-72 w-auto rounded-xl shadow-sm object-contain">`;
+            } else {
+                imgContainer.innerHTML = `<div class="text-center text-slate-400 py-8"><i class="fa-regular fa-image text-3xl mb-1"></i><p>Mitra belum mengunggah foto bukti transaksi.</p></div>`;
+            }
+
+            const noteEl = document.getElementById('hq-vp-note');
+            if (order.proofNote) {
+                noteEl.textContent = `Catatan dari Mitra: "${order.proofNote}"`;
+                noteEl.classList.remove('hidden');
+            } else {
+                noteEl.classList.add('hidden');
+            }
+
+            const modal = document.getElementById('hq-verify-proof-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         };
 
-        // ==================== 11. MITRA ORDERS & DIGITAL INVOICE MODAL ====================
+        window.closeHqVerifyProofModal = function() {
+            const modal = document.getElementById('hq-verify-proof-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.approvePaymentProof = function() {
+            const orderId = document.getElementById('hq-vp-order-id').value;
+            const adminNote = document.getElementById('hq-vp-admin-note').value.trim();
+            const order = state.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            order.paymentStatus = 'LUNAS';
+            order.orderStatus = 'Diproses Gudang UGIEE';
+            order.trackingLogs = order.trackingLogs || [];
+            order.trackingLogs.push({
+                time: getFormattedNow(),
+                title: 'Pembayaran Diverifikasi & Lunas',
+                note: adminNote || 'Bukti transfer/QRIS telah diverifikasi Admin Finance Pusat. Pesanan masuk antrean packing gudang.'
+            });
+
+            saveLocalData();
+            syncDocToCloud('orders', order.id, order);
+            closeHqVerifyProofModal();
+            refreshActiveScreenUI();
+
+            const waText = `Halo *${order.outletName}* (${order.ownerName}),\n\nPembayaran untuk pesanan *${order.id}* sebesar *${formatRupiah(order.grandTotal)}* telah *DIVERIFIKASI & LUNAS* oleh Admin Pusat UGIEE.\nPesanan bahan baku Anda kini sedang diproses/packing oleh Gudang Pusat. Terima kasih!`;
+            logWhatsAppGateway(order.id, order.outletName, order.partnerPhone, 'Verifikasi Pembayaran Lunas -> Mitra', waText);
+            showToast(`Pembayaran ${order.id} disetujui & masuk proses gudang!`, 'success');
+        };
+
+        window.rejectPaymentProof = function() {
+            const orderId = document.getElementById('hq-vp-order-id').value;
+            const adminNote = document.getElementById('hq-vp-admin-note').value.trim() || 'Bukti transfer tidak terbaca / nominal belum sesuai. Mohon unggah ulang bukti yang valid.';
+            const order = state.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            order.paymentStatus = 'DITOLAK / UPLOAD ULANG';
+            order.orderStatus = 'Menunggu Pembayaran';
+            order.trackingLogs = order.trackingLogs || [];
+            order.trackingLogs.push({
+                time: getFormattedNow(),
+                title: 'Bukti Transaksi Ditolak Admin Pusat',
+                note: adminNote
+            });
+
+            saveLocalData();
+            syncDocToCloud('orders', order.id, order);
+            closeHqVerifyProofModal();
+            refreshActiveScreenUI();
+
+            const waText = `Halo *${order.outletName}*,\n\nBukti pembayaran untuk pesanan *${order.id}* belum dapat disetujui dengan catatan: _${adminNote}_.\nSilakan masuk ke Portal Mitra UGIEE untuk mengunggah ulang bukti transfer yang valid.`;
+            logWhatsAppGateway(order.id, order.outletName, order.partnerPhone, 'Penolakan Bukti Bayar -> Mitra', waText);
+            showToast(`Bukti pembayaran ${order.id} ditolak, mitra diminta upload ulang.`, 'warning');
+        };
+
+        // ==================== 11. MITRA ORDER HISTORY & DIGITAL INVOICE MODAL ====================
+        function getStatusBadgeHtml(order) {
+            if (order.paymentStatus === 'MENUNGGU VERIFIKASI') {
+                return `<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 font-extrabold text-[11px]"><i class="fa-solid fa-hourglass-half mr-1"></i>Menunggu Verifikasi Pusat</span>`;
+            }
+            if (order.paymentStatus !== 'LUNAS') {
+                return `<span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-[11px]"><i class="fa-solid fa-clock mr-1"></i>${order.paymentStatus}</span>`;
+            }
+            if (order.orderStatus === 'Selesai') {
+                return `<span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-extrabold text-[11px]"><i class="fa-solid fa-circle-check mr-1"></i>Selesai Diterima</span>`;
+            }
+            if (order.orderStatus === 'Dalam Pengiriman Ekspedisi') {
+                return `<span class="px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 border border-sky-200 font-extrabold text-[11px]"><i class="fa-solid fa-truck-fast mr-1"></i>Dalam Pengiriman</span>`;
+            }
+            return `<span class="px-2.5 py-1 rounded-full bg-ugiee-100 text-ugiee-800 border border-ugiee-200 font-extrabold text-[11px]"><i class="fa-solid fa-box-open mr-1"></i>${order.orderStatus}</span>`;
+        }
+
         function renderMitraOrders() {
             const container = document.getElementById('orders-list');
             if (!container || !state.currentUser) return;
@@ -4077,82 +4163,91 @@
             const myOrders = state.orders.filter(o => o.partnerId === state.currentUser.id);
             if (myOrders.length === 0) {
                 container.innerHTML = `
-                    <div class="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-3">
-                        <i class="fa-solid fa-box-open text-4xl text-slate-300"></i>
-                        <h3 class="text-base font-extrabold text-slate-800">Belum Ada Riwayat Pemesanan</h3>
-                        <p class="text-xs text-slate-500 max-w-md mx-auto">Mulai pesan tepung premiks, sirup aren, bubuk minuman, atau kemasan cup untuk outlet Anda.</p>
+                    <div class="bg-white rounded-3xl p-10 text-center border border-slate-200 space-y-3">
+                        <i class="fa-solid fa-receipt text-4xl text-slate-300"></i>
+                        <h3 class="text-base font-extrabold text-slate-800">Belum Ada Riwayat Pesanan</h3>
+                        <p class="text-xs text-slate-500 max-w-md mx-auto">Anda belum pernah melakukan pemesanan bahan baku dari katalog pusat. Mulai order stok pertama outlet Anda sekarang.</p>
                         <button onclick="switchMainView('catalog')" class="px-5 py-2.5 rounded-xl bg-ugiee-600 text-white font-bold text-xs">Buka Katalog Bahan Baku</button>
                     </div>`;
                 return;
             }
 
-            container.innerHTML = myOrders.map(o => {
-                const isPaid = o.paymentStatus === 'LUNAS';
-                const isPendingVerify = o.paymentStatus === 'MENUNGGU_VERIFIKASI';
-                const isRejected = o.paymentStatus === 'DITOLAK';
-
-                const statusColors = {
-                    'Menunggu Pembayaran': 'bg-amber-100 text-amber-800 border-amber-200',
-                    'Menunggu Verifikasi Admin Pusat': 'bg-purple-100 text-purple-800 border-purple-200',
-                    'Bukti Pembayaran Ditolak': 'bg-rose-100 text-rose-800 border-rose-200',
-                    'Diproses Gudang UGIEE': 'bg-sky-100 text-sky-800 border-sky-200',
-                    'Dalam Pengiriman Ekspedisi': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-                    'Selesai': 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                };
-
-                let payBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700">BELUM UPLOAD BUKTI</span>`;
-                if (isPaid) {
-                    payBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700">LUNAS &amp; DISETUJUI</span>`;
-                } else if (isPendingVerify) {
-                    payBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-50 text-purple-700">MENUNGGU CEK PUSAT</span>`;
-                } else if (isRejected) {
-                    payBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800">BUKTI DITOLAK — UPLOAD ULANG</span>`;
-                }
+            container.innerHTML = myOrders.map(order => {
+                const needPayment = order.paymentStatus !== 'LUNAS' && order.paymentStatus !== 'MENUNGGU VERIFIKASI';
+                const waConfirmMsg = encodeURIComponent(`Halo Admin UGIEE Pusat, saya ingin konfirmasi pesanan *${order.id}* dari *${order.outletName}* senilai *${formatRupiah(order.grandTotal)}*.`);
+                const waUrl = `https://wa.me/${formatWaInternational(state.waConfig.hqPhone)}?text=${waConfirmMsg}`;
 
                 return `
                     <div class="bg-white rounded-3xl border border-ugiee-200/80 shadow-xs p-5 sm:p-6 space-y-4">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                             <div>
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <span class="font-mono font-black text-sm text-ugiee-950">${o.id}</span>
-                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${statusColors[o.orderStatus] || 'bg-slate-100 text-slate-700'}">
-                                        ${o.orderStatus}
-                                    </span>
-                                    ${payBadgeHtml}
+                                    <span class="font-mono font-black text-sm text-ugiee-900">${order.id}</span>
+                                    ${getStatusBadgeHtml(order)}
                                 </div>
-                                <p class="text-[11px] text-slate-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${o.createdAt} • ${o.courierName}</p>
+                                <p class="text-[11px] text-slate-500 mt-1">${order.createdAt} • Ekspedisi: <strong>${order.courierName}</strong></p>
                             </div>
-
-                            <div class="flex flex-wrap items-center gap-2">
-                                ${!isPaid ? `
-                                    <button type="button" onclick="openPaymentModal('${o.id}')" class="px-4 py-2 rounded-xl ${isPendingVerify ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-amberbrand-500 hover:bg-amberbrand-600 text-ugiee-950'} font-extrabold text-xs shadow-xs transition">
-                                        <i class="fa-solid ${isPendingVerify ? 'fa-rotate' : 'fa-file-arrow-up'} mr-1"></i> ${isPendingVerify ? 'Ganti Bukti Bayar' : 'Bayar & Upload Bukti'}
-                                    </button>
-                                ` : ''}
-                                <button type="button" onclick="openInvoiceModal('${o.id}')" class="px-4 py-2 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-xs transition flex items-center gap-1.5">
-                                    <i class="fa-solid fa-file-invoice"></i> Detail, Bukti &amp; Invoice
-                                </button>
+                            <div class="sm:text-right">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Tagihan</span>
+                                <span class="text-lg font-black text-ugiee-950">${formatRupiah(order.grandTotal)}</span>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center text-xs">
                             <div class="md:col-span-7 space-y-1">
-                                <p class="font-bold text-slate-700">Rincian Bahan Baku (${o.items.length} SKU • ${o.totalWeight} kg):</p>
-                                <p class="text-slate-600 line-clamp-2">${o.items.map(i => `${i.name} (${i.qty}x)`).join(', ')}</p>
+                                <p class="font-bold text-slate-700">Rincian Item (${order.items.length} SKU • ${order.totalWeight} kg):</p>
+                                <div class="flex flex-wrap gap-1.5">
+                                    ${order.items.map(it => `<span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-medium">${it.qty}x ${it.name}</span>`).join('')}
+                                </div>
                             </div>
-                            <div class="md:col-span-3">
-                                <span class="text-[10px] uppercase font-bold text-slate-400 block">Nomor Resi Kargo</span>
-                                <span class="font-mono font-extrabold text-ugiee-900">${o.resiNumber || '-'}</span>
+                            <div class="md:col-span-5 bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 block">Nomor Resi / Surat Jalan</span>
+                                <span class="font-mono font-black text-sm text-slate-900">${order.resiNumber || '-'}</span>
+                                <p class="text-[10px] text-slate-500 mt-0.5 truncate">${order.address}</p>
                             </div>
-                            <div class="md:col-span-2 md:text-right">
-                                <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Tagihan</span>
-                                <span class="text-base font-black text-ugiee-950">${formatRupiah(o.grandTotal)}</span>
+                        </div>
+
+                        <div class="pt-2 flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                ${needPayment ? `
+                                    <button onclick="openPaymentModal('${order.id}')" class="px-4 py-2 rounded-xl bg-amberbrand-500 hover:bg-amberbrand-600 text-ugiee-950 font-extrabold text-xs shadow-xs transition flex items-center gap-1.5">
+                                        <i class="fa-solid fa-upload"></i> Bayar &amp; Upload Bukti
+                                    </button>
+                                ` : ''}
+                                <button onclick="openInvoiceModal('${order.id}')" class="px-4 py-2 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-xs transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-file-invoice"></i> Invoice &amp; Lacak Resi
+                                </button>
+                                <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 font-bold text-xs transition flex items-center gap-1.5">
+                                    <i class="fa-brands fa-whatsapp text-sm"></i> Konfirmasi WA Pusat
+                                </a>
                             </div>
+
+                            ${order.orderStatus === 'Dalam Pengiriman Ekspedisi' ? `
+                                <button onclick="confirmOrderReceivedByMitra('${order.id}')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-box-check"></i> Konfirmasi Pesanan Diterima
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 `;
             }).join('');
         }
+
+        window.confirmOrderReceivedByMitra = function(orderId) {
+            const order = state.orders.find(o => o.id === orderId);
+            if (!order) return;
+            order.orderStatus = 'Selesai';
+            order.trackingLogs = order.trackingLogs || [];
+            order.trackingLogs.push({
+                time: getFormattedNow(),
+                title: 'Pesanan Diterima Outlet Mitra',
+                note: `Dikonfirmasi diterima dalam kondisi baik oleh ${order.ownerName}`
+            });
+            saveLocalData();
+            syncDocToCloud('orders', order.id, order);
+            refreshActiveScreenUI();
+            showToast(`Terima kasih! Pesanan ${order.id} telah ditandai Selesai.`, 'success');
+        };
 
         window.openInvoiceModal = function(orderId) {
             const order = state.orders.find(o => o.id === orderId);
@@ -4160,112 +4255,114 @@
 
             const isHQ = state.currentUser && state.currentUser.role === 'PUSAT';
             const targetPhone = isHQ ? order.partnerPhone : state.waConfig.hqPhone;
-            const waBtnLabel = document.getElementById('invoice-wa-btn-label');
-            if (waBtnLabel) waBtnLabel.textContent = isHQ ? 'Kirim Resi ke WA Mitra' : 'Konfirmasi ke WA Pusat';
+            const waText = isHQ
+                ? `Halo *${order.outletName}* (${order.ownerName}), berikut info pesanan *${order.id}*:\n• Status: *${order.orderStatus}*\n• No. Resi: *${order.resiNumber}*\n• Total: *${formatRupiah(order.grandTotal)}*`
+                : `Halo Admin UGIEE Pusat, konfirmasi pesanan *${order.id}* dari *${order.outletName}* senilai *${formatRupiah(order.grandTotal)}*.`;
 
-            const waMsg = isHQ
-                ? `Halo *${order.ownerName} (${order.outletName})*,\n\nUpdate Status Pengiriman Bahan Baku UGIEE:\n*No. Invoice:* ${order.id}\n*Status:* ${order.orderStatus}\n*Ekspedisi:* ${order.courierName}\n*No. Resi:* ${order.resiNumber}\n\nTerima kasih telah bermitra dengan UGIEE!`
-                : `Halo *${state.waConfig.hqName}*,\n\nSaya dari *${order.outletName}* (${order.partnerId}) ingin mengonfirmasi pesanan:\n*No. Invoice:* ${order.id}\n*Total:* ${formatRupiah(order.grandTotal)}\n*Status:* ${order.paymentStatus}\n\nMohon info update pengiriman. Terima kasih!`;
-
-            document.getElementById('invoice-wa-direct-btn').href = `https://wa.me/${formatWaInternational(targetPhone)}?text=${encodeURIComponent(waMsg)}`;
+            const waBtn = document.getElementById('invoice-wa-direct-btn');
+            const waLbl = document.getElementById('invoice-wa-btn-label');
+            waBtn.href = `https://wa.me/${formatWaInternational(targetPhone)}?text=${encodeURIComponent(waText)}`;
+            waLbl.textContent = isHQ ? 'Kirim Resi ke WA Mitra' : 'Konfirmasi WA Pusat';
 
             document.getElementById('printable-invoice').innerHTML = `
+                <!-- Header Invoice Resmi UGIEE -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b-2 border-ugiee-700">
                     <div class="flex items-center gap-3">
                         <div class="w-11 h-11 rounded-2xl bg-ugiee-700 text-amberbrand-400 flex items-center justify-center text-xl font-black">
                             <i class="fa-solid fa-boxes-stacked"></i>
                         </div>
                         <div>
-                            <h2 class="text-lg font-black text-ugiee-950 tracking-tight">PT UGIEE MABBARAKKA INDONESIA</h2>
-                            <p class="text-[11px] text-slate-500">Supply Chain &amp; Distribusi Bahan Baku Kemitraan • Makassar</p>
+                            <h2 class="text-lg font-black text-ugiee-950 tracking-tight">INVOICE DISTRIBUSI B2B UGIEE</h2>
+                            <p class="text-[11px] text-slate-500">UGIEE! SIGNATURE Supply Chain • Gudang Pusat Makassar</p>
                         </div>
                     </div>
                     <div class="sm:text-right">
-                        <span class="px-3 py-1 rounded-lg bg-ugiee-100 text-ugiee-900 font-mono font-black text-sm">${order.id}</span>
-                        <p class="text-[11px] text-slate-500 mt-1">${order.createdAt}</p>
+                        <span class="font-mono font-black text-base text-ugiee-900 block">${order.id}</span>
+                        <span class="text-xs text-slate-500">${order.createdAt}</span>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
+                <!-- Info Pengirim & Penerima -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
                     <div>
-                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Ditujukan Kepada Mitra</span>
+                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Ditagihkan &amp; Dikirim Kepada</span>
                         <p class="font-extrabold text-slate-900 text-sm mt-0.5">${order.outletName}</p>
                         <p class="text-slate-600">PIC: ${order.ownerName} (${order.partnerPhone})</p>
                         <p class="text-slate-600 mt-1">${order.address}</p>
                     </div>
-                    <div class="sm:text-right space-y-1">
-                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Detail Pengiriman &amp; Pembayaran</span>
-                        <p class="font-bold text-slate-800">${order.courierName}</p>
-                        <p class="font-mono font-extrabold text-ugiee-800">Resi: ${order.resiNumber || '-'}</p>
-                        <p class="text-slate-600">Metode: <strong>${order.paymentDestinationDetail || order.paymentMethod}</strong> (${order.paymentStatus})</p>
+                    <div class="sm:text-right">
+                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Detail Logistik &amp; Pembayaran</span>
+                        <p class="font-bold text-slate-800 mt-0.5">Ekspedisi: ${order.courierName}</p>
+                        <p class="font-mono font-black text-ugiee-800">Resi: ${order.resiNumber || '-'}</p>
+                        <p class="mt-1 font-bold ${order.paymentStatus === 'LUNAS' ? 'text-emerald-700' : 'text-amber-700'}">
+                            Status Bayar: ${order.paymentStatus} (${order.paymentMethod})
+                        </p>
                     </div>
                 </div>
 
-                ${order.paymentProofImage ? `
-                    <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 no-print">
-                        <div class="space-y-1 text-xs">
-                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">BUKTI TRANSAKSI TERLAMPIR</span>
-                            <p class="font-bold text-slate-900">Waktu Upload: ${order.paymentProofUploadedAt || '-'}</p>
-                            ${order.paymentProofNote ? `<p class="text-slate-600">Catatan Mitra: ${order.paymentProofNote}</p>` : ''}
-                        </div>
-                        <img src="${order.paymentProofImage}" alt="Bukti Transaksi" class="h-28 w-auto rounded-xl border border-slate-300 bg-white object-contain shadow-xs">
-                    </div>
-                ` : ''}
-
-                <div class="overflow-x-auto">
+                <!-- Tabel Item Bahan Baku -->
+                <div class="overflow-x-auto border border-slate-200 rounded-2xl">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="bg-ugiee-700 text-white">
-                                <th class="py-2.5 px-3 rounded-tl-xl">SKU</th>
-                                <th class="py-2.5 px-3">Nama Bahan Baku</th>
+                            <tr class="bg-ugiee-700 text-white uppercase text-[10px]">
+                                <th class="py-2.5 px-4">SKU</th>
+                                <th class="py-2.5 px-4">Nama Bahan Baku</th>
                                 <th class="py-2.5 px-3 text-center">Qty</th>
-                                <th class="py-2.5 px-3 text-right">Harga Satuan</th>
-                                <th class="py-2.5 px-3 text-right rounded-tr-xl">Subtotal</th>
+                                <th class="py-2.5 px-4 text-right">Harga Satuan</th>
+                                <th class="py-2.5 px-4 text-right">Subtotal</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-200">
-                            ${order.items.map(item => `
+                        <tbody class="divide-y divide-slate-100">
+                            ${order.items.map(it => `
                                 <tr>
-                                    <td class="py-2.5 px-3 font-mono font-bold text-ugiee-800">${item.sku}</td>
-                                    <td class="py-2.5 px-3 font-semibold text-slate-800">${item.name}</td>
-                                    <td class="py-2.5 px-3 text-center font-bold">${item.qty}</td>
-                                    <td class="py-2.5 px-3 text-right">${formatRupiah(item.price)}</td>
-                                    <td class="py-2.5 px-3 text-right font-bold text-slate-900">${formatRupiah(item.price * item.qty)}</td>
+                                    <td class="py-2.5 px-4 font-mono font-bold text-ugiee-800">${it.sku}</td>
+                                    <td class="py-2.5 px-4 font-semibold text-slate-900">${it.name}</td>
+                                    <td class="py-2.5 px-3 text-center font-bold">${it.qty}</td>
+                                    <td class="py-2.5 px-4 text-right">${formatRupiah(it.price)}</td>
+                                    <td class="py-2.5 px-4 text-right font-bold">${formatRupiah(it.price * it.qty)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
                 </div>
 
-                <div class="flex flex-col sm:flex-row justify-between gap-4 pt-3 border-t border-slate-200 text-xs">
-                    <div class="space-y-2 flex-1 no-print">
-                        <h4 class="font-extrabold text-slate-800 uppercase text-[11px]">Riwayat Pelacakan Logistik</h4>
-                        <div class="space-y-2">
-                            ${(order.trackingLogs || []).map(log => `
-                                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <span class="font-bold text-ugiee-900">${log.title}</span>
-                                        <span class="text-[10px] text-slate-400">${log.time}</span>
-                                    </div>
-                                    <p class="text-[11px] text-slate-600 mt-0.5">${log.note}</p>
-                                </div>
-                            `).join('')}
-                        </div>
+                <!-- Ringkasan Total -->
+                <div class="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-end">
+                    <div class="text-[11px] text-slate-500 max-w-sm">
+                        <p class="font-bold text-slate-700">Catatan Resmi:</p>
+                        <p>Dokumen invoice &amp; surat jalan digital ini sah diterbitkan otomatis oleh sistem UGIEE Supply Chain Portal.</p>
                     </div>
-
-                    <div class="w-full sm:w-64 space-y-1.5 bg-ugiee-50 p-4 rounded-2xl border border-ugiee-200 self-start">
+                    <div class="w-full sm:w-72 space-y-1.5 text-xs bg-ugiee-50 p-4 rounded-2xl border border-ugiee-200">
                         <div class="flex justify-between text-slate-600">
                             <span>Subtotal Produk</span>
-                            <span class="font-bold">${formatRupiah(order.subtotal)}</span>
+                            <span class="font-bold text-slate-900">${formatRupiah(order.subtotal)}</span>
                         </div>
                         <div class="flex justify-between text-slate-600">
-                            <span>Ongkir (${order.totalWeight} kg)</span>
-                            <span class="font-bold">${formatRupiah(order.shippingFee)}</span>
+                            <span>Ongkos Kirim (${order.totalWeight} kg)</span>
+                            <span class="font-bold text-slate-900">${formatRupiah(order.shippingFee)}</span>
                         </div>
                         <div class="flex justify-between text-sm font-black text-ugiee-950 pt-2 border-t border-ugiee-200">
-                            <span>Total Lunas</span>
+                            <span>TOTAL TAGIHAN</span>
                             <span>${formatRupiah(order.grandTotal)}</span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Pelacakan Logistik -->
+                <div class="pt-4 border-t border-slate-200 space-y-3 no-print">
+                    <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <i class="fa-solid fa-truck-fast text-ugiee-700"></i> Riwayat Pelacakan Pengiriman
+                    </h4>
+                    <div class="space-y-2.5">
+                        ${(order.trackingLogs || []).slice().reverse().map((log, idx) => `
+                            <div class="flex items-start gap-3 text-xs">
+                                <span class="w-2.5 h-2.5 rounded-full ${idx === 0 ? 'bg-emerald-500 ring-4 ring-emerald-100' : 'bg-slate-300'} mt-1 shrink-0"></span>
+                                <div>
+                                    <p class="font-extrabold text-slate-900">${log.title} <span class="font-normal text-[10px] text-slate-400 ml-1">(${log.time})</span></p>
+                                    <p class="text-slate-600 text-[11px]">${log.note}</p>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
@@ -4281,8 +4378,8 @@
             modal.classList.remove('flex');
         };
 
-        // ==================== 12. PUSAT (HQ) DASHBOARD, ANALYTICS, MAP & MANAGEMENT ====================
-        window.switchHqTab = function(tabName) {
+        // ==================== 12. HQ (PUSAT) DASHBOARD, PERIOD FILTER & CHARTS ====================
+        window.switchHqTab = function(tab) {
             const tabs = {
                 overview: document.getElementById('hq-overview-tab'),
                 partners: document.getElementById('hq-partners-tab'),
@@ -4291,444 +4388,274 @@
                 admins: document.getElementById('hq-admins-tab')
             };
             Object.entries(tabs).forEach(([k, el]) => {
-                if (el) el.classList.toggle('hidden', k !== tabName);
+                if (el) el.classList.toggle('hidden', k !== tab);
             });
 
-            const deskBtns = {
+            const navBtns = {
                 overview: document.getElementById('nav-hq-overview-btn'),
                 partners: document.getElementById('nav-hq-partners-btn'),
                 products: document.getElementById('nav-hq-products-btn'),
                 recipes: document.getElementById('nav-hq-recipes-btn'),
                 admins: document.getElementById('nav-hq-admins-btn')
             };
-            Object.entries(deskBtns).forEach(([k, btn]) => {
+            Object.entries(navBtns).forEach(([k, btn]) => {
                 if (!btn) return;
-                btn.className = k === tabName
+                btn.className = k === tab
                     ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amberbrand-500 text-ugiee-950 transition flex items-center gap-1.5'
                     : 'px-3 py-1.5 rounded-lg text-xs font-semibold text-ugiee-200 hover:text-white transition flex items-center gap-1.5';
             });
 
-            const mobBtns = {
+            const bnavBtns = {
                 overview: document.getElementById('bnav-hq-overview'),
                 partners: document.getElementById('bnav-hq-partners'),
                 products: document.getElementById('bnav-hq-products'),
                 recipes: document.getElementById('bnav-hq-recipes'),
                 admins: document.getElementById('bnav-hq-admins')
             };
-            Object.entries(mobBtns).forEach(([k, btn]) => {
+            Object.entries(bnavBtns).forEach(([k, btn]) => {
                 if (!btn) return;
-                btn.className = k === tabName
+                btn.className = k === tab
                     ? 'flex flex-col items-center justify-center gap-0.5 rounded-xl text-ugiee-800 font-extrabold text-[9px]'
                     : 'flex flex-col items-center justify-center gap-0.5 rounded-xl text-slate-500 font-semibold text-[9px]';
             });
 
-            if (tabName === 'overview') {
+            if (tab === 'overview') {
                 renderHqDashboard();
                 setTimeout(() => {
                     renderHqPartnersMap();
                     if (state.mapInstance) state.mapInstance.invalidateSize();
                 }, 120);
-            } else if (tabName === 'partners') {
+            } else if (tab === 'partners') {
                 renderHqPartnersDatabase();
-            } else if (tabName === 'products') {
+            } else if (tab === 'products') {
                 renderHqProductsTable();
-            } else if (tabName === 'recipes') {
+            } else if (tab === 'recipes') {
                 renderHqRecipesGrid();
-            } else if (tabName === 'admins') {
+            } else if (tab === 'admins') {
                 renderHqAdminsTable();
             }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        const MONTH_MAP_ID = {
-            jan: 1, januari: 1,
-            feb: 2, februari: 2,
-            mar: 3, maret: 3,
-            apr: 4, april: 4,
-            mei: 5, may: 5,
-            jun: 6, juni: 6,
-            jul: 7, juli: 7,
-            agu: 8, agt: 8, agustus: 8, aug: 8,
-            sep: 9, september: 9,
-            okt: 10, oktober: 10, oct: 10,
-            nov: 11, november: 11,
-            des: 12, desember: 12, dec: 12
-        };
-
-        const MONTH_NAMES_FULL = [
-            '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ];
-
-        function parseOrderDateParts(order) {
-            if (!order) return null;
-            if (order.isoDate) {
-                const d = new Date(order.isoDate);
-                if (!isNaN(d.getTime())) {
-                    return { day: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear() };
-                }
-            }
-            const raw = String(order.createdAt || '').trim();
-            const matchId = raw.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
-            if (matchId) {
-                const day = parseInt(matchId[1], 10);
-                const mStr = matchId[2].toLowerCase();
-                const month = MONTH_MAP_ID[mStr] || 0;
-                const year = parseInt(matchId[3], 10);
-                if (day && month && year) return { day, month, year };
-            }
-            const matchIso = raw.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
-            if (matchIso) {
-                return {
-                    year: parseInt(matchIso[1], 10),
-                    month: parseInt(matchIso[2], 10),
-                    day: parseInt(matchIso[3], 10)
-                };
-            }
-            const matchSlash = raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-            if (matchSlash) {
-                return {
-                    day: parseInt(matchSlash[1], 10),
-                    month: parseInt(matchSlash[2], 10),
-                    year: parseInt(matchSlash[3], 10)
-                };
-            }
-            return null;
-        }
-
-        function initHqPeriodFilterDropdowns() {
+        function populateHqPeriodDropdowns() {
             const daySelect = document.getElementById('hq-filter-day');
             const yearSelect = document.getElementById('hq-filter-year');
-            if (daySelect && daySelect.options.length <= 1) {
-                let dayOpts = '<option value="ALL">Semua Tgl</option>';
+            if (daySelect) {
+                let daysHtml = '<option value="ALL">Semua Tgl</option>';
                 for (let d = 1; d <= 31; d++) {
-                    dayOpts += `<option value="${d}">${String(d).padStart(2, '0')}</option>`;
+                    daysHtml += `<option value="${d}">${String(d).padStart(2, '0')}</option>`;
                 }
-                daySelect.innerHTML = dayOpts;
+                daySelect.innerHTML = daysHtml;
             }
             if (yearSelect) {
                 const currentYear = new Date().getFullYear();
-                const yearSet = new Set([currentYear - 1, currentYear, currentYear + 1, 2025, 2026]);
-                state.orders.forEach(o => {
-                    const parts = parseOrderDateParts(o);
-                    if (parts && parts.year) yearSet.add(parts.year);
-                });
-                const sortedYears = Array.from(yearSet).sort((a, b) => b - a);
-                const prevVal = state.hqFilterYear || 'ALL';
-                yearSelect.innerHTML = '<option value="ALL">Semua Tahun</option>' +
-                    sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
-                yearSelect.value = prevVal;
+                let yearsHtml = '<option value="ALL">Semua Tahun</option>';
+                for (let y = currentYear; y >= 2024; y--) {
+                    yearsHtml += `<option value="${y}">${y}</option>`;
+                }
+                yearSelect.innerHTML = yearsHtml;
             }
         }
 
-        function getPeriodFilteredOrders() {
-            const dFilter = state.hqFilterDay;
-            const mFilter = state.hqFilterMonth;
-            const yFilter = state.hqFilterYear;
+        function parseOrderDateParts(dateStr) {
+            const monthMap = {
+                jan: 1, feb: 2, mar: 3, apr: 4, mei: 5, may: 5, jun: 6,
+                jul: 7, agu: 8, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, des: 12, dec: 12
+            };
+            const match = String(dateStr || '').match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/);
+            if (!match) return null;
+            return {
+                day: parseInt(match[1], 10),
+                month: monthMap[match[2].toLowerCase()] || 1,
+                year: parseInt(match[3], 10)
+            };
+        }
 
-            if (dFilter === 'ALL' && mFilter === 'ALL' && yFilter === 'ALL') {
-                return state.orders;
-            }
-
+        function getFilteredOrdersByPeriod() {
             return state.orders.filter(o => {
-                const parts = parseOrderDateParts(o);
-                if (!parts) return false;
-                if (dFilter !== 'ALL' && parts.day !== parseInt(dFilter, 10)) return false;
-                if (mFilter !== 'ALL' && parts.month !== parseInt(mFilter, 10)) return false;
-                if (yFilter !== 'ALL' && parts.year !== parseInt(yFilter, 10)) return false;
+                if (state.hqFilterDay === 'ALL' && state.hqFilterMonth === 'ALL' && state.hqFilterYear === 'ALL') {
+                    return true;
+                }
+                const parts = parseOrderDateParts(o.createdAt);
+                if (!parts) return true;
+                if (state.hqFilterDay !== 'ALL' && parts.day !== Number(state.hqFilterDay)) return false;
+                if (state.hqFilterMonth !== 'ALL' && parts.month !== Number(state.hqFilterMonth)) return false;
+                if (state.hqFilterYear !== 'ALL' && parts.year !== Number(state.hqFilterYear)) return false;
                 return true;
             });
         }
 
-        function updateHqPeriodBadgeLabel() {
-            const badge = document.getElementById('hq-period-active-badge');
-            if (!badge) return;
-            const d = state.hqFilterDay;
-            const m = state.hqFilterMonth;
-            const y = state.hqFilterYear;
-
-            if (d === 'ALL' && m === 'ALL' && y === 'ALL') {
-                badge.textContent = 'Semua Periode';
-                badge.className = 'px-2.5 py-0.5 rounded-full bg-ugiee-100 text-ugiee-800 text-[10px] font-extrabold';
-                return;
-            }
-
-            const chunks = [];
-            if (d !== 'ALL') chunks.push(`Tgl ${String(d).padStart(2, '0')}`);
-            if (m !== 'ALL') chunks.push(MONTH_NAMES_FULL[parseInt(m, 10)] || `Bulan ${m}`);
-            if (y !== 'ALL') chunks.push(y);
-
-            badge.textContent = 'Filter: ' + chunks.join(' • ');
-            badge.className = 'px-2.5 py-0.5 rounded-full bg-amberbrand-500 text-ugiee-950 text-[10px] font-extrabold';
-        }
-
         window.handleHqPeriodFilterChange = function() {
-            state.hqFilterDay = document.getElementById('hq-filter-day')?.value || 'ALL';
-            state.hqFilterMonth = document.getElementById('hq-filter-month')?.value || 'ALL';
-            state.hqFilterYear = document.getElementById('hq-filter-year')?.value || 'ALL';
-            updateHqPeriodBadgeLabel();
+            state.hqFilterDay = document.getElementById('hq-filter-day').value;
+            state.hqFilterMonth = document.getElementById('hq-filter-month').value;
+            state.hqFilterYear = document.getElementById('hq-filter-year').value;
+
+            const badge = document.getElementById('hq-period-active-badge');
+            const labels = [];
+            if (state.hqFilterDay !== 'ALL') labels.push(`Tgl ${state.hqFilterDay}`);
+            if (state.hqFilterMonth !== 'ALL') {
+                const mNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                labels.push(mNames[Number(state.hqFilterMonth)]);
+            }
+            if (state.hqFilterYear !== 'ALL') labels.push(state.hqFilterYear);
+            badge.textContent = labels.length > 0 ? labels.join(' ') : 'Semua Periode';
+
             renderHqDashboard();
-            renderHqPartnersMap();
             renderHqPartnersDatabase();
+            renderHqPartnersMap();
         };
 
         window.setHqPeriodToday = function() {
             const now = new Date();
-            const d = String(now.getDate());
-            const m = String(now.getMonth() + 1);
-            const y = String(now.getFullYear());
-
-            initHqPeriodFilterDropdowns();
-            state.hqFilterDay = d;
-            state.hqFilterMonth = m;
-            state.hqFilterYear = y;
-
-            const dayEl = document.getElementById('hq-filter-day');
-            const monthEl = document.getElementById('hq-filter-month');
-            const yearEl = document.getElementById('hq-filter-year');
-            if (dayEl) dayEl.value = d;
-            if (monthEl) monthEl.value = m;
-            if (yearEl) yearEl.value = y;
-
-            updateHqPeriodBadgeLabel();
-            renderHqDashboard();
-            renderHqPartnersMap();
-            renderHqPartnersDatabase();
-            showToast(`Menampilkan laporan hari ini (${String(d).padStart(2, '0')} ${MONTH_NAMES_FULL[parseInt(m, 10)]} ${y})`, 'info');
+            document.getElementById('hq-filter-day').value = String(now.getDate());
+            document.getElementById('hq-filter-month').value = String(now.getMonth() + 1);
+            document.getElementById('hq-filter-year').value = String(now.getFullYear());
+            handleHqPeriodFilterChange();
+            showToast('Menampilkan laporan transaksi khusus Hari Ini.', 'info');
         };
 
         window.resetHqPeriodFilter = function() {
-            state.hqFilterDay = 'ALL';
-            state.hqFilterMonth = 'ALL';
-            state.hqFilterYear = 'ALL';
-
-            const dayEl = document.getElementById('hq-filter-day');
-            const monthEl = document.getElementById('hq-filter-month');
-            const yearEl = document.getElementById('hq-filter-year');
-            if (dayEl) dayEl.value = 'ALL';
-            if (monthEl) monthEl.value = 'ALL';
-            if (yearEl) yearEl.value = 'ALL';
-
-            updateHqPeriodBadgeLabel();
-            renderHqDashboard();
-            renderHqPartnersMap();
-            renderHqPartnersDatabase();
-            showToast('Filter periode laporan direset ke semua waktu.', 'info');
+            document.getElementById('hq-filter-day').value = 'ALL';
+            document.getElementById('hq-filter-month').value = 'ALL';
+            document.getElementById('hq-filter-year').value = 'ALL';
+            handleHqPeriodFilterChange();
+            showToast('Filter periode direset ke Semua Periode.', 'info');
         };
 
-        window.renderHqDashboard = function() {
-            initHqPeriodFilterDropdowns();
-            updateHqPeriodBadgeLabel();
-            const periodOrders = getPeriodFilteredOrders();
+        function renderHqDashboard() {
+            const periodOrders = getFilteredOrdersByPeriod();
             const paidOrders = periodOrders.filter(o => o.paymentStatus === 'LUNAS');
+
             const totalRevenue = paidOrders.reduce((s, o) => s + (o.subtotal || 0), 0);
             const totalHpp = paidOrders.reduce((s, o) => s + (o.totalHpp || 0), 0);
-            const totalShipping = paidOrders.reduce((s, o) => s + (o.shippingFee || 0), 0);
             const netProfit = totalRevenue - totalHpp;
-            const marginPct = totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0;
+            const marginPct = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : '0.0';
+            const totalShipping = paidOrders.reduce((s, o) => s + (o.shippingFee || 0), 0);
 
             document.getElementById('hq-kpi-revenue').textContent = formatRupiah(totalRevenue);
             document.getElementById('hq-kpi-hpp').textContent = formatRupiah(totalHpp);
             document.getElementById('hq-kpi-profit').textContent = formatRupiah(netProfit);
             document.getElementById('hq-kpi-margin-badge').textContent = `${marginPct}% Margin`;
-            document.getElementById('hq-kpi-orders').textContent = `${periodOrders.length} Order`;
+            document.getElementById('hq-kpi-orders').textContent = `${paidOrders.length} Order`;
             document.getElementById('hq-kpi-shipping').textContent = formatRupiah(totalShipping);
 
-            renderHqProfitChart(periodOrders);
+            renderHqProfitChart(paidOrders, totalRevenue, totalHpp, netProfit);
 
-            // Render Transactions Table
-            const filterVal = document.getElementById('hq-status-filter')?.value || 'ALL';
-            const filteredOrders = periodOrders.filter(o => {
-                if (filterVal === 'PENDING_VERIFY') return o.paymentStatus === 'MENUNGGU_VERIFIKASI';
-                if (filterVal === 'PAID') return o.paymentStatus === 'LUNAS';
-                if (filterVal === 'UNPAID') return o.paymentStatus !== 'LUNAS' && o.paymentStatus !== 'MENUNGGU_VERIFIKASI';
+            // Tabel Transaksi Mitra
+            const statusFilter = document.getElementById('hq-status-filter')?.value || 'ALL';
+            const tableOrders = periodOrders.filter(o => {
+                if (statusFilter === 'PAID') return o.paymentStatus === 'LUNAS';
+                if (statusFilter === 'UNPAID') return o.paymentStatus !== 'LUNAS';
                 return true;
             });
 
             const tbody = document.getElementById('hq-transactions-tbody');
-            if (tbody) {
-                if (filteredOrders.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="py-10 px-6 text-center text-xs text-slate-500 font-semibold">Tidak ada transaksi mitra pada periode atau status yang dipilih.</td></tr>`;
-                } else {
-                tbody.innerHTML = filteredOrders.map(o => {
+            if (!tbody) return;
+
+            if (tableOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400 font-semibold">Belum ada transaksi pada filter periode &amp; status ini.</td></tr>`;
+            } else {
+                tbody.innerHTML = tableOrders.map(o => {
                     const profit = (o.subtotal || 0) - (o.totalHpp || 0);
-                    const isPaid = o.paymentStatus === 'LUNAS';
-                    const isPendingVerify = o.paymentStatus === 'MENUNGGU_VERIFIKASI';
-
-                    let badgeStyle = 'bg-amber-100 text-amber-800';
-                    if (isPaid) badgeStyle = 'bg-emerald-100 text-emerald-800';
-                    else if (isPendingVerify) badgeStyle = 'bg-purple-100 text-purple-800 animate-pulse';
-                    else if (o.paymentStatus === 'DITOLAK') badgeStyle = 'bg-rose-100 text-rose-800';
-
+                    const hasProof = Boolean(o.proofImage) || o.paymentStatus === 'MENUNGGU VERIFIKASI';
                     return `
-                        <tr class="hover:bg-slate-50/80 transition ${isPendingVerify ? 'bg-purple-50/40' : ''}">
+                        <tr class="hover:bg-slate-50/80 transition">
                             <td class="py-3.5 px-5">
-                                <span class="font-mono font-black text-ugiee-950 block">${o.id}</span>
+                                <span class="font-mono font-black text-ugiee-900 block">${o.id}</span>
                                 <span class="text-[11px] text-slate-400">${o.createdAt}</span>
                             </td>
                             <td class="py-3.5 px-4">
                                 <p class="font-extrabold text-slate-900">${o.outletName}</p>
-                                <p class="text-[11px] text-slate-500">${o.ownerName} • <span class="text-emerald-700 font-bold">${o.partnerPhone}</span></p>
+                                <p class="text-[11px] text-slate-500">${o.ownerName} • <span class="text-emerald-700 font-semibold">${o.partnerPhone}</span></p>
                             </td>
                             <td class="py-3.5 px-4 text-right font-bold text-slate-900">${formatRupiah(o.subtotal)}</td>
                             <td class="py-3.5 px-4 text-right font-semibold text-amber-700">${formatRupiah(o.totalHpp)}</td>
                             <td class="py-3.5 px-4 text-right text-slate-600">${formatRupiah(o.shippingFee)}</td>
-                            <td class="py-3.5 px-4 text-right font-black text-emerald-700">+${formatRupiah(profit)}</td>
-                            <td class="py-3.5 px-4 text-center">
-                                <div class="flex flex-col items-center gap-1.5">
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${badgeStyle}">
-                                        ${o.orderStatus}
-                                    </span>
-                                    <span class="font-mono text-[10px] text-slate-500">Resi: ${o.resiNumber || '-'}</span>
-                                    <div class="flex flex-wrap items-center justify-center gap-1.5">
-                                        ${isPendingVerify || o.paymentProofImage ? `
-                                            <button type="button" onclick="openHqVerifyProofModal('${o.id}')" class="px-2.5 py-1 rounded-lg ${isPendingVerify ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-xs' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'} font-extrabold text-[10px] transition">
-                                                <i class="fa-solid fa-file-circle-check mr-1"></i>${isPendingVerify ? 'Cek & Setujui Bukti' : 'Lihat Bukti'}
-                                            </button>
-                                        ` : ''}
-                                        <button type="button" onclick="openHqTrackingModal('${o.id}')" class="px-2.5 py-1 rounded-lg bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[10px] transition">
-                                            <i class="fa-solid fa-truck-fast mr-1"></i>Resi &amp; WA
+                            <td class="py-3.5 px-4 text-right font-black text-ugiee-800">+${formatRupiah(profit)}</td>
+                            <td class="py-3.5 px-4 text-center space-y-1.5">
+                                <div>${getStatusBadgeHtml(o)}</div>
+                                <div class="text-[10px] font-mono font-bold text-slate-500">Resi: ${o.resiNumber || '-'}</div>
+                                <div class="flex flex-wrap items-center justify-center gap-1 pt-0.5">
+                                    ${hasProof ? `
+                                        <button onclick="openHqVerifyProofModal('${o.id}')" class="px-2.5 py-1 rounded-lg ${o.paymentStatus === 'MENUNGGU VERIFIKASI' ? 'bg-amberbrand-500 text-ugiee-950 animate-pulse' : 'bg-slate-100 text-slate-700'} font-extrabold text-[10px] transition">
+                                            <i class="fa-solid fa-file-circle-check mr-0.5"></i> Cek Bukti
                                         </button>
-                                        <button type="button" onclick="openInvoiceModal('${o.id}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px]">
-                                            Invoice
-                                        </button>
-                                    </div>
+                                    ` : ''}
+                                    <button onclick="openHqTrackingModal('${o.id}')" class="px-2.5 py-1 rounded-lg bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[10px] transition">
+                                        <i class="fa-solid fa-truck-fast mr-0.5"></i> Resi &amp; WA
+                                    </button>
+                                    <button onclick="openInvoiceModal('${o.id}')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px]" title="Invoice">
+                                        <i class="fa-solid fa-receipt"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                     `;
                 }).join('');
-                }
             }
 
-            // Render WA Logs
-            const waList = document.getElementById('hq-wa-logs-list');
-            if (waList) {
-                if (state.waLogs.length === 0) {
-                    waList.innerHTML = `<p class="col-span-full text-xs text-slate-500 text-center py-4">Belum ada log notifikasi WhatsApp otomatis.</p>`;
-                } else {
-                    waList.innerHTML = state.waLogs.slice(0, 6).map(log => `
-                        <div class="p-3.5 rounded-2xl bg-white border border-emerald-200/80 shadow-2xs space-y-1.5 text-xs">
-                            <div class="flex items-center justify-between">
-                                <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">${log.direction}</span>
-                                <span class="text-[10px] text-slate-400">${log.time}</span>
-                            </div>
-                            <p class="font-bold text-slate-900">${log.recipientName} (${log.recipientPhone})</p>
-                            <p class="text-[11px] text-slate-600 line-clamp-3 whitespace-pre-line bg-slate-50 p-2 rounded-xl border border-slate-100">${log.message}</p>
-                        </div>
-                    `).join('');
-                }
-            }
-        };
+            renderHqWaLogs();
+        }
 
-        function renderHqProfitChart(periodOrders = null) {
+        function renderHqProfitChart(paidOrders, totalRev, totalHpp, totalProfit) {
+            document.getElementById('hq-chart-total-revenue').textContent = formatRupiah(totalRev);
+            document.getElementById('hq-chart-total-hpp').textContent = formatRupiah(totalHpp);
+            document.getElementById('hq-chart-total-profit').textContent = formatRupiah(totalProfit);
+
             const canvas = document.getElementById('hqProfitChart');
             if (!canvas || typeof Chart === 'undefined') return;
 
-            const sourceOrders = Array.isArray(periodOrders) ? periodOrders : getPeriodFilteredOrders();
-            const paidOrders = sourceOrders.filter(o => o.paymentStatus === 'LUNAS');
-            const totalRevenue = paidOrders.reduce((s, o) => s + (o.subtotal || 0), 0);
-            const totalHpp = paidOrders.reduce((s, o) => s + (o.totalHpp || 0), 0);
-            const netProfit = totalRevenue - totalHpp;
-
-            const revEl = document.getElementById('hq-chart-total-revenue');
-            const hppEl = document.getElementById('hq-chart-total-hpp');
-            const prfEl = document.getElementById('hq-chart-total-profit');
-            if (revEl) revEl.textContent = formatRupiah(totalRevenue);
-            if (hppEl) hppEl.textContent = formatRupiah(totalHpp);
-            if (prfEl) prfEl.textContent = formatRupiah(netProfit);
+            const labels = paidOrders.length > 0
+                ? paidOrders.slice().reverse().map(o => `${o.id} (${o.outletName.replace('UGIEE Outlet ', '')})`)
+                : ['Belum Ada Transaksi Lunas'];
+            const revData = paidOrders.length > 0 ? paidOrders.slice().reverse().map(o => o.subtotal) : [0];
+            const hppData = paidOrders.length > 0 ? paidOrders.slice().reverse().map(o => o.totalHpp) : [0];
+            const profData = paidOrders.length > 0 ? paidOrders.slice().reverse().map(o => o.subtotal - o.totalHpp) : [0];
 
             if (state.profitChartInstance) {
                 state.profitChartInstance.destroy();
             }
 
-            state.profitChartInstance = new Chart(canvas.getContext('2d'), {
+            state.profitChartInstance = new Chart(canvas, {
                 type: 'bar',
                 data: {
-                    labels: ['Total Keseluruhan Pembelian Mitra'],
+                    labels,
                     datasets: [
-                        {
-                            label: 'Omzet Produk',
-                            data: [totalRevenue],
-                            backgroundColor: '#0E6453',
-                            borderRadius: 10,
-                            maxBarThickness: 96
-                        },
-                        {
-                            label: 'Modal (HPP)',
-                            data: [totalHpp],
-                            backgroundColor: '#F7A928',
-                            borderRadius: 10,
-                            maxBarThickness: 96
-                        },
-                        {
-                            label: 'Laba Bersih',
-                            data: [netProfit],
-                            backgroundColor: '#10B981',
-                            borderRadius: 10,
-                            maxBarThickness: 96
-                        }
+                        { label: 'Omzet Produk', data: revData, backgroundColor: '#0E6453', borderRadius: 8 },
+                        { label: 'Modal (HPP)', data: hppData, backgroundColor: '#F7A928', borderRadius: 8 },
+                        { label: 'Laba Bersih', data: profData, backgroundColor: '#10B981', borderRadius: 8 }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: (ctx) => `${ctx.dataset.label}: ${formatRupiah(ctx.parsed.y)}`
-                            }
-                        }
+                        legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: 'bold', size: 11 } } }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                callback: (v) => 'Rp ' + Number(v).toLocaleString('id-ID'),
-                                font: { size: 10 }
+                                callback: val => 'Rp ' + (val / 1000).toLocaleString('id-ID') + 'k',
+                                font: { family: 'Inter', size: 10 }
                             }
                         },
-                        x: {
-                            ticks: {
-                                font: { size: 12, weight: 'bold' }
-                            }
-                        }
+                        x: { ticks: { font: { family: 'Inter', size: 10 } } }
                     }
                 }
             });
         }
 
-        // ==================== 13. INTERACTIVE LEAFLET MAP (HQ) ====================
-        function getPartnerMetricsList() {
-            const periodOrders = getPeriodFilteredOrders();
-            const mitras = state.users.filter(u => u.role === 'MITRA');
-            return mitras.map((m, idx) => {
-                const partnerOrders = periodOrders.filter(o => o.partnerId === m.id);
-                const paidOrders = partnerOrders.filter(o => o.paymentStatus === 'LUNAS');
-                const totalRevenue = paidOrders.reduce((s, o) => s + (o.subtotal || 0), 0);
-                const totalProfit = paidOrders.reduce((s, o) => s + ((o.subtotal || 0) - (o.totalHpp || 0)), 0);
-                const coords = (m.lat && m.lng) ? { lat: m.lat, lng: m.lng } : resolveCoordinatesFromAddress(m.address, m.cityId, idx + 1);
-                return {
-                    ...m,
-                    lat: coords.lat,
-                    lng: coords.lng,
-                    orderCount: partnerOrders.length,
-                    paidCount: paidOrders.length,
-                    totalRevenue,
-                    totalProfit
-                };
-            }).sort((a, b) => b.orderCount - a.orderCount || b.totalRevenue - a.totalRevenue);
-        }
-
-        window.renderHqPartnersMap = function() {
+        // ==================== 13. INTERACTIVE LEAFLET.JS PARTNER MAP ====================
+        function renderHqPartnersMap() {
             const mapEl = document.getElementById('hq-partners-map');
+            const listEl = document.getElementById('hq-map-outlet-list');
+            const countBadge = document.getElementById('hq-map-count-badge');
             if (!mapEl || typeof L === 'undefined') return;
 
             if (!state.mapInstance) {
-                state.mapInstance = L.map('hq-partners-map').setView([-4.5, 120.5], 6);
+                state.mapInstance = L.map('hq-partners-map', { zoomControl: true }).setView([-4.3, 120.5], 6);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors'
+                    attribution: '&copy; OpenStreetMap contributors • UGIEE Supply Chain'
                 }).addTo(state.mapInstance);
                 state.mapMarkersLayer = L.layerGroup().addTo(state.mapInstance);
             }
@@ -4736,166 +4663,237 @@
             state.mapMarkersLayer.clearLayers();
             state.partnerMarkerLookup = {};
 
-            // HQ Warehouse Pin
+            // Pin Gudang Pusat UGIEE
             const hqIcon = L.divIcon({
                 className: 'ugiee-map-pin',
-                html: `<div class="w-8 h-8 rounded-full bg-ugiee-950 border-2 border-amberbrand-400 text-amberbrand-300 flex items-center justify-center shadow-lg text-xs font-black"><i class="fa-solid fa-warehouse"></i></div>`,
-                iconSize: [32, 32],
-                iconAnchor: [16, 16]
+                html: `<div class="w-9 h-9 rounded-2xl bg-ugiee-950 text-amberbrand-400 border-2 border-amberbrand-400 shadow-lg flex items-center justify-center text-sm font-black"><i class="fa-solid fa-warehouse"></i></div>`,
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
             });
+
             L.marker([HQ_WAREHOUSE_COORDS.lat, HQ_WAREHOUSE_COORDS.lng], { icon: hqIcon })
                 .addTo(state.mapMarkersLayer)
-                .bindPopup(`<div class="text-xs space-y-1"><strong class="text-ugiee-950 block">${HQ_WAREHOUSE_COORDS.name}</strong><p class="text-slate-600">${HQ_WAREHOUSE_COORDS.address}</p></div>`);
+                .bindPopup(`
+                    <div class="space-y-1 text-xs">
+                        <span class="px-2 py-0.5 rounded bg-ugiee-950 text-amberbrand-300 font-bold text-[10px]">PUSAT LOGISTIK</span>
+                        <h4 class="font-extrabold text-slate-900">${HQ_WAREHOUSE_COORDS.name}</h4>
+                        <p class="text-slate-600 text-[11px]">${HQ_WAREHOUSE_COORDS.address}</p>
+                    </div>
+                `);
 
             const zoneFilter = document.getElementById('hq-map-zone-filter')?.value || 'ALL';
             const searchQuery = (document.getElementById('hq-map-search-input')?.value || '').trim().toLowerCase();
+            const periodOrders = getFilteredOrdersByPeriod();
 
-            const allMitras = getPartnerMetricsList();
-            const topMitraId = allMitras.length > 0 && allMitras[0].orderCount > 0 ? allMitras[0].id : null;
+            const mitras = state.users
+                .filter(u => u.role === 'MITRA')
+                .map((m, idx) => {
+                    const mOrders = periodOrders.filter(o => o.partnerId === m.id && o.paymentStatus === 'LUNAS');
+                    const rev = mOrders.reduce((s, o) => s + (o.subtotal || 0), 0);
+                    const coords = (m.lat && m.lng) ? { lat: m.lat, lng: m.lng } : resolveCoordinatesFromAddress(m.address, m.cityId, idx + 1);
+                    return { ...m, lat: coords.lat, lng: coords.lng, orderCount: mOrders.length, revenue: rev };
+                })
+                .sort((a, b) => b.orderCount - a.orderCount || b.revenue - a.revenue);
 
-            const filtered = allMitras.filter(m => {
+            const filteredMitras = mitras.filter(m => {
                 const matchZone = zoneFilter === 'ALL' || m.cityId === zoneFilter;
-                const matchQuery = !searchQuery || m.outletName.toLowerCase().includes(searchQuery) || m.address.toLowerCase().includes(searchQuery) || m.ownerName.toLowerCase().includes(searchQuery);
+                const matchQuery = !searchQuery || m.outletName.toLowerCase().includes(searchQuery) || (m.address || '').toLowerCase().includes(searchQuery) || m.ownerName.toLowerCase().includes(searchQuery);
                 return matchZone && matchQuery;
             });
 
-            document.getElementById('hq-map-count-badge').textContent = `${filtered.length} Outlet Terpetakan`;
+            if (countBadge) countBadge.textContent = `${filteredMitras.length} Outlet Terpetakan`;
 
-            filtered.forEach(m => {
-                const isTop = m.id === topMitraId;
-                const pinIcon = L.divIcon({
+            filteredMitras.forEach((m, idx) => {
+                const isTop = idx === 0 && m.orderCount > 0;
+                const pinHtml = isTop
+                    ? `<div class="w-8 h-8 rounded-full bg-amberbrand-500 text-ugiee-950 border-2 border-ugiee-950 shadow-lg flex items-center justify-center text-xs font-black"><i class="fa-solid fa-crown"></i></div>`
+                    : `<div class="w-8 h-8 rounded-full bg-ugiee-600 text-white border-2 border-white shadow-md flex items-center justify-center text-xs font-bold"><i class="fa-solid fa-store"></i></div>`;
+
+                const markerIcon = L.divIcon({
                     className: 'ugiee-map-pin',
-                    html: `<div class="w-7 h-7 rounded-full ${isTop ? 'bg-amberbrand-500 border-2 border-ugiee-950 text-ugiee-950' : 'bg-ugiee-600 border-2 border-white text-white'} flex items-center justify-center shadow-md text-[11px] font-black"><i class="fa-solid fa-store"></i></div>`,
-                    iconSize: [28, 28],
-                    iconAnchor: [14, 14]
+                    html: pinHtml,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
                 });
 
                 const waLink = `https://wa.me/${formatWaInternational(m.phone)}`;
-                const marker = L.marker([m.lat, m.lng], { icon: pinIcon })
+                const marker = L.marker([m.lat, m.lng], { icon: markerIcon })
                     .addTo(state.mapMarkersLayer)
                     .bindPopup(`
-                        <div class="text-xs space-y-1.5">
-                            <span class="px-2 py-0.5 rounded bg-ugiee-100 text-ugiee-900 font-mono text-[10px] font-bold">${m.id}</span>
-                            <strong class="text-slate-900 block text-sm">${m.outletName}</strong>
-                            <p class="text-slate-600">${m.address}</p>
-                            <div class="pt-1 border-t border-slate-200 flex justify-between font-bold">
-                                <span>${m.orderCount} Order</span>
-                                <span class="text-ugiee-800">${formatRupiah(m.totalRevenue)}</span>
+                        <div class="space-y-1.5 text-xs">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-mono font-bold text-[10px] text-ugiee-700">${m.id}</span>
+                                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">${m.orderCount}x Order</span>
                             </div>
-                            <a href="${waLink}" target="_blank" class="mt-1 w-full py-1.5 px-2.5 rounded-lg bg-emerald-600 text-white font-bold text-[11px] inline-flex items-center justify-center gap-1">
-                                <i class="fa-brands fa-whatsapp"></i> Hubungi ${m.ownerName}
-                            </a>
+                            <h4 class="font-extrabold text-slate-900 text-sm">${m.outletName}</h4>
+                            <p class="text-[11px] text-slate-600">${m.address}</p>
+                            <p class="text-[11px] font-bold text-ugiee-900">Omzet: ${formatRupiah(m.revenue)}</p>
+                            <div class="pt-1 flex gap-1.5">
+                                <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="flex-1 py-1.5 px-2 rounded-lg bg-emerald-600 text-white font-bold text-[10px] text-center">Chat WA</a>
+                                <button type="button" onclick="openPartnerDetailModal('${m.id}')" class="flex-1 py-1.5 px-2 rounded-lg bg-ugiee-700 text-white font-bold text-[10px]">Detail</button>
+                            </div>
                         </div>
                     `);
+
                 state.partnerMarkerLookup[m.id] = marker;
             });
 
-            const listContainer = document.getElementById('hq-map-outlet-list');
-            if (listContainer) {
-                listContainer.innerHTML = filtered.map(m => `
-                    <button type="button" onclick="focusPartnerOnMap('${m.id}')" class="w-full p-3 rounded-2xl bg-white hover:bg-ugiee-50 border border-slate-200 hover:border-ugiee-400 text-left transition shadow-2xs space-y-1">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="font-mono text-[10px] font-bold text-ugiee-700">${m.id}</span>
-                            <span class="px-2 py-0.5 rounded-full bg-ugiee-100 text-ugiee-900 text-[10px] font-extrabold">${m.orderCount} Order</span>
+            if (listEl) {
+                if (filteredMitras.length === 0) {
+                    listEl.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Tidak ada outlet mitra sesuai filter peta.</div>`;
+                } else {
+                    listEl.innerHTML = filteredMitras.map((m, idx) => `
+                        <div onclick="focusPartnerOnMap('${m.id}')" class="p-3 rounded-2xl bg-white hover:bg-ugiee-50 border border-slate-200 hover:border-ugiee-400 cursor-pointer transition space-y-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-mono font-bold text-[10px] text-ugiee-700">${m.id}</span>
+                                <span class="px-2 py-0.5 rounded-full ${idx === 0 && m.orderCount > 0 ? 'bg-amberbrand-500 text-ugiee-950' : 'bg-slate-100 text-slate-700'} font-extrabold text-[10px]">
+                                    ${m.orderCount} Order • ${formatRupiah(m.revenue)}
+                                </span>
+                            </div>
+                            <p class="text-xs font-extrabold text-slate-900 truncate">${m.outletName}</p>
+                            <p class="text-[11px] text-slate-500 line-clamp-1"><i class="fa-solid fa-location-dot text-ugiee-600 mr-1"></i>${m.address}</p>
                         </div>
-                        <p class="text-xs font-extrabold text-slate-900 truncate">${m.outletName}</p>
-                        <p class="text-[11px] text-slate-500 truncate">${m.address}</p>
-                    </button>
-                `).join('');
+                    `).join('');
+                }
             }
-        };
+        }
 
         window.focusPartnerOnMap = function(partnerId) {
-            const marker = state.partnerMarkerLookup[partnerId];
-            if (marker && state.mapInstance) {
-                const ll = marker.getLatLng();
-                state.mapInstance.setView(ll, 14, { animate: true });
-                marker.openPopup();
-            }
+            switchHqTab('overview');
+            setTimeout(() => {
+                const marker = state.partnerMarkerLookup[partnerId];
+                if (marker && state.mapInstance) {
+                    const latLng = marker.getLatLng();
+                    state.mapInstance.setView(latLng, 14, { animate: true });
+                    marker.openPopup();
+                }
+            }, 150);
         };
 
         window.fitAllPartnerMarkers = function() {
             if (!state.mapInstance) return;
-            const markers = Object.values(state.partnerMarkerLookup);
-            if (markers.length === 0) return;
-            const group = L.featureGroup(markers);
-            state.mapInstance.fitBounds(group.getBounds().pad(0.25));
+            const coords = [[HQ_WAREHOUSE_COORDS.lat, HQ_WAREHOUSE_COORDS.lng]];
+            Object.values(state.partnerMarkerLookup).forEach(m => {
+                const ll = m.getLatLng();
+                coords.push([ll.lat, ll.lng]);
+            });
+            if (coords.length > 0) {
+                state.mapInstance.fitBounds(L.latLngBounds(coords), { padding: [40, 40] });
+            }
         };
 
         window.syncAllPartnerCoordinates = function(notify = false) {
-            let idx = 1;
-            state.users.forEach(u => {
+            let updated = 0;
+            state.users.forEach((u, idx) => {
                 if (u.role === 'MITRA') {
-                    const c = resolveCoordinatesFromAddress(u.address, u.cityId, idx++);
-                    u.lat = c.lat;
-                    u.lng = c.lng;
+                    const coords = resolveCoordinatesFromAddress(u.address, u.cityId, idx + 1);
+                    u.lat = coords.lat;
+                    u.lng = coords.lng;
                     syncDocToCloud('users', u.id, u);
+                    updated++;
                 }
             });
             saveLocalData();
             renderHqPartnersMap();
-            if (notify) showToast('Seluruh koordinat outlet mitra berhasil disinkronkan!', 'success');
+            fitAllPartnerMarkers();
+            if (notify) showToast(`${updated} titik koordinat outlet mitra disinkronkan dari alamat terdaftar.`, 'success');
         };
 
-        // ==================== 14. HQ PARTNERS DATABASE, PRODUCTS & ADMINS CRUD ====================
+        // ==================== 14. HQ PARTNERS DATABASE & REGISTRATION ====================
         window.renderHqPartnersDatabase = function() {
-            const metrics = getPartnerMetricsList();
-            const activeMitras = metrics.filter(m => m.orderCount > 0);
-            const totalOrdersAll = metrics.reduce((s, m) => s + m.orderCount, 0);
-
-            document.getElementById('hq-partner-kpi-total').textContent = `${metrics.length} Outlet`;
-            document.getElementById('hq-partner-kpi-active').textContent = `${activeMitras.length} Outlet`;
-            document.getElementById('hq-partner-kpi-orders').textContent = `${totalOrdersAll} Order`;
-
-            if (metrics.length > 0) {
-                document.getElementById('hq-partner-kpi-top-name').textContent = metrics[0].outletName;
-                document.getElementById('hq-partner-kpi-top-count').textContent = `${metrics[0].orderCount} Orderan (${formatRupiah(metrics[0].totalRevenue)})`;
-            }
-
-            const search = (document.getElementById('hq-partner-search')?.value || '').trim().toLowerCase();
-            const sortBy = document.getElementById('hq-partner-sort')?.value || 'ORDERS_DESC';
-
-            let list = metrics.filter(m =>
-                !search ||
-                m.outletName.toLowerCase().includes(search) ||
-                m.ownerName.toLowerCase().includes(search) ||
-                m.id.toLowerCase().includes(search) ||
-                m.address.toLowerCase().includes(search)
-            );
-
-            if (sortBy === 'REVENUE_DESC') list.sort((a, b) => b.totalRevenue - a.totalRevenue);
-            else if (sortBy === 'PROFIT_DESC') list.sort((a, b) => b.totalProfit - a.totalProfit);
-            else if (sortBy === 'NAME_ASC') list.sort((a, b) => a.outletName.localeCompare(b.outletName));
-
             const tbody = document.getElementById('hq-partners-tbody');
             if (!tbody) return;
 
-            tbody.innerHTML = list.map((m, i) => {
-                const zoneObj = SHIPPING_ZONES.find(z => z.id === m.cityId) || SHIPPING_ZONES[0];
+            const periodOrders = getFilteredOrdersByPeriod();
+            const searchQuery = (document.getElementById('hq-partner-search')?.value || '').trim().toLowerCase();
+            const sortBy = document.getElementById('hq-partner-sort')?.value || 'ORDERS_DESC';
+
+            let mitras = state.users.filter(u => u.role === 'MITRA').map(m => {
+                const mOrders = periodOrders.filter(o => o.partnerId === m.id);
+                const paidOrders = mOrders.filter(o => o.paymentStatus === 'LUNAS');
+                const totalRevenue = paidOrders.reduce((s, o) => s + (o.subtotal || 0), 0);
+                const totalProfit = paidOrders.reduce((s, o) => s + ((o.subtotal || 0) - (o.totalHpp || 0)), 0);
+                const zone = SHIPPING_ZONES.find(z => z.id === m.cityId) || SHIPPING_ZONES[0];
+                return {
+                    ...m,
+                    zoneCity: zone.city,
+                    totalOrdersCount: mOrders.length,
+                    paidOrdersCount: paidOrders.length,
+                    totalRevenue,
+                    totalProfit
+                };
+            });
+
+            // KPI Database Mitra
+            const activeMitras = mitras.filter(m => m.totalOrdersCount > 0);
+            const totalAccOrders = mitras.reduce((s, m) => s + m.totalOrdersCount, 0);
+            const sortedByOrders = [...mitras].sort((a, b) => b.totalOrdersCount - a.totalOrdersCount || b.totalRevenue - a.totalRevenue);
+            const topMitra = sortedByOrders[0];
+
+            document.getElementById('hq-partner-kpi-total').textContent = `${mitras.length} Outlet`;
+            document.getElementById('hq-partner-kpi-active').textContent = `${activeMitras.length} Outlet`;
+            document.getElementById('hq-partner-kpi-orders').textContent = `${totalAccOrders} Order`;
+            document.getElementById('hq-partner-kpi-top-name').textContent = topMitra ? topMitra.outletName : '-';
+            document.getElementById('hq-partner-kpi-top-count').textContent = topMitra ? `${topMitra.totalOrdersCount} Orderan (${formatRupiah(topMitra.totalRevenue)})` : '0 Orderan';
+
+            // Filter & Sort
+            if (searchQuery) {
+                mitras = mitras.filter(m =>
+                    m.outletName.toLowerCase().includes(searchQuery) ||
+                    m.ownerName.toLowerCase().includes(searchQuery) ||
+                    m.id.toLowerCase().includes(searchQuery) ||
+                    m.zoneCity.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            mitras.sort((a, b) => {
+                if (sortBy === 'REVENUE_DESC') return b.totalRevenue - a.totalRevenue;
+                if (sortBy === 'PROFIT_DESC') return b.totalProfit - a.totalProfit;
+                if (sortBy === 'NAME_ASC') return a.outletName.localeCompare(b.outletName);
+                return b.totalOrdersCount - a.totalOrdersCount || b.totalRevenue - a.totalRevenue;
+            });
+
+            if (mitras.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-400 font-semibold">Tidak ada data mitra outlet yang sesuai pencarian.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = mitras.map((m, idx) => {
+                const rankBadge = idx === 0
+                    ? `<span class="w-7 h-7 rounded-full bg-amberbrand-500 text-ugiee-950 font-black inline-flex items-center justify-center shadow-2xs">#1</span>`
+                    : `<span class="font-mono font-bold text-slate-500">#${idx + 1}</span>`;
                 return `
                     <tr class="hover:bg-slate-50/80 transition">
-                        <td class="py-3.5 px-4 text-center font-black ${i === 0 ? 'text-amber-600 text-sm' : 'text-slate-500'}">#${i + 1}</td>
+                        <td class="py-3.5 px-4 text-center">${rankBadge}</td>
                         <td class="py-3.5 px-4">
-                            <span class="font-mono font-bold text-[11px] text-ugiee-700">${m.id}</span>
-                            <p class="font-extrabold text-slate-900">${m.outletName}</p>
+                            <span class="font-mono font-bold text-[11px] text-ugiee-700 block">${m.id}</span>
+                            <span class="font-extrabold text-slate-900">${m.outletName}</span>
                         </td>
                         <td class="py-3.5 px-4">
                             <p class="font-bold text-slate-800">${m.ownerName}</p>
-                            <p class="text-emerald-700 font-semibold">${m.phone}</p>
+                            <p class="text-[11px] text-emerald-700 font-semibold"><i class="fa-brands fa-whatsapp mr-1"></i>${m.phone}</p>
                         </td>
                         <td class="py-3.5 px-4 max-w-xs">
-                            <span class="text-[11px] font-bold text-ugiee-800 block">${zoneObj.zone}</span>
-                            <p class="text-slate-500 truncate">${m.address}</p>
+                            <span class="font-bold text-slate-700 block">${m.zoneCity}</span>
+                            <span class="text-[11px] text-slate-500 line-clamp-1">${m.address}</span>
                         </td>
                         <td class="py-3.5 px-4 text-center">
-                            <span class="px-2.5 py-1 rounded-full bg-ugiee-100 text-ugiee-950 font-black">${m.orderCount}x</span>
+                            <span class="px-2.5 py-1 rounded-full bg-ugiee-100 text-ugiee-900 font-extrabold">${m.totalOrdersCount}x Order</span>
                         </td>
-                        <td class="py-3.5 px-4 text-right font-bold text-slate-900">${formatRupiah(m.totalRevenue)}</td>
-                        <td class="py-3.5 px-4 text-right font-extrabold text-emerald-700">+${formatRupiah(m.totalProfit)}</td>
+                        <td class="py-3.5 px-4 text-right font-extrabold text-slate-900">${formatRupiah(m.totalRevenue)}</td>
+                        <td class="py-3.5 px-4 text-right font-black text-emerald-700">+${formatRupiah(m.totalProfit)}</td>
                         <td class="py-3.5 px-4 text-center">
-                            <button type="button" onclick="openPartnerDetailModal('${m.id}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition">
-                                Detail &amp; Riwayat
-                            </button>
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="openPartnerDetailModal('${m.id}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition">
+                                    Detail
+                                </button>
+                                <button onclick="focusPartnerOnMap('${m.id}')" class="p-1.5 rounded-xl bg-amberbrand-500/20 hover:bg-amberbrand-500 text-ugiee-950 font-bold text-xs transition" title="Lihat di Peta">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </button>
+                                <button onclick="openDeletePartnerConfirmModal('${m.id}')" class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold text-xs transition" title="Hapus Mitra & Seluruh Transaksinya">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -4903,52 +4901,72 @@
         };
 
         window.openPartnerDetailModal = function(partnerId) {
-            const metrics = getPartnerMetricsList();
-            const m = metrics.find(x => x.id === partnerId);
-            if (!m) return;
+            const partner = state.users.find(u => u.id === partnerId && u.role === 'MITRA');
+            if (!partner) return;
 
-            const zoneObj = SHIPPING_ZONES.find(z => z.id === m.cityId) || SHIPPING_ZONES[0];
-            const partnerOrders = getPeriodFilteredOrders().filter(o => o.partnerId === m.id);
-            const avgOrder = m.paidCount > 0 ? Math.round(m.totalRevenue / m.paidCount) : 0;
+            const zone = SHIPPING_ZONES.find(z => z.id === partner.cityId) || SHIPPING_ZONES[0];
+            const partnerOrders = state.orders.filter(o => o.partnerId === partner.id);
+            const paidOrders = partnerOrders.filter(o => o.paymentStatus === 'LUNAS');
+            const totalRevenue = paidOrders.reduce((s, o) => s + (o.subtotal || 0), 0);
+            const totalProfit = paidOrders.reduce((s, o) => s + ((o.subtotal || 0) - (o.totalHpp || 0)), 0);
+            const avgOrder = paidOrders.length > 0 ? Math.round(totalRevenue / paidOrders.length) : 0;
 
-            document.getElementById('pdm-outlet-name').textContent = m.outletName;
-            document.getElementById('pdm-partner-id').textContent = m.id;
-            document.getElementById('pdm-pic-info').textContent = `${m.ownerName} • ${m.phone} • ${zoneObj.city}`;
-            document.getElementById('pdm-owner-name').textContent = m.ownerName;
-            document.getElementById('pdm-email').textContent = m.email;
-            document.getElementById('pdm-phone').textContent = m.phone;
-            document.getElementById('pdm-zone').textContent = zoneObj.city;
-            document.getElementById('pdm-address').textContent = m.address;
-            document.getElementById('pdm-coords').textContent = `Lat: ${m.lat}, Lng: ${m.lng}`;
+            document.getElementById('pdm-outlet-name').textContent = partner.outletName;
+            document.getElementById('pdm-partner-id').textContent = partner.id;
+            document.getElementById('pdm-pic-info').textContent = `${partner.ownerName} • ${partner.phone} • ${zone.city}`;
+            document.getElementById('pdm-owner-name').textContent = partner.ownerName;
+            document.getElementById('pdm-email').textContent = partner.email;
+            document.getElementById('pdm-phone').textContent = partner.phone;
+            document.getElementById('pdm-zone').textContent = zone.city;
+            document.getElementById('pdm-address').textContent = partner.address;
+            document.getElementById('pdm-coords').textContent = (partner.lat && partner.lng)
+                ? `Koordinat: ${partner.lat}, ${partner.lng}`
+                : 'Koordinat otomatis dari zona kota';
 
-            document.getElementById('pdm-stat-orders').textContent = `${m.orderCount} Order`;
-            document.getElementById('pdm-stat-paid-split').textContent = `${m.paidCount} Lunas • ${m.orderCount - m.paidCount} Pending`;
-            document.getElementById('pdm-stat-revenue').textContent = formatRupiah(m.totalRevenue);
+            document.getElementById('pdm-stat-orders').textContent = `${partnerOrders.length} Order`;
+            document.getElementById('pdm-stat-paid-split').textContent = `${paidOrders.length} Lunas • ${partnerOrders.length - paidOrders.length} Pending`;
+            document.getElementById('pdm-stat-revenue').textContent = formatRupiah(totalRevenue);
             document.getElementById('pdm-stat-avg').textContent = formatRupiah(avgOrder);
-            document.getElementById('pdm-stat-profit').textContent = `+${formatRupiah(m.totalProfit)}`;
+            document.getElementById('pdm-stat-profit').textContent = `+${formatRupiah(totalProfit)}`;
 
-            document.getElementById('pdm-wa-btn').href = `https://wa.me/${formatWaInternational(m.phone)}`;
+            document.getElementById('pdm-wa-btn').href = `https://wa.me/${formatWaInternational(partner.phone)}`;
             document.getElementById('pdm-focus-map-btn').onclick = () => {
                 closePartnerDetailModal();
-                switchHqTab('overview');
-                setTimeout(() => focusPartnerOnMap(m.id), 250);
+                focusPartnerOnMap(partner.id);
             };
+            const pdmDeleteBtn = document.getElementById('pdm-delete-btn');
+            if (pdmDeleteBtn) {
+                pdmDeleteBtn.onclick = () => {
+                    closePartnerDetailModal();
+                    openDeletePartnerConfirmModal(partner.id);
+                };
+            }
 
-            const ordersContainer = document.getElementById('pdm-orders-list');
-            ordersContainer.innerHTML = partnerOrders.length === 0
-                ? `<p class="text-xs text-slate-500 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">Mitra ini belum memiliki transaksi pemesanan.</p>`
-                : partnerOrders.map(o => `
-                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 text-xs">
+            const listEl = document.getElementById('pdm-orders-list');
+            if (partnerOrders.length === 0) {
+                listEl.innerHTML = `<div class="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center text-xs text-slate-400">Mitra ini belum memiliki riwayat transaksi pesanan.</div>`;
+            } else {
+                listEl.innerHTML = partnerOrders.map(ord => `
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                         <div>
-                            <span class="font-mono font-black text-ugiee-900">${o.id}</span> • <span class="text-slate-500">${o.createdAt}</span>
-                            <p class="text-slate-600 mt-0.5">${o.items.map(i => `${i.name} (${i.qty}x)`).join(', ')}</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="font-mono font-black text-ugiee-900">${ord.id}</span>
+                                ${getStatusBadgeHtml(ord)}
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1">${ord.createdAt} • ${ord.items.length} SKU (${ord.totalWeight} kg) • Resi: <strong>${ord.resiNumber || '-'}</strong></p>
                         </div>
-                        <div class="text-right shrink-0">
-                            <span class="font-black text-slate-900 block">${formatRupiah(o.grandTotal)}</span>
-                            <span class="text-[10px] font-bold ${o.paymentStatus === 'LUNAS' ? 'text-emerald-700' : 'text-amber-700'}">${o.orderStatus}</span>
+                        <div class="flex items-center gap-3">
+                            <div class="sm:text-right">
+                                <span class="font-black text-slate-900 block">${formatRupiah(ord.grandTotal)}</span>
+                                <span class="text-[10px] font-bold text-emerald-700">Profit: +${formatRupiah((ord.subtotal || 0) - (ord.totalHpp || 0))}</span>
+                            </div>
+                            <button type="button" onclick="closePartnerDetailModal(); openInvoiceModal('${ord.id}');" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px]">
+                                Invoice
+                            </button>
                         </div>
                     </div>
                 `).join('');
+            }
 
             const modal = document.getElementById('partner-detail-modal');
             modal.classList.remove('hidden');
@@ -4961,7 +4979,78 @@
             modal.classList.remove('flex');
         };
 
+        window.openDeletePartnerConfirmModal = function(partnerId) {
+            const partner = state.users.find(u => u.id === partnerId && u.role === 'MITRA');
+            if (!partner) return;
+
+            const relatedOrders = state.orders.filter(o => o.partnerId === partner.id);
+            const zone = SHIPPING_ZONES.find(z => z.id === partner.cityId) || SHIPPING_ZONES[0];
+
+            document.getElementById('dpm-target-id').value = partner.id;
+            document.getElementById('dpm-partner-id').textContent = `${partner.id} • ${zone.city}`;
+            document.getElementById('dpm-outlet-name').textContent = partner.outletName;
+            document.getElementById('dpm-owner-info').textContent = `PIC: ${partner.ownerName} • WA: ${partner.phone}`;
+            document.getElementById('dpm-orders-count').textContent = `${relatedOrders.length} riwayat transaksi`;
+
+            const modal = document.getElementById('delete-partner-confirm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeDeletePartnerConfirmModal = function() {
+            const modal = document.getElementById('delete-partner-confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.confirmDeletePartnerAndTransactions = function() {
+            const partnerId = document.getElementById('dpm-target-id').value;
+            const partnerIndex = state.users.findIndex(u => u.id === partnerId && u.role === 'MITRA');
+            if (partnerIndex === -1) {
+                closeDeletePartnerConfirmModal();
+                return;
+            }
+
+            const deletedPartner = state.users[partnerIndex];
+            const relatedOrders = state.orders.filter(o => o.partnerId === partnerId);
+            const relatedOrderIds = new Set(relatedOrders.map(o => o.id));
+
+            // 1. Hapus akun mitra dari state & Cloud RTDB
+            state.users.splice(partnerIndex, 1);
+            deleteDocFromCloud('users', partnerId);
+
+            // 2. Hapus seluruh riwayat transaksi milik mitra tersebut dari state & Cloud RTDB
+            relatedOrders.forEach(ord => {
+                deleteDocFromCloud('orders', ord.id);
+            });
+            state.orders = state.orders.filter(o => o.partnerId !== partnerId);
+
+            // 3. Bersihkan log WhatsApp terkait pesanan/outlet mitra tersebut
+            if (Array.isArray(state.waLogs)) {
+                state.waLogs = state.waLogs.filter(log =>
+                    !relatedOrderIds.has(log.orderId) &&
+                    log.targetName !== deletedPartner.outletName
+                );
+                if (cloudReady && db) {
+                    set(ref(db, `${RTDB_ROOT}/settings/waLogs`), { logs: state.waLogs }).catch(() => {});
+                }
+            }
+
+            saveLocalData();
+            closeDeletePartnerConfirmModal();
+            refreshActiveScreenUI();
+            showToast(`Mitra "${deletedPartner.outletName}" beserta ${relatedOrders.length} riwayat transaksinya berhasil dihapus permanen.`, 'info');
+        };
+
         window.openHqNewPartnerModal = function() {
+            document.getElementById('hq-np-outlet').value = '';
+            document.getElementById('hq-np-owner').value = '';
+            document.getElementById('hq-np-email').value = '';
+            document.getElementById('hq-np-phone').value = '';
+            document.getElementById('hq-np-password').value = '123';
+            document.getElementById('hq-np-address').value = '';
+            document.getElementById('hq-np-lat').value = '';
+            document.getElementById('hq-np-lng').value = '';
             const modal = document.getElementById('hq-new-partner-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -4974,12 +5063,13 @@
         };
 
         window.detectHqNewPartnerCoords = function() {
-            const address = document.getElementById('hq-np-address').value;
+            const address = document.getElementById('hq-np-address').value.trim();
             const cityId = document.getElementById('hq-np-city').value;
-            const c = resolveCoordinatesFromAddress(address, cityId, state.users.length + 1);
-            document.getElementById('hq-np-lat').value = c.lat;
-            document.getElementById('hq-np-lng').value = c.lng;
-            showToast(`Koordinat terdeteksi: ${c.lat}, ${c.lng}`, 'info');
+            const mitraCount = state.users.filter(u => u.role === 'MITRA').length + 1;
+            const coords = resolveCoordinatesFromAddress(address, cityId, mitraCount);
+            document.getElementById('hq-np-lat').value = coords.lat;
+            document.getElementById('hq-np-lng').value = coords.lng;
+            showToast(`Koordinat terdeteksi: ${coords.lat}, ${coords.lng}`, 'info');
         };
 
         window.submitHqNewPartner = function(e) {
@@ -4991,17 +5081,19 @@
             const cityId = document.getElementById('hq-np-city').value;
             const password = document.getElementById('hq-np-password').value.trim();
             const address = document.getElementById('hq-np-address').value.trim();
+            const rawLat = parseFloat(document.getElementById('hq-np-lat').value);
+            const rawLng = parseFloat(document.getElementById('hq-np-lng').value);
 
             if (state.users.some(u => u.email.toLowerCase() === email)) {
-                showToast('Email mitra sudah terdaftar!', 'warning');
+                showToast('Email mitra sudah terdaftar di database!', 'error');
                 return;
             }
 
-            const count = state.users.filter(u => u.role === 'MITRA').length + 1;
-            const newId = 'UG-MTR-' + String(count).padStart(3, '0');
-            const latVal = parseFloat(document.getElementById('hq-np-lat').value);
-            const lngVal = parseFloat(document.getElementById('hq-np-lng').value);
-            const autoCoords = resolveCoordinatesFromAddress(address, cityId, count);
+            const mitraCount = state.users.filter(u => u.role === 'MITRA').length + 1;
+            const newId = 'UG-MTR-' + String(mitraCount).padStart(3, '0');
+            const fallbackCoords = resolveCoordinatesFromAddress(address, cityId, mitraCount);
+            const lat = !isNaN(rawLat) ? rawLat : fallbackCoords.lat;
+            const lng = !isNaN(rawLng) ? rawLng : fallbackCoords.lng;
 
             const newPartner = {
                 id: newId,
@@ -5013,8 +5105,8 @@
                 phone,
                 cityId,
                 address,
-                lat: !isNaN(latVal) ? latVal : autoCoords.lat,
-                lng: !isNaN(lngVal) ? lngVal : autoCoords.lng
+                lat,
+                lng
             };
 
             state.users.push(newPartner);
@@ -5022,42 +5114,51 @@
             syncDocToCloud('users', newPartner.id, newPartner);
             closeHqNewPartnerModal();
             refreshActiveScreenUI();
-            showToast(`Mitra ${outletName} (${newId}) berhasil ditambahkan ke database & peta!`, 'success');
+            showToast(`Mitra baru "${outletName}" (${newId}) berhasil ditambahkan ke Database & Peta!`, 'success');
         };
 
-        // Products Master CRUD (HQ)
-        window.renderHqProductsTable = function() {
+        // ==================== 15. HQ MASTER RAW MATERIALS & HPP CRUD ====================
+        function renderHqProductsTable() {
             const tbody = document.getElementById('hq-products-tbody');
             if (!tbody) return;
 
+            if (state.products.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Belum ada master bahan baku.</td></tr>`;
+                return;
+            }
+
             tbody.innerHTML = state.products.map(p => {
-                const marginUnit = (p.price || 0) - (p.hpp || 0);
-                const imgUrl = p.image || CATEGORY_DEFAULT_IMAGES[p.category] || 'https://placehold.co/120x120/15987E/FBC14D?text=UGIEE';
+                const profitUnit = (p.price || 0) - (p.hpp || 0);
+                const imgUrl = p.image || CATEGORY_DEFAULT_IMAGES[p.category] || 'https://placehold.co/300x200/15987E/FBC14D?text=UGIEE';
                 return `
                     <tr class="hover:bg-slate-50/80 transition">
                         <td class="py-3.5 px-5">
                             <div class="flex items-center gap-3">
                                 <img src="${imgUrl}" alt="${p.name}" onerror="this.src='https://placehold.co/120x120/15987E/FBC14D?text=UGIEE'" class="w-11 h-11 rounded-xl object-cover border border-slate-200 shrink-0">
                                 <div>
-                                    <span class="font-mono font-bold text-[11px] text-ugiee-700">${p.sku}</span>
-                                    <p class="font-extrabold text-slate-900">${p.name}</p>
+                                    <span class="font-mono font-bold text-[11px] text-ugiee-700 block">${p.sku}</span>
+                                    <span class="font-extrabold text-slate-900">${p.name}</span>
                                 </div>
                             </div>
                         </td>
                         <td class="py-3.5 px-4">
                             <span class="font-bold text-slate-700 block">${p.category}</span>
-                            <span class="text-slate-400">${p.unit} (${p.weight} kg)</span>
+                            <span class="text-[11px] text-slate-400">${p.unit} • ${p.weight} kg</span>
                         </td>
                         <td class="py-3.5 px-4 text-right font-extrabold text-slate-900">${formatRupiah(p.price)}</td>
                         <td class="py-3.5 px-4 text-right font-bold text-amber-700">${formatRupiah(p.hpp)}</td>
-                        <td class="py-3.5 px-4 text-right font-black text-emerald-700">+${formatRupiah(marginUnit)}</td>
+                        <td class="py-3.5 px-4 text-right font-black text-emerald-700">+${formatRupiah(profitUnit)}</td>
                         <td class="py-3.5 px-4 text-center">
-                            <span class="px-2.5 py-1 rounded-full ${p.stock < 15 ? 'bg-rose-100 text-rose-800' : 'bg-ugiee-100 text-ugiee-900'} font-extrabold">${p.stock}</span>
+                            <span class="px-2.5 py-1 rounded-full ${p.stock > 10 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-700'} font-extrabold">
+                                ${p.stock} unit
+                            </span>
                         </td>
                         <td class="py-3.5 px-5 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" onclick="openProductModal('${p.sku}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px]">Edit</button>
-                                <button type="button" onclick="deleteProductItem('${p.sku}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold text-[11px]">
+                                <button onclick="openProductModal('${p.sku}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition">
+                                    Edit
+                                </button>
+                                <button onclick="deleteProduct('${p.sku}')" class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold text-xs transition" title="Hapus Produk">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
@@ -5065,46 +5166,48 @@
                     </tr>
                 `;
             }).join('');
-        };
+        }
 
         window.previewProductImage = function(url) {
             const img = document.getElementById('prod-image-preview');
-            if (!img) return;
-            img.src = url || CATEGORY_DEFAULT_IMAGES[document.getElementById('prod-category')?.value] || 'https://placehold.co/300x200/15987E/FBC14D?text=UGIEE+Produk';
+            if (img) {
+                img.src = url.trim() || 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=300&q=80';
+            }
         };
 
         window.openProductModal = function(editSku = null) {
             const modal = document.getElementById('product-modal');
-            const title = document.getElementById('product-modal-title');
-            const skuInput = document.getElementById('prod-sku');
+            const titleEl = document.getElementById('product-modal-title');
             const editInput = document.getElementById('prod-edit-sku');
+            const skuInput = document.getElementById('prod-sku');
 
             if (editSku) {
-                const prod = state.products.find(p => p.sku === editSku);
-                if (!prod) return;
-                title.textContent = `Edit Bahan Baku & HPP: ${prod.sku}`;
-                editInput.value = prod.sku;
-                skuInput.value = prod.sku;
+                const p = state.products.find(item => item.sku === editSku);
+                if (!p) return;
+                titleEl.textContent = `Edit Bahan Baku & HPP: ${p.sku}`;
+                editInput.value = p.sku;
+                skuInput.value = p.sku;
                 skuInput.readOnly = true;
-                document.getElementById('prod-category').value = prod.category;
-                document.getElementById('prod-name').value = prod.name;
-                document.getElementById('prod-unit').value = prod.unit;
-                document.getElementById('prod-weight').value = prod.weight;
-                document.getElementById('prod-stock').value = prod.stock;
-                document.getElementById('prod-hpp').value = prod.hpp;
-                document.getElementById('prod-price').value = prod.price;
-                document.getElementById('prod-image').value = prod.image || '';
-                document.getElementById('prod-desc').value = prod.desc || '';
-                previewProductImage(prod.image);
+                document.getElementById('prod-category').value = p.category;
+                document.getElementById('prod-name').value = p.name;
+                document.getElementById('prod-unit').value = p.unit;
+                document.getElementById('prod-weight').value = p.weight;
+                document.getElementById('prod-stock').value = p.stock;
+                document.getElementById('prod-hpp').value = p.hpp;
+                document.getElementById('prod-price').value = p.price;
+                document.getElementById('prod-image').value = p.image || '';
+                document.getElementById('prod-desc').value = p.desc || '';
+                previewProductImage(p.image || '');
             } else {
-                title.textContent = 'Tambah Bahan Baku & Master HPP';
+                const nextNum = String(state.products.length + 1).padStart(2, '0');
+                titleEl.textContent = 'Tambah Bahan Baku & Master HPP Baru';
                 editInput.value = '';
-                skuInput.value = '';
+                skuInput.value = `UG-PRD-${nextNum}`;
                 skuInput.readOnly = false;
                 document.getElementById('prod-category').value = 'Tepung & Premiks';
                 document.getElementById('prod-name').value = '';
                 document.getElementById('prod-unit').value = '';
-                document.getElementById('prod-weight').value = '';
+                document.getElementById('prod-weight').value = '5';
                 document.getElementById('prod-stock').value = '50';
                 document.getElementById('prod-hpp').value = '';
                 document.getElementById('prod-price').value = '';
@@ -5137,16 +5240,16 @@
             const image = document.getElementById('prod-image').value.trim() || CATEGORY_DEFAULT_IMAGES[category] || '';
             const desc = document.getElementById('prod-desc').value.trim();
 
-            const prodObj = { sku, name, category, unit, weight, hpp, price, stock, image, desc };
+            if (!editSku && state.products.some(p => p.sku === sku)) {
+                showToast(`Kode SKU "${sku}" sudah ada! Gunakan kode lain.`, 'error');
+                return;
+            }
 
+            const prodObj = { sku, name, category, unit, weight, hpp, price, stock, image, desc };
             if (editSku) {
                 const idx = state.products.findIndex(p => p.sku === editSku);
                 if (idx !== -1) state.products[idx] = prodObj;
             } else {
-                if (state.products.some(p => p.sku === sku)) {
-                    showToast(`Kode SKU ${sku} sudah terdaftar!`, 'warning');
-                    return;
-                }
                 state.products.push(prodObj);
             }
 
@@ -5154,116 +5257,21 @@
             syncDocToCloud('products', prodObj.sku, prodObj);
             closeProductModal();
             refreshActiveScreenUI();
-            showToast(`Data bahan baku ${name} (${sku}) berhasil disimpan!`, 'success');
+            showToast(`Bahan baku "${name}" berhasil disimpan!`, 'success');
         };
 
-        window.deleteProductItem = function(sku) {
-            state.products = state.products.filter(p => p.sku !== sku);
+        window.deleteProduct = function(sku) {
+            const idx = state.products.findIndex(p => p.sku === sku);
+            if (idx === -1) return;
+            const deletedName = state.products[idx].name;
+            state.products.splice(idx, 1);
             saveLocalData();
             deleteDocFromCloud('products', sku);
             refreshActiveScreenUI();
-            showToast(`Bahan baku ${sku} telah dihapus.`, 'info');
+            showToast(`Bahan baku "${deletedName}" dihapus dari master katalog.`, 'info');
         };
 
-        // HQ Payment Proof Verification & Approval Modal
-        window.openHqVerifyProofModal = function(orderId) {
-            const order = state.orders.find(o => o.id === orderId);
-            if (!order) return;
-
-            document.getElementById('hq-vp-order-id').value = order.id;
-            document.getElementById('hq-vp-subtitle').textContent = `${order.id} • ${order.createdAt}`;
-            document.getElementById('hq-vp-outlet').textContent = `${order.outletName} (${order.partnerId})`;
-            document.getElementById('hq-vp-pic').textContent = `PIC: ${order.ownerName} • WA: ${order.partnerPhone}`;
-            document.getElementById('hq-vp-amount').textContent = formatRupiah(order.grandTotal);
-            document.getElementById('hq-vp-method').textContent = order.paymentDestinationDetail || order.paymentMethod;
-            document.getElementById('hq-vp-upload-time').textContent = order.paymentProofUploadedAt ? `Diupload: ${order.paymentProofUploadedAt}` : '';
-            document.getElementById('hq-vp-admin-note').value = '';
-
-            const noteEl = document.getElementById('hq-vp-note');
-            if (order.paymentProofNote) {
-                noteEl.textContent = `Catatan Mitra: "${order.paymentProofNote}"`;
-                noteEl.classList.remove('hidden');
-            } else {
-                noteEl.classList.add('hidden');
-            }
-
-            const imgContainer = document.getElementById('hq-vp-image-container');
-            if (order.paymentProofImage) {
-                imgContainer.innerHTML = `<img src="${order.paymentProofImage}" alt="Bukti Transaksi Mitra" class="max-h-72 w-auto rounded-xl shadow-sm object-contain">`;
-            } else {
-                imgContainer.innerHTML = `<p class="text-xs text-slate-400">Mitra belum mengunggah gambar bukti pembayaran.</p>`;
-            }
-
-            const modal = document.getElementById('hq-verify-proof-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        };
-
-        window.closeHqVerifyProofModal = function() {
-            const modal = document.getElementById('hq-verify-proof-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        };
-
-        window.approvePaymentProof = function() {
-            const orderId = document.getElementById('hq-vp-order-id').value;
-            const adminNote = document.getElementById('hq-vp-admin-note').value.trim() || 'Dana telah diverifikasi masuk ke rekening/QRIS resmi UGIEE';
-            const order = state.orders.find(o => o.id === orderId);
-            if (!order) return;
-
-            order.paymentStatus = 'LUNAS';
-            order.orderStatus = 'Diproses Gudang UGIEE';
-            order.resiNumber = order.resiNumber && !order.resiNumber.startsWith('Menunggu') ? order.resiNumber : 'Menunggu Resi Kargo';
-            order.trackingLogs.push({
-                time: getFormattedNow(),
-                title: 'Pembayaran Dicek & Disetujui Admin Pusat',
-                note: `${adminNote} • Pesanan diteruskan ke Gudang Pusat untuk diproses`
-            });
-
-            saveLocalData();
-            syncDocToCloud('orders', order.id, order);
-            closeHqVerifyProofModal();
-
-            const waText = `Halo *${order.ownerName} (${order.outletName})*,\n\nPembayaran Anda telah *DICEK & DISETUJUI* oleh Admin Pusat UGIEE:\n*No. Invoice:* ${order.id}\n*Total Lunas:* ${formatRupiah(order.grandTotal)}\n*Status Pesanan:* Diproses Gudang UGIEE\n*Catatan Pusat:* ${adminNote}\n\nPesanan bahan baku Anda sedang disiapkan oleh tim gudang kami. Terima kasih!`;
-            logWhatsAppNotification('PUSAT -> MITRA', `${order.outletName} (${order.ownerName})`, order.partnerPhone, order.id, waText);
-
-            const waUrl = `https://wa.me/${formatWaInternational(order.partnerPhone)}?text=${encodeURIComponent(waText)}`;
-            document.getElementById('wa-banner-title').textContent = 'Pembayaran Disetujui & Masuk Proses Gudang!';
-            document.getElementById('wa-banner-desc').textContent = `Transaksi ${order.id} telah lunas dan otomatis dihitung ke laporan omzet & laba bersih pusat.`;
-            document.getElementById('wa-banner-preview').textContent = waText;
-            document.getElementById('wa-banner-direct-link').href = waUrl;
-            document.getElementById('wa-banner-cta-text').textContent = `Kirim Info Persetujuan ke WA Mitra (${order.partnerPhone})`;
-
-            const bannerModal = document.getElementById('wa-confirm-banner-modal');
-            bannerModal.classList.remove('hidden');
-            bannerModal.classList.add('flex');
-
-            refreshActiveScreenUI();
-            showToast(`Pembayaran ${order.id} disetujui & masuk antrean proses gudang!`, 'success');
-        };
-
-        window.rejectPaymentProof = function() {
-            const orderId = document.getElementById('hq-vp-order-id').value;
-            const reason = document.getElementById('hq-vp-admin-note').value.trim() || 'Bukti transfer tidak terbaca / nominal belum sesuai';
-            const order = state.orders.find(o => o.id === orderId);
-            if (!order) return;
-
-            order.paymentStatus = 'DITOLAK';
-            order.orderStatus = 'Bukti Pembayaran Ditolak';
-            order.trackingLogs.push({
-                time: getFormattedNow(),
-                title: 'Bukti Pembayaran Ditolak Admin Pusat',
-                note: `Alasan: ${reason} — Silakan upload ulang bukti transfer yang valid`
-            });
-
-            saveLocalData();
-            syncDocToCloud('orders', order.id, order);
-            closeHqVerifyProofModal();
-            refreshActiveScreenUI();
-            showToast(`Bukti pembayaran ${order.id} ditolak. Mitra diminta mengunggah ulang.`, 'warning');
-        };
-
-        // HQ Tracking Modal & WA Trigger
+        // ==================== 16. HQ TRACKING, RESI & WHATSAPP GATEWAY ====================
         window.openHqTrackingModal = function(orderId) {
             const order = state.orders.find(o => o.id === orderId);
             if (!order) return;
@@ -5273,8 +5281,8 @@
             document.getElementById('hq-track-outlet-name').textContent = order.outletName;
             document.getElementById('hq-track-partner-wa').textContent = order.partnerPhone;
             document.getElementById('hq-track-courier').textContent = order.courierName;
-            document.getElementById('hq-track-status-select').value = order.orderStatus;
-            document.getElementById('hq-track-resi-input').value = order.resiNumber && !order.resiNumber.startsWith('Menunggu') ? order.resiNumber : '';
+            document.getElementById('hq-track-status-select').value = order.orderStatus || 'Diproses Gudang UGIEE';
+            document.getElementById('hq-track-resi-input').value = order.resiNumber && order.resiNumber !== '-' ? order.resiNumber : '';
             document.getElementById('hq-track-note-input').value = '';
 
             const modal = document.getElementById('hq-tracking-modal');
@@ -5296,47 +5304,94 @@
         window.submitHqTrackingUpdate = function(e) {
             e.preventDefault();
             const orderId = document.getElementById('hq-track-order-id').value;
-            const newStatus = document.getElementById('hq-track-status-select').value;
+            const nextStatus = document.getElementById('hq-track-status-select').value;
             const resi = document.getElementById('hq-track-resi-input').value.trim().toUpperCase();
-            const note = document.getElementById('hq-track-note-input').value.trim() || `Status diperbarui menjadi ${newStatus}`;
+            const note = document.getElementById('hq-track-note-input').value.trim();
 
             const order = state.orders.find(o => o.id === orderId);
             if (!order) return;
 
-            if (newStatus !== 'Menunggu Pembayaran') order.paymentStatus = 'LUNAS';
-            order.orderStatus = newStatus;
-            order.resiNumber = resi;
+            if (nextStatus !== 'Menunggu Pembayaran') {
+                order.paymentStatus = 'LUNAS';
+            }
+            order.orderStatus = nextStatus;
+            order.resiNumber = resi || '-';
+            order.trackingLogs = order.trackingLogs || [];
             order.trackingLogs.push({
                 time: getFormattedNow(),
-                title: newStatus,
-                note: `${note} (Resi: ${resi})`
+                title: `Status Diperbarui: ${nextStatus}`,
+                note: `Resi: ${order.resiNumber}${note ? ` • ${note}` : ''}`
             });
 
             saveLocalData();
             syncDocToCloud('orders', order.id, order);
             closeHqTrackingModal();
-
-            const waText = `Halo *${order.ownerName} (${order.outletName})*,\n\nUpdate Pengiriman Bahan Baku UGIEE:\n*No. Invoice:* ${order.id}\n*Status Terbaru:* ${newStatus}\n*Ekspedisi:* ${order.courierName}\n*No. Resi:* ${resi}\n*Catatan:* ${note}\n\nPantau terus di Portal Mitra UGIEE!`;
-            logWhatsAppNotification('PUSAT -> MITRA', `${order.outletName} (${order.ownerName})`, order.partnerPhone, order.id, waText);
-
-            const waUrl = `https://wa.me/${formatWaInternational(order.partnerPhone)}?text=${encodeURIComponent(waText)}`;
-            document.getElementById('wa-banner-title').textContent = 'Resi Diperbarui & Log WA Mitra Tercatat!';
-            document.getElementById('wa-banner-desc').textContent = `Notifikasi pengiriman ${order.id} siap dikirim ke WhatsApp ${order.ownerName} (${order.partnerPhone}).`;
-            document.getElementById('wa-banner-preview').textContent = waText;
-            document.getElementById('wa-banner-direct-link').href = waUrl;
-            document.getElementById('wa-banner-cta-text').textContent = `Kirim Resi ke WA Mitra (${order.partnerPhone})`;
-
-            const bannerModal = document.getElementById('wa-confirm-banner-modal');
-            bannerModal.classList.remove('hidden');
-            bannerModal.classList.add('flex');
-
             refreshActiveScreenUI();
+
+            const waText = `Halo *${order.outletName}* (${order.ownerName}),\n\nUpdate pengiriman pesanan bahan baku *${order.id}*:\n• Status Terbaru: *${nextStatus}*\n• Ekspedisi: *${order.courierName}*\n• No. Resi / Surat Jalan: *${order.resiNumber}*\n${note ? `• Catatan Logistik: ${note}\n` : ''}\nPantau detail pelacakan & invoice digital Anda di Portal Mitra UGIEE. Terima kasih!`;
+
+            logWhatsAppGateway(order.id, order.outletName, order.partnerPhone, `Update Resi & Status (${nextStatus})`, waText);
+            openWaConfirmBanner(
+                'Status & Resi Diperbarui!',
+                `Status pesanan ${order.id} telah diubah menjadi "${nextStatus}". Klik tombol di bawah untuk langsung mengirim nomor resi ke WhatsApp Mitra (${order.partnerPhone}).`,
+                waText,
+                order.partnerPhone,
+                'Kirim Info Resi ke WA Mitra'
+            );
         };
 
-        // WA Gateway Settings Modal
+        function logWhatsAppGateway(orderId, targetName, targetPhone, eventType, messageText) {
+            const entry = {
+                id: 'WA-' + Date.now(),
+                time: getFormattedNow(),
+                orderId,
+                targetName,
+                targetPhone,
+                eventType,
+                messageText
+            };
+            state.waLogs.unshift(entry);
+            if (state.waLogs.length > 30) state.waLogs = state.waLogs.slice(0, 30);
+            saveLocalData();
+            if (cloudReady && db) {
+                set(ref(db, `${RTDB_ROOT}/settings/waLogs`), { logs: state.waLogs }).catch(() => {});
+            }
+            renderHqWaLogs();
+        }
+
+        function renderHqWaLogs() {
+            const container = document.getElementById('hq-wa-logs-list');
+            if (!container) return;
+
+            if (!state.waLogs || state.waLogs.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-6 text-xs text-slate-400">Belum ada riwayat notifikasi WhatsApp Gateway otomatis.</div>`;
+                return;
+            }
+
+            container.innerHTML = state.waLogs.map(log => {
+                const waUrl = `https://wa.me/${formatWaInternational(log.targetPhone)}?text=${encodeURIComponent(log.messageText)}`;
+                return `
+                    <div class="p-4 rounded-2xl bg-white border border-emerald-200/80 shadow-2xs space-y-2 text-xs flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-mono font-bold text-[10px] text-ugiee-800">${log.orderId}</span>
+                                <span class="text-[10px] text-slate-400">${log.time}</span>
+                            </div>
+                            <p class="font-extrabold text-slate-900">${log.eventType}</p>
+                            <p class="text-[11px] text-emerald-700 font-semibold">Tujuan: ${log.targetName} (${log.targetPhone})</p>
+                            <p class="text-[11px] text-slate-500 line-clamp-3 bg-slate-50 p-2 rounded-xl border border-slate-100 whitespace-pre-line">${log.messageText}</p>
+                        </div>
+                        <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 font-bold text-[11px] text-center transition flex items-center justify-center gap-1.5">
+                            <i class="fa-brands fa-whatsapp"></i> Kirim Ulang via wa.me
+                        </a>
+                    </div>
+                `;
+            }).join('');
+        }
+
         window.openWaSettingsModal = function() {
-            document.getElementById('wa-hq-phone-input').value = state.waConfig.hqPhone;
-            document.getElementById('wa-hq-name-input').value = state.waConfig.hqName;
+            document.getElementById('wa-hq-phone-input').value = state.waConfig.hqPhone || '081333555114';
+            document.getElementById('wa-hq-name-input').value = state.waConfig.hqName || 'Admin Logistik & Finance UGIEE Pusat';
             const modal = document.getElementById('wa-settings-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -5353,33 +5408,55 @@
             state.waConfig.hqPhone = document.getElementById('wa-hq-phone-input').value.trim();
             state.waConfig.hqName = document.getElementById('wa-hq-name-input').value.trim();
             saveLocalData();
-            syncDocToCloud('settings', 'waConfig', state.waConfig);
+            if (cloudReady && db) {
+                set(ref(db, `${RTDB_ROOT}/settings/waConfig`), state.waConfig).catch(() => {});
+            }
             closeWaSettingsModal();
             refreshActiveScreenUI();
-            showToast('Konfigurasi WhatsApp Gateway Pusat berhasil disimpan!', 'success');
+            showToast(`Nomor WhatsApp Pusat diperbarui ke ${state.waConfig.hqPhone}`, 'success');
         };
 
-        // HQ Admins Management
-        window.renderHqAdminsTable = function() {
+        function openWaConfirmBanner(title, desc, previewText, targetPhone, ctaText) {
+            document.getElementById('wa-banner-title').textContent = title;
+            document.getElementById('wa-banner-desc').textContent = desc;
+            document.getElementById('wa-banner-preview').textContent = previewText;
+            document.getElementById('wa-banner-cta-text').textContent = ctaText;
+            document.getElementById('wa-banner-direct-link').href = `https://wa.me/${formatWaInternational(targetPhone)}?text=${encodeURIComponent(previewText)}`;
+
+            const modal = document.getElementById('wa-confirm-banner-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        window.closeWaConfirmBanner = function() {
+            const modal = document.getElementById('wa-confirm-banner-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        // ==================== 17. HQ ADMIN ACCOUNTS MANAGEMENT ====================
+        function renderHqAdminsTable() {
             const tbody = document.getElementById('hq-admins-tbody');
             if (!tbody) return;
-            const admins = state.users.filter(u => u.role === 'PUSAT');
 
+            const admins = state.users.filter(u => u.role === 'PUSAT');
             tbody.innerHTML = admins.map(adm => `
                 <tr class="hover:bg-slate-50/80 transition">
                     <td class="py-3.5 px-5">
-                        <span class="font-mono font-bold text-[11px] text-ugiee-700">${adm.id}</span>
-                        <p class="font-extrabold text-slate-900">${adm.outletName}</p>
+                        <span class="font-mono font-bold text-[11px] text-ugiee-700 block">${adm.id}</span>
+                        <span class="font-extrabold text-slate-900">${adm.outletName}</span>
                     </td>
                     <td class="py-3.5 px-4 font-bold text-slate-800">${adm.ownerName}</td>
-                    <td class="py-3.5 px-4 font-mono text-slate-700">${adm.email}</td>
-                    <td class="py-3.5 px-4 text-emerald-700 font-bold">${adm.phone}</td>
-                    <td class="py-3.5 px-4 font-mono text-slate-500">${adm.password}</td>
+                    <td class="py-3.5 px-4 font-mono text-xs text-slate-700">${adm.email}</td>
+                    <td class="py-3.5 px-4 text-emerald-700 font-semibold">${adm.phone}</td>
+                    <td class="py-3.5 px-4 font-mono font-bold text-slate-600">${adm.password}</td>
                     <td class="py-3.5 px-5 text-center">
                         <div class="flex items-center justify-center gap-1.5">
-                            <button type="button" onclick="openHqAdminModal('${adm.id}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px]">Edit</button>
+                            <button onclick="openHqAdminModal('${adm.id}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition">
+                                Edit
+                            </button>
                             ${admins.length > 1 ? `
-                                <button type="button" onclick="deleteHqAdmin('${adm.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold text-[11px]">
+                                <button onclick="deleteHqAdmin('${adm.id}')" class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold text-xs transition" title="Hapus Akun Admin">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             ` : ''}
@@ -5387,16 +5464,18 @@
                     </td>
                 </tr>
             `).join('');
-        };
+        }
 
         window.openHqAdminModal = function(editId = null) {
             const modal = document.getElementById('hq-admin-modal');
-            const title = document.getElementById('hq-admin-modal-title');
+            const titleEl = document.getElementById('hq-admin-modal-title');
+            const editInput = document.getElementById('hq-adm-edit-id');
+
             if (editId) {
-                const adm = state.users.find(u => u.id === editId);
+                const adm = state.users.find(u => u.id === editId && u.role === 'PUSAT');
                 if (!adm) return;
-                title.innerHTML = `<i class="fa-solid fa-user-pen text-amberbrand-400"></i> Edit Akun Pusat: ${adm.id}`;
-                document.getElementById('hq-adm-edit-id').value = adm.id;
+                titleEl.innerHTML = `<i class="fa-solid fa-user-pen text-amberbrand-400"></i> Edit Akun Admin: ${adm.id}`;
+                editInput.value = adm.id;
                 document.getElementById('hq-adm-division').value = adm.outletName;
                 document.getElementById('hq-adm-owner').value = adm.ownerName;
                 document.getElementById('hq-adm-email').value = adm.email;
@@ -5404,15 +5483,16 @@
                 document.getElementById('hq-adm-password').value = adm.password;
                 document.getElementById('hq-adm-address').value = adm.address || '';
             } else {
-                title.innerHTML = `<i class="fa-solid fa-user-plus text-amberbrand-400"></i> Tambah Akun Admin Pusat`;
-                document.getElementById('hq-adm-edit-id').value = '';
+                titleEl.innerHTML = `<i class="fa-solid fa-user-shield text-amberbrand-400"></i> Tambah Akun Admin Pusat Baru`;
+                editInput.value = '';
                 document.getElementById('hq-adm-division').value = '';
                 document.getElementById('hq-adm-owner').value = '';
                 document.getElementById('hq-adm-email').value = '';
-                document.getElementById('hq-adm-phone').value = '081333555114';
+                document.getElementById('hq-adm-phone').value = '';
                 document.getElementById('hq-adm-password').value = '';
                 document.getElementById('hq-adm-address').value = 'Jl. Perintis Kemerdekaan KM 10, Tamalanrea, Makassar';
             }
+
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         };
@@ -5426,32 +5506,45 @@
         window.submitHqAdminForm = function(e) {
             e.preventDefault();
             const editId = document.getElementById('hq-adm-edit-id').value.trim();
-            const outletName = document.getElementById('hq-adm-division').value.trim();
+            const division = document.getElementById('hq-adm-division').value.trim();
             const ownerName = document.getElementById('hq-adm-owner').value.trim();
             const email = document.getElementById('hq-adm-email').value.trim().toLowerCase();
             const phone = document.getElementById('hq-adm-phone').value.trim();
             const password = document.getElementById('hq-adm-password').value.trim();
             const address = document.getElementById('hq-adm-address').value.trim();
 
+            const duplicateEmail = state.users.find(u => u.email.toLowerCase() === email && u.id !== editId);
+            if (duplicateEmail) {
+                showToast('Email sudah digunakan oleh akun lain!', 'error');
+                return;
+            }
+
             if (editId) {
                 const idx = state.users.findIndex(u => u.id === editId);
                 if (idx !== -1) {
-                    state.users[idx] = { ...state.users[idx], outletName, ownerName, email, phone, password, address };
+                    state.users[idx] = {
+                        ...state.users[idx],
+                        outletName: division,
+                        ownerName,
+                        email,
+                        phone,
+                        password,
+                        address
+                    };
                     syncDocToCloud('users', editId, state.users[idx]);
+                    if (state.currentUser && state.currentUser.id === editId) {
+                        state.currentUser = state.users[idx];
+                    }
                 }
             } else {
-                if (state.users.some(u => u.email.toLowerCase() === email)) {
-                    showToast('Email tersebut sudah terdaftar!', 'warning');
-                    return;
-                }
-                const count = state.users.filter(u => u.role === 'PUSAT').length + 1;
-                const newId = 'HQ-PUSAT-' + String(count).padStart(2, '0');
+                const adminCount = state.users.filter(u => u.role === 'PUSAT').length + 1;
+                const newId = 'HQ-PUSAT-' + String(adminCount).padStart(2, '0');
                 const newAdmin = {
                     id: newId,
                     role: 'PUSAT',
                     email,
                     password,
-                    outletName,
+                    outletName: division,
                     ownerName,
                     phone,
                     cityId: 'MKS',
@@ -5460,39 +5553,52 @@
                     lng: HQ_WAREHOUSE_COORDS.lng
                 };
                 state.users.push(newAdmin);
-                syncDocToCloud('users', newId, newAdmin);
+                syncDocToCloud('users', newAdmin.id, newAdmin);
             }
 
             saveLocalData();
             closeHqAdminModal();
             refreshActiveScreenUI();
-            showToast('Data akun Admin Pusat berhasil diperbarui!', 'success');
+            showToast('Akun Admin Pusat berhasil disimpan & disinkronkan!', 'success');
         };
 
         window.deleteHqAdmin = function(adminId) {
             const admins = state.users.filter(u => u.role === 'PUSAT');
             if (admins.length <= 1) {
-                showToast('Minimal harus ada 1 akun Admin Pusat aktif!', 'warning');
+                showToast('Minimal 1 akun Admin Pusat harus tetap aktif.', 'warning');
                 return;
             }
-            state.users = state.users.filter(u => u.id !== adminId);
+            if (state.currentUser && state.currentUser.id === adminId) {
+                showToast('Tidak dapat menghapus akun yang sedang digunakan login saat ini.', 'warning');
+                return;
+            }
+            const idx = state.users.findIndex(u => u.id === adminId);
+            if (idx === -1) return;
+            const removedName = state.users[idx].ownerName;
+            state.users.splice(idx, 1);
             saveLocalData();
             deleteDocFromCloud('users', adminId);
             refreshActiveScreenUI();
-            showToast(`Akun ${adminId} berhasil dihapus.`, 'info');
+            showToast(`Akun Admin "${removedName}" telah dihapus.`, 'info');
         };
 
-        // ==================== 15. BOOTSTRAP APPLICATION ====================
-        document.addEventListener('DOMContentLoaded', () => {
+        // ==================== 18. INITIALIZATION ON PAGE LOAD ====================
+        function bootstrapPortal() {
             loadLocalData();
             populateZoneDropdowns();
-            initHqPeriodFilterDropdowns();
+            populateHqPeriodDropdowns();
             initCloudSync();
 
             if (state.currentUser) {
                 enterPortalSession(state.currentUser);
             }
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bootstrapPortal);
+        } else {
+            bootstrapPortal();
+        }
     </script>
 </body>
 </html>
