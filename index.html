@@ -528,6 +528,68 @@
             <!-- SUB-TAB 1: EXECUTIVE OVERVIEW (KPI, PETA SEBARAN MITRA, CHART & PROFITABILITY TABLE) -->
             <div id="hq-overview-tab" class="space-y-8">
                 
+                <!-- FILTER PERIODE LAPORAN PUSAT -->
+                <div class="bg-white rounded-3xl p-4 sm:p-5 border border-ugiee-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-ugiee-100 text-ugiee-800 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </div>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h2 class="text-sm font-extrabold text-slate-900">Filter Periode Laporan Pusat</h2>
+                                <span id="hq-period-active-badge" class="px-2.5 py-0.5 rounded-full bg-ugiee-100 text-ugiee-800 text-[10px] font-extrabold">
+                                    Semua Periode
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Menyaring otomatis 4 Kartu KPI, Grafik Batang, Tabel Transaksi, Peta &amp; Peringkat Mitra.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div>
+                            <label for="hq-filter-day" class="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Tanggal</label>
+                            <select id="hq-filter-day" onchange="handleHqPeriodFilterChange()" class="px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-ugiee-700">
+                                <option value="ALL">Semua Tgl</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="hq-filter-month" class="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Bulan</label>
+                            <select id="hq-filter-month" onchange="handleHqPeriodFilterChange()" class="px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-ugiee-700">
+                                <option value="ALL">Semua Bulan</option>
+                                <option value="1">Januari</option>
+                                <option value="2">Februari</option>
+                                <option value="3">Maret</option>
+                                <option value="4">April</option>
+                                <option value="5">Mei</option>
+                                <option value="6">Juni</option>
+                                <option value="7">Juli</option>
+                                <option value="8">Agustus</option>
+                                <option value="9">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="hq-filter-year" class="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Tahun</label>
+                            <select id="hq-filter-year" onchange="handleHqPeriodFilterChange()" class="px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-ugiee-700">
+                                <option value="ALL">Semua Tahun</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-end gap-2 pt-3.5 sm:pt-4">
+                            <button type="button" onclick="setHqPeriodToday()" class="px-3.5 py-2 rounded-xl bg-amberbrand-500 hover:bg-amberbrand-600 text-ugiee-950 font-extrabold text-xs shadow-2xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-calendar-day"></i> Hari Ini
+                            </button>
+                            <button type="button" onclick="resetHqPeriodFilter()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-200 transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-rotate-left"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- 4 Executive KPI Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     <div class="bg-white rounded-3xl p-5 border border-ugiee-200/80 shadow-xs">
@@ -2399,7 +2461,10 @@
             profitChartInstance: null,
             mapInstance: null,
             mapMarkersLayer: null,
-            partnerMarkerLookup: {}
+            partnerMarkerLookup: {},
+            hqFilterDay: 'ALL',
+            hqFilterMonth: 'ALL',
+            hqFilterYear: 'ALL'
         };
 
         // ==================== 3. CLOUD FIRESTORE INITIALIZATION ====================
@@ -3734,6 +3799,7 @@
                 paymentStatus: 'BELUM_BAYAR',
                 orderStatus: 'Menunggu Pembayaran',
                 resiNumber: 'Menunggu Verifikasi',
+                isoDate: new Date().toISOString(),
                 createdAt: getFormattedNow(),
                 items: orderItems,
                 totalWeight: totals.totalWeight,
@@ -4250,8 +4316,187 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
+        const MONTH_MAP_ID = {
+            jan: 1, januari: 1,
+            feb: 2, februari: 2,
+            mar: 3, maret: 3,
+            apr: 4, april: 4,
+            mei: 5, may: 5,
+            jun: 6, juni: 6,
+            jul: 7, juli: 7,
+            agu: 8, agt: 8, agustus: 8, aug: 8,
+            sep: 9, september: 9,
+            okt: 10, oktober: 10, oct: 10,
+            nov: 11, november: 11,
+            des: 12, desember: 12, dec: 12
+        };
+
+        const MONTH_NAMES_FULL = [
+            '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+
+        function parseOrderDateParts(order) {
+            if (!order) return null;
+            if (order.isoDate) {
+                const d = new Date(order.isoDate);
+                if (!isNaN(d.getTime())) {
+                    return { day: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear() };
+                }
+            }
+            const raw = String(order.createdAt || '').trim();
+            const matchId = raw.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+            if (matchId) {
+                const day = parseInt(matchId[1], 10);
+                const mStr = matchId[2].toLowerCase();
+                const month = MONTH_MAP_ID[mStr] || 0;
+                const year = parseInt(matchId[3], 10);
+                if (day && month && year) return { day, month, year };
+            }
+            const matchIso = raw.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+            if (matchIso) {
+                return {
+                    year: parseInt(matchIso[1], 10),
+                    month: parseInt(matchIso[2], 10),
+                    day: parseInt(matchIso[3], 10)
+                };
+            }
+            const matchSlash = raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (matchSlash) {
+                return {
+                    day: parseInt(matchSlash[1], 10),
+                    month: parseInt(matchSlash[2], 10),
+                    year: parseInt(matchSlash[3], 10)
+                };
+            }
+            return null;
+        }
+
+        function initHqPeriodFilterDropdowns() {
+            const daySelect = document.getElementById('hq-filter-day');
+            const yearSelect = document.getElementById('hq-filter-year');
+            if (daySelect && daySelect.options.length <= 1) {
+                let dayOpts = '<option value="ALL">Semua Tgl</option>';
+                for (let d = 1; d <= 31; d++) {
+                    dayOpts += `<option value="${d}">${String(d).padStart(2, '0')}</option>`;
+                }
+                daySelect.innerHTML = dayOpts;
+            }
+            if (yearSelect) {
+                const currentYear = new Date().getFullYear();
+                const yearSet = new Set([currentYear - 1, currentYear, currentYear + 1, 2025, 2026]);
+                state.orders.forEach(o => {
+                    const parts = parseOrderDateParts(o);
+                    if (parts && parts.year) yearSet.add(parts.year);
+                });
+                const sortedYears = Array.from(yearSet).sort((a, b) => b - a);
+                const prevVal = state.hqFilterYear || 'ALL';
+                yearSelect.innerHTML = '<option value="ALL">Semua Tahun</option>' +
+                    sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+                yearSelect.value = prevVal;
+            }
+        }
+
+        function getPeriodFilteredOrders() {
+            const dFilter = state.hqFilterDay;
+            const mFilter = state.hqFilterMonth;
+            const yFilter = state.hqFilterYear;
+
+            if (dFilter === 'ALL' && mFilter === 'ALL' && yFilter === 'ALL') {
+                return state.orders;
+            }
+
+            return state.orders.filter(o => {
+                const parts = parseOrderDateParts(o);
+                if (!parts) return false;
+                if (dFilter !== 'ALL' && parts.day !== parseInt(dFilter, 10)) return false;
+                if (mFilter !== 'ALL' && parts.month !== parseInt(mFilter, 10)) return false;
+                if (yFilter !== 'ALL' && parts.year !== parseInt(yFilter, 10)) return false;
+                return true;
+            });
+        }
+
+        function updateHqPeriodBadgeLabel() {
+            const badge = document.getElementById('hq-period-active-badge');
+            if (!badge) return;
+            const d = state.hqFilterDay;
+            const m = state.hqFilterMonth;
+            const y = state.hqFilterYear;
+
+            if (d === 'ALL' && m === 'ALL' && y === 'ALL') {
+                badge.textContent = 'Semua Periode';
+                badge.className = 'px-2.5 py-0.5 rounded-full bg-ugiee-100 text-ugiee-800 text-[10px] font-extrabold';
+                return;
+            }
+
+            const chunks = [];
+            if (d !== 'ALL') chunks.push(`Tgl ${String(d).padStart(2, '0')}`);
+            if (m !== 'ALL') chunks.push(MONTH_NAMES_FULL[parseInt(m, 10)] || `Bulan ${m}`);
+            if (y !== 'ALL') chunks.push(y);
+
+            badge.textContent = 'Filter: ' + chunks.join(' • ');
+            badge.className = 'px-2.5 py-0.5 rounded-full bg-amberbrand-500 text-ugiee-950 text-[10px] font-extrabold';
+        }
+
+        window.handleHqPeriodFilterChange = function() {
+            state.hqFilterDay = document.getElementById('hq-filter-day')?.value || 'ALL';
+            state.hqFilterMonth = document.getElementById('hq-filter-month')?.value || 'ALL';
+            state.hqFilterYear = document.getElementById('hq-filter-year')?.value || 'ALL';
+            updateHqPeriodBadgeLabel();
+            renderHqDashboard();
+            renderHqPartnersMap();
+            renderHqPartnersDatabase();
+        };
+
+        window.setHqPeriodToday = function() {
+            const now = new Date();
+            const d = String(now.getDate());
+            const m = String(now.getMonth() + 1);
+            const y = String(now.getFullYear());
+
+            initHqPeriodFilterDropdowns();
+            state.hqFilterDay = d;
+            state.hqFilterMonth = m;
+            state.hqFilterYear = y;
+
+            const dayEl = document.getElementById('hq-filter-day');
+            const monthEl = document.getElementById('hq-filter-month');
+            const yearEl = document.getElementById('hq-filter-year');
+            if (dayEl) dayEl.value = d;
+            if (monthEl) monthEl.value = m;
+            if (yearEl) yearEl.value = y;
+
+            updateHqPeriodBadgeLabel();
+            renderHqDashboard();
+            renderHqPartnersMap();
+            renderHqPartnersDatabase();
+            showToast(`Menampilkan laporan hari ini (${String(d).padStart(2, '0')} ${MONTH_NAMES_FULL[parseInt(m, 10)]} ${y})`, 'info');
+        };
+
+        window.resetHqPeriodFilter = function() {
+            state.hqFilterDay = 'ALL';
+            state.hqFilterMonth = 'ALL';
+            state.hqFilterYear = 'ALL';
+
+            const dayEl = document.getElementById('hq-filter-day');
+            const monthEl = document.getElementById('hq-filter-month');
+            const yearEl = document.getElementById('hq-filter-year');
+            if (dayEl) dayEl.value = 'ALL';
+            if (monthEl) monthEl.value = 'ALL';
+            if (yearEl) yearEl.value = 'ALL';
+
+            updateHqPeriodBadgeLabel();
+            renderHqDashboard();
+            renderHqPartnersMap();
+            renderHqPartnersDatabase();
+            showToast('Filter periode laporan direset ke semua waktu.', 'info');
+        };
+
         window.renderHqDashboard = function() {
-            const paidOrders = state.orders.filter(o => o.paymentStatus === 'LUNAS');
+            initHqPeriodFilterDropdowns();
+            updateHqPeriodBadgeLabel();
+            const periodOrders = getPeriodFilteredOrders();
+            const paidOrders = periodOrders.filter(o => o.paymentStatus === 'LUNAS');
             const totalRevenue = paidOrders.reduce((s, o) => s + (o.subtotal || 0), 0);
             const totalHpp = paidOrders.reduce((s, o) => s + (o.totalHpp || 0), 0);
             const totalShipping = paidOrders.reduce((s, o) => s + (o.shippingFee || 0), 0);
@@ -4262,14 +4507,14 @@
             document.getElementById('hq-kpi-hpp').textContent = formatRupiah(totalHpp);
             document.getElementById('hq-kpi-profit').textContent = formatRupiah(netProfit);
             document.getElementById('hq-kpi-margin-badge').textContent = `${marginPct}% Margin`;
-            document.getElementById('hq-kpi-orders').textContent = `${state.orders.length} Order`;
+            document.getElementById('hq-kpi-orders').textContent = `${periodOrders.length} Order`;
             document.getElementById('hq-kpi-shipping').textContent = formatRupiah(totalShipping);
 
-            renderHqProfitChart();
+            renderHqProfitChart(periodOrders);
 
             // Render Transactions Table
             const filterVal = document.getElementById('hq-status-filter')?.value || 'ALL';
-            const filteredOrders = state.orders.filter(o => {
+            const filteredOrders = periodOrders.filter(o => {
                 if (filterVal === 'PENDING_VERIFY') return o.paymentStatus === 'MENUNGGU_VERIFIKASI';
                 if (filterVal === 'PAID') return o.paymentStatus === 'LUNAS';
                 if (filterVal === 'UNPAID') return o.paymentStatus !== 'LUNAS' && o.paymentStatus !== 'MENUNGGU_VERIFIKASI';
@@ -4278,6 +4523,9 @@
 
             const tbody = document.getElementById('hq-transactions-tbody');
             if (tbody) {
+                if (filteredOrders.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="py-10 px-6 text-center text-xs text-slate-500 font-semibold">Tidak ada transaksi mitra pada periode atau status yang dipilih.</td></tr>`;
+                } else {
                 tbody.innerHTML = filteredOrders.map(o => {
                     const profit = (o.subtotal || 0) - (o.totalHpp || 0);
                     const isPaid = o.paymentStatus === 'LUNAS';
@@ -4326,6 +4574,7 @@
                         </tr>
                     `;
                 }).join('');
+                }
             }
 
             // Render WA Logs
@@ -4348,11 +4597,12 @@
             }
         };
 
-        function renderHqProfitChart() {
+        function renderHqProfitChart(periodOrders = null) {
             const canvas = document.getElementById('hqProfitChart');
             if (!canvas || typeof Chart === 'undefined') return;
 
-            const paidOrders = state.orders.filter(o => o.paymentStatus === 'LUNAS');
+            const sourceOrders = Array.isArray(periodOrders) ? periodOrders : getPeriodFilteredOrders();
+            const paidOrders = sourceOrders.filter(o => o.paymentStatus === 'LUNAS');
             const totalRevenue = paidOrders.reduce((s, o) => s + (o.subtotal || 0), 0);
             const totalHpp = paidOrders.reduce((s, o) => s + (o.totalHpp || 0), 0);
             const netProfit = totalRevenue - totalHpp;
@@ -4427,9 +4677,10 @@
 
         // ==================== 13. INTERACTIVE LEAFLET MAP (HQ) ====================
         function getPartnerMetricsList() {
+            const periodOrders = getPeriodFilteredOrders();
             const mitras = state.users.filter(u => u.role === 'MITRA');
             return mitras.map((m, idx) => {
-                const partnerOrders = state.orders.filter(o => o.partnerId === m.id);
+                const partnerOrders = periodOrders.filter(o => o.partnerId === m.id);
                 const paidOrders = partnerOrders.filter(o => o.paymentStatus === 'LUNAS');
                 const totalRevenue = paidOrders.reduce((s, o) => s + (o.subtotal || 0), 0);
                 const totalProfit = paidOrders.reduce((s, o) => s + ((o.subtotal || 0) - (o.totalHpp || 0)), 0);
@@ -4633,7 +4884,7 @@
             if (!m) return;
 
             const zoneObj = SHIPPING_ZONES.find(z => z.id === m.cityId) || SHIPPING_ZONES[0];
-            const partnerOrders = state.orders.filter(o => o.partnerId === m.id);
+            const partnerOrders = getPeriodFilteredOrders().filter(o => o.partnerId === m.id);
             const avgOrder = m.paidCount > 0 ? Math.round(m.totalRevenue / m.paidCount) : 0;
 
             document.getElementById('pdm-outlet-name').textContent = m.outletName;
@@ -5211,6 +5462,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadLocalData();
             populateZoneDropdowns();
+            initHqPeriodFilterDropdowns();
             initCloudSync();
 
             if (state.currentUser) {
