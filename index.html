@@ -1842,15 +1842,15 @@
 
         // ==================== CLOUD DATABASE (FIRESTORE) CONFIGURATION ====================
         // Jika Anda mendeploy ke GitHub Pages / Vercel sendiri, tempel objek firebaseConfig proyek Firebase Anda di bawah ini:
-const firebaseConfig = {
-  apiKey: "AIzaSyB4v23rAro4ofdNRYzeQqw6pIy1eyt9EDI",
-  authDomain: "ugiee-supply-chain.firebaseapp.com",
-  databaseURL: "https://ugiee-supply-chain-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "ugiee-supply-chain",
-  storageBucket: "ugiee-supply-chain.firebasestorage.app",
-  messagingSenderId: "942326025398",
-  appId: "1:942326025398:web:817a70a985a0e1598d6a17",
-  measurementId: "G-QXXJTP15BS"
+const MANUAL_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyB4v23rAro4ofdNRYzeQqw6pIy1eyt9EDI",
+    authDomain: "ugiee-supply-chain.firebaseapp.com",
+    databaseURL: "https://ugiee-supply-chain-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "ugiee-supply-chain",
+    storageBucket: "ugiee-supply-chain.firebasestorage.app",
+    messagingSenderId: "942326025398",
+    appId: "1:942326025398:web:817a70a985a0e1598d6a17",
+    measurementId: "G-QXXJTP15BS"
 };
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ugiee-supply-chain-prod';
