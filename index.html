@@ -13,6 +13,10 @@
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+    <!-- Leaflet.js Interactive Map (OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
@@ -98,6 +102,26 @@
         .no-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
+        }
+
+        /* Custom Leaflet Map Styling for UGIEE Brand */
+        #hq-partners-map {
+            z-index: 10;
+            font-family: 'Inter', sans-serif;
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 18px !important;
+            box-shadow: 0 12px 28px -6px rgba(6, 49, 41, 0.22) !important;
+            border: 1px solid #C7D8C7 !important;
+            padding: 2px !important;
+        }
+        .leaflet-popup-content {
+            margin: 12px 14px !important;
+            min-width: 230px;
+        }
+        .ugiee-map-pin {
+            background: transparent;
+            border: none;
         }
     </style>
 </head>
@@ -234,7 +258,7 @@
                         <input type="text" id="reg-address" required placeholder="Jl. A.P. Pettarani No. 12, Kota..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:border-ugiee-700 outline-none">
                     </div>
 
-                    <button type="submit" class="w-full py-3 px-5 rounded-xl bg-amberbrand-500 hover:bg-amberbrand-600 text-ugiee-950 font-extrabold text-sm shadow-md transition">
+                    <button type="submit" id="reg-submit-btn" class="w-full py-3 px-5 rounded-xl bg-amberbrand-500 hover:bg-amberbrand-600 text-ugiee-950 font-extrabold text-sm shadow-md transition">
                         Daftar &amp; Masuk Sekarang
                     </button>
                 </form>
@@ -460,7 +484,7 @@
             </div>
         </main>
 
-        <!-- ==================== VIEW C: DASHBOARD INDUK (PUSAT / PROFIT & HPP ANALYTICS) ==================== -->
+        <!-- ==================== VIEW C: DASHBOARD INDUK (PUSAT / PROFIT & HPP ANALYTICS + PETA SEBARAN MITRA) ==================== -->
         <main id="hq-dashboard-section" class="hidden flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-8 pb-28 md:pb-10 space-y-6 sm:space-y-8">
             
             <!-- HQ Executive Header Banner -->
@@ -470,10 +494,10 @@
                         <i class="fa-solid fa-crown"></i> DASHBOARD INDUK PUSAT — UGIEE SUPPLY CHAIN
                     </div>
                     <h1 class="text-xl sm:text-3xl font-extrabold tracking-tight">
-                        Laporan Omzet, Modal (HPP) &amp; Keuntungan Bersih
+                        Laporan Omzet, Modal (HPP) &amp; Peta Sebaran Mitra
                     </h1>
                     <p class="text-ugiee-100/80 text-xs sm:text-sm mt-1.5 max-w-2xl">
-                        Pantau akumulasi modal pokok bahan baku terjual, laba bersih, serta kelola konfirmasi &amp; pelacakan WhatsApp otomatis ke mitra.
+                        Pantau akumulasi modal pokok bahan baku terjual, laba bersih, sebaran titik lokasi outlet mitra terdaftar, serta notifikasi WhatsApp otomatis.
                     </p>
                 </div>
 
@@ -493,7 +517,7 @@
                 </div>
             </div>
 
-            <!-- SUB-TAB 1: EXECUTIVE OVERVIEW (KPI, CHART & PROFITABILITY TABLE) -->
+            <!-- SUB-TAB 1: EXECUTIVE OVERVIEW (KPI, PETA SEBARAN MITRA, CHART & PROFITABILITY TABLE) -->
             <div id="hq-overview-tab" class="space-y-8">
                 
                 <!-- 4 Executive KPI Cards -->
@@ -538,6 +562,88 @@
                         </div>
                         <p id="hq-kpi-orders" class="text-2xl font-black text-slate-900 mt-3">0 Order</p>
                         <p class="text-[11px] text-slate-500 mt-1">Total Ongkir: <span id="hq-kpi-shipping" class="font-bold text-slate-700">Rp 0</span></p>
+                    </div>
+                </div>
+
+                <!-- ==================== PETA INTERAKTIF TITIK PENYEBARAN OUTLET MITRA ==================== -->
+                <div class="bg-white rounded-3xl border border-ugiee-200/90 shadow-xs overflow-hidden">
+                    <!-- Header & Map Controls -->
+                    <div class="px-5 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-ugiee-800 via-ugiee-700 to-ugiee-600 text-white flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div class="flex items-start sm:items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-amberbrand-500 text-ugiee-950 flex items-center justify-center text-lg font-black shadow shrink-0">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </div>
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h2 class="text-base sm:text-lg font-extrabold tracking-tight">
+                                        Peta Titik Penyebaran Outlet Mitra UGIEE
+                                    </h2>
+                                    <span id="hq-map-count-badge" class="px-2.5 py-0.5 rounded-full bg-amberbrand-500/20 border border-amberbrand-400/40 text-amberbrand-300 text-[11px] font-extrabold">
+                                        0 Outlet Terpetakan
+                                    </span>
+                                </div>
+                                <p class="text-xs text-ugiee-100/85 mt-0.5">
+                                    Visualisasi geografis real-time titik lokasi outlet mitra sesuai data alamat terdaftar &amp; Gudang Pusat UGIEE Makassar.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select id="hq-map-zone-filter" onchange="renderHqPartnersMap()" class="px-3 py-2 rounded-xl bg-ugiee-900/70 border border-ugiee-500 text-white text-xs font-bold outline-none focus:border-amberbrand-400">
+                                <option value="ALL">Semua Zona Wilayah</option>
+                                <option value="MKS">Zona 1 — Makassar &amp; Gowa</option>
+                                <option value="PRE">Zona 2 — Parepare &amp; Barru</option>
+                                <option value="PLP">Zona 3 — Palopo &amp; Luwu</option>
+                                <option value="KDI">Zona 4 — Kendari &amp; Sultra</option>
+                                <option value="MDO">Zona 5 — Manado &amp; Sulut</option>
+                            </select>
+
+                            <button type="button" onclick="fitAllPartnerMarkers()" class="px-3.5 py-2 rounded-xl bg-amberbrand-500 hover:bg-amberbrand-400 text-ugiee-950 text-xs font-extrabold shadow-xs transition flex items-center gap-1.5" title="Tampilkan semua titik outlet pada layar peta">
+                                <i class="fa-solid fa-expand"></i> Semua Titik
+                            </button>
+
+                            <button type="button" onclick="syncAllPartnerCoordinates(true)" class="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 text-xs font-bold transition flex items-center gap-1.5" title="Sinkronkan ulang titik koordinat berdasarkan alamat mitra">
+                                <i class="fa-solid fa-location-crosshairs"></i> Sinkron Alamat
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Map Canvas & Interactive Outlet List Split -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12">
+                        <!-- Left / Top Interactive Leaflet Map -->
+                        <div class="lg:col-span-8 relative bg-ugiee-100/60 border-b lg:border-b-0 lg:border-r border-slate-200">
+                            <div id="hq-partners-map" class="w-full h-[360px] sm:h-[430px]"></div>
+
+                            <!-- Map Legend Overlay -->
+                            <div class="px-4 py-2.5 bg-white/95 backdrop-blur-xs border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                                <div class="flex flex-wrap items-center gap-3 font-semibold text-slate-600">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-3 h-3 rounded-full bg-ugiee-950 border-2 border-amberbrand-400 inline-block"></span> Gudang Pusat UGIEE
+                                    </span>
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-3 h-3 rounded-full bg-ugiee-600 border-2 border-white shadow-2xs inline-block"></span> Outlet Mitra Aktif
+                                    </span>
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-3 h-3 rounded-full bg-amberbrand-500 border-2 border-ugiee-950 inline-block"></span> Top #1 Mitra Teraktif
+                                    </span>
+                                </div>
+                                <span class="text-[10px] text-slate-400">Klik pin outlet untuk detail alamat, omzet &amp; WhatsApp</span>
+                            </div>
+                        </div>
+
+                        <!-- Right / Bottom Quick Directory & Focus List -->
+                        <div class="lg:col-span-4 flex flex-col bg-slate-50/70 max-h-[480px]">
+                            <div class="p-3.5 border-b border-slate-200 bg-white">
+                                <div class="relative">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                    <input type="text" id="hq-map-search-input" oninput="renderHqPartnersMap()" placeholder="Cari outlet atau alamat di peta..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 text-xs focus:border-ugiee-700 outline-none">
+                                </div>
+                            </div>
+
+                            <div id="hq-map-outlet-list" class="p-3.5 space-y-2.5 overflow-y-auto flex-1">
+                                <!-- Populated dynamically by renderHqPartnersMap() -->
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -707,7 +813,7 @@
                                     <th class="py-3.5 px-4 font-bold text-center">Jumlah Orderan</th>
                                     <th class="py-3.5 px-4 font-bold text-right">Total Belanja</th>
                                     <th class="py-3.5 px-4 font-bold text-right">Kontribusi Laba</th>
-                                    <th class="py-3.5 px-4 font-bold text-center">Riwayat Transaksi</th>
+                                    <th class="py-3.5 px-4 font-bold text-center">Aksi &amp; Peta</th>
                                 </tr>
                             </thead>
                             <tbody id="hq-partners-tbody" class="divide-y divide-slate-100">
@@ -844,7 +950,7 @@
             <div id="bottom-nav-pusat" class="hidden grid-cols-4 h-15 py-1.5 px-1.5">
                 <button id="bnav-hq-overview" onclick="switchHqTab('overview')" class="flex flex-col items-center justify-center gap-0.5 rounded-xl text-ugiee-800 font-extrabold text-[10px]">
                     <i class="fa-solid fa-chart-pie text-base"></i>
-                    <span>Laba &amp; HPP</span>
+                    <span>Laba &amp; Peta</span>
                 </button>
                 <button id="bnav-hq-partners" onclick="switchHqTab('partners')" class="flex flex-col items-center justify-center gap-0.5 rounded-xl text-slate-500 font-semibold text-[10px]">
                     <i class="fa-solid fa-users-rectangle text-base"></i>
@@ -1301,6 +1407,9 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <button id="pdm-focus-map-btn" type="button" class="px-3 py-1.5 rounded-xl bg-amberbrand-500 hover:bg-amberbrand-400 text-ugiee-950 font-extrabold text-xs flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-location-dot"></i> Lihat di Peta
+                    </button>
                     <a id="pdm-wa-btn" href="#" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 transition">
                         <i class="fa-brands fa-whatsapp text-sm"></i> Chat WA Mitra
                     </a>
@@ -1324,8 +1433,9 @@
                         <p id="pdm-zone" class="text-slate-600 mt-0.5">-</p>
                     </div>
                     <div>
-                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Alamat Pengiriman Outlet</span>
+                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Alamat &amp; Koordinat Peta</span>
                         <p id="pdm-address" class="text-slate-700 font-medium mt-0.5">-</p>
+                        <p id="pdm-coords" class="font-mono text-[10px] text-ugiee-700 font-bold mt-1">-</p>
                     </div>
                 </div>
 
@@ -1418,9 +1528,26 @@
                     <input type="text" id="hq-np-address" required placeholder="Jl. Poros Makassar - Maros No. 18..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-ugiee-700">
                 </div>
 
+                <!-- Koordinat Peta Sebaran Mitra -->
+                <div class="p-3.5 rounded-2xl bg-ugiee-50/80 border border-ugiee-200 space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <label class="font-bold text-ugiee-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-location-dot text-ugiee-600"></i> Koordinat Titik Peta (Opsional / Otomatis)
+                        </label>
+                        <button type="button" onclick="detectHqNewPartnerCoords()" class="px-2.5 py-1 rounded-lg bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition flex items-center gap-1">
+                            <i class="fa-solid fa-location-crosshairs"></i> Deteksi dari Alamat
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <input type="number" step="any" id="hq-np-lat" placeholder="Latitude (cth: -5.1476)" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-[11px] outline-none focus:border-ugiee-700">
+                        <input type="number" step="any" id="hq-np-lng" placeholder="Longitude (cth: 119.4327)" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-[11px] outline-none focus:border-ugiee-700">
+                    </div>
+                    <p class="text-[10px] text-slate-500">Jika dikosongkan, sistem otomatis mencari koordinat peta sesuai alamat &amp; zona kota mitra.</p>
+                </div>
+
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="closeHqNewPartnerModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold">Batal</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold shadow-sm">Simpan ke Database Mitra</button>
+                    <button type="submit" id="hq-np-submit-btn" class="px-5 py-2.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold shadow-sm">Simpan ke Database &amp; Peta</button>
                 </div>
             </form>
         </div>
@@ -1513,11 +1640,34 @@
 
         // ==================== 1. MASTER REFERENCE DATA ====================
         const SHIPPING_ZONES = [
-            { id: 'MKS', city: 'Makassar & Sekitarnya (Zona 1)', zone: 'Zona 1 — Dalam Kota', baseFee: 15000, ratePerKg: 850, eta: 'Hari yang sama (Maks. 4 jam)' },
-            { id: 'PRE', city: 'Parepare & Barru (Zona 2)', zone: 'Zona 2 — Sulsel Tengah', baseFee: 25000, ratePerKg: 2000, eta: '1 - 2 Hari Kerja' },
-            { id: 'PLP', city: 'Palopo & Luwu Raya (Zona 3)', zone: 'Zona 3 — Sulsel Utara', baseFee: 35000, ratePerKg: 3200, eta: '2 - 3 Hari Kerja' },
-            { id: 'KDI', city: 'Kendari & Sultra (Zona 4)', zone: 'Zona 4 — Antar Provinsi', baseFee: 45000, ratePerKg: 4800, eta: '3 - 4 Hari Kerja' },
-            { id: 'MDO', city: 'Manado & Sulut (Zona 5)', zone: 'Zona 5 — Sulawesi Utara', baseFee: 55000, ratePerKg: 6200, eta: '4 - 5 Hari Kerja' }
+            { id: 'MKS', city: 'Makassar & Sekitarnya (Zona 1)', zone: 'Zona 1 — Dalam Kota', baseFee: 15000, ratePerKg: 850, eta: 'Hari yang sama (Maks. 4 jam)', centerLat: -5.147665, centerLng: 119.432732 },
+            { id: 'PRE', city: 'Parepare & Barru (Zona 2)', zone: 'Zona 2 — Sulsel Tengah', baseFee: 25000, ratePerKg: 2000, eta: '1 - 2 Hari Kerja', centerLat: -4.013512, centerLng: 119.625549 },
+            { id: 'PLP', city: 'Palopo & Luwu Raya (Zona 3)', zone: 'Zona 3 — Sulsel Utara', baseFee: 35000, ratePerKg: 3200, eta: '2 - 3 Hari Kerja', centerLat: -2.992411, centerLng: 120.196976 },
+            { id: 'KDI', city: 'Kendari & Sultra (Zona 4)', zone: 'Zona 4 — Antar Provinsi', baseFee: 45000, ratePerKg: 4800, eta: '3 - 4 Hari Kerja', centerLat: -3.972201, centerLng: 122.514900 },
+            { id: 'MDO', city: 'Manado & Sulut (Zona 5)', zone: 'Zona 5 — Sulawesi Utara', baseFee: 55000, ratePerKg: 6200, eta: '4 - 5 Hari Kerja', centerLat: 1.474830, centerLng: 124.842079 }
+        ];
+
+        const HQ_WAREHOUSE_COORDS = {
+            name: 'Gudang & Kantor Pusat UGIEE',
+            address: 'Jl. Perintis Kemerdekaan KM 10, Tamalanrea, Makassar',
+            lat: -5.133280,
+            lng: 119.488420
+        };
+
+        // Kamus Referensi Alamat / Area Sulawesi untuk Akurasi Titik Otomatis
+        const KNOWN_AREA_COORDINATES = [
+            { keywords: ['boulevard', 'panakkukang'], lat: -5.158420, lng: 119.446180 },
+            { keywords: ['pettarani', 'a.p. pettarani'], lat: -5.155890, lng: 119.436910 },
+            { keywords: ['tamalanrea', 'perintis'], lat: -5.133280, lng: 119.488420 },
+            { keywords: ['losari', 'penghibur', 'ujung pandang'], lat: -5.143620, lng: 119.407650 },
+            { keywords: ['alauddin', 'rappocini'], lat: -5.174310, lng: 119.433750 },
+            { keywords: ['gowa', 'sungguminasa', 'wahid hasyim'], lat: -5.206350, lng: 119.448820 },
+            { keywords: ['maros', 'poros makassar'], lat: -5.006940, lng: 119.573610 },
+            { keywords: ['parepare', 'sultan hasanuddin'], lat: -4.013512, lng: 119.625549 },
+            { keywords: ['barru'], lat: -4.407120, lng: 119.622340 },
+            { keywords: ['palopo', 'luwu'], lat: -2.992411, lng: 120.196976 },
+            { keywords: ['kendari', 'mandonga', 'abdullah silondae'], lat: -3.972201, lng: 122.514900 },
+            { keywords: ['manado', 'sam ratulangi'], lat: 1.474830, lng: 124.842079 }
         ];
 
         const COURIERS = [
@@ -1841,17 +1991,16 @@
         };
 
         // ==================== CLOUD DATABASE (FIRESTORE) CONFIGURATION ====================
-        // Jika Anda mendeploy ke GitHub Pages / Vercel sendiri, tempel objek firebaseConfig proyek Firebase Anda di bawah ini:
-const MANUAL_FIREBASE_CONFIG = {
-    apiKey: "AIzaSyB4v23rAro4ofdNRYzeQqw6pIy1eyt9EDI",
-    authDomain: "ugiee-supply-chain.firebaseapp.com",
-    databaseURL: "https://ugiee-supply-chain-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "ugiee-supply-chain",
-    storageBucket: "ugiee-supply-chain.firebasestorage.app",
-    messagingSenderId: "942326025398",
-    appId: "1:942326025398:web:817a70a985a0e1598d6a17",
-    measurementId: "G-QXXJTP15BS"
-};
+        const MANUAL_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyB4v23rAro4ofdNRYzeQqw6pIy1eyt9EDI",
+            authDomain: "ugiee-supply-chain.firebaseapp.com",
+            databaseURL: "https://ugiee-supply-chain-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ugiee-supply-chain",
+            storageBucket: "ugiee-supply-chain.firebasestorage.app",
+            messagingSenderId: "942326025398",
+            appId: "1:942326025398:web:817a70a985a0e1598d6a17",
+            measurementId: "G-QXXJTP15BS"
+        };
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ugiee-supply-chain-prod';
         let cloudDb = null;
@@ -1881,7 +2030,6 @@ const MANUAL_FIREBASE_CONFIG = {
             }
         }
 
-        // Strict Rule 1 Path Helper: /artifacts/{appId}/public/data/{collectionName}
         function getPublicCollectionRef(colName) {
             return collection(cloudDb, 'artifacts', appId, 'public', 'data', colName);
         }
@@ -1926,7 +2074,6 @@ const MANUAL_FIREBASE_CONFIG = {
                 cloudAuth = getAuth(fbApp);
                 cloudDb = getFirestore(fbApp);
 
-                // Rule 3: Authenticate FIRST before any Firestore query
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     const cred = await signInWithCustomToken(cloudAuth, __initial_auth_token);
                     cloudUser = cred.user;
@@ -1978,11 +2125,20 @@ const MANUAL_FIREBASE_CONFIG = {
                     return;
                 }
                 const list = [];
-                snap.forEach(d => list.push(d.data()));
+                snap.forEach(d => {
+                    const uData = d.data();
+                    if (uData.role === 'mitra' && (typeof uData.lat !== 'number' || typeof uData.lng !== 'number')) {
+                        const fallback = resolveQuickPartnerCoords(uData.address, uData.cityId, uData.partnerId);
+                        uData.lat = fallback.lat;
+                        uData.lng = fallback.lng;
+                    }
+                    list.push(uData);
+                });
                 cloudCache.users = list;
                 localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(list));
                 renderHqPartnersDatabase();
                 renderHqAdminsTable();
+                renderHqPartnersMap();
             }, (err) => console.error('Snapshot users error:', err));
 
             // 3. Real-time Orders Listener
@@ -2038,6 +2194,9 @@ const MANUAL_FIREBASE_CONFIG = {
             selectedRecipeCategory: 'Semua',
             hqSubTab: 'overview',
             hqChartInstance: null,
+            hqMapInstance: null,
+            hqMapMarkers: {},
+            hqWarehouseMarker: null,
             cart: [],
             checkoutCityId: 'MKS',
             checkoutAddress: '',
@@ -2047,6 +2206,74 @@ const MANUAL_FIREBASE_CONFIG = {
             activePaymentOrderId: null,
             countdownInterval: null
         };
+
+        // ==================== GEOCODING & COORDINATE RESOLVER FOR MITRA OUTLETS ====================
+        function deterministicOffsetFromSeed(seedStr) {
+            let hash = 0;
+            const str = String(seedStr || 'UGIEE');
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            const latOffset = ((Math.abs(hash) % 100) / 100 - 0.5) * 0.018;
+            const lngOffset = ((Math.abs(hash >> 4) % 100) / 100 - 0.5) * 0.018;
+            return { latOffset, lngOffset };
+        }
+
+        function resolveQuickPartnerCoords(address, cityId, seedKey = '') {
+            const addrLower = String(address || '').toLowerCase();
+            const offset = deterministicOffsetFromSeed(seedKey || address);
+
+            for (const area of KNOWN_AREA_COORDINATES) {
+                if (area.keywords.some(kw => addrLower.includes(kw))) {
+                    return {
+                        lat: Number((area.lat + offset.latOffset * 0.35).toFixed(6)),
+                        lng: Number((area.lng + offset.lngOffset * 0.35).toFixed(6)),
+                        source: 'area'
+                    };
+                }
+            }
+
+            const zoneObj = SHIPPING_ZONES.find(z => z.id === cityId) || SHIPPING_ZONES[0];
+            return {
+                lat: Number((zoneObj.centerLat + offset.latOffset).toFixed(6)),
+                lng: Number((zoneObj.centerLng + offset.lngOffset).toFixed(6)),
+                source: 'zone'
+            };
+        }
+
+        async function geocodeAddressWithFallback(address, cityId, seedKey = '') {
+            const quickCoords = resolveQuickPartnerCoords(address, cityId, seedKey);
+            const zoneObj = SHIPPING_ZONES.find(z => z.id === cityId) || SHIPPING_ZONES[0];
+            const cityClean = zoneObj.city.split('(')[0].replace('& Sekitarnya', '').trim();
+
+            try {
+                const query = encodeURIComponent(`${address}, ${cityClean}, Sulawesi, Indonesia`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`, {
+                    signal: controller.signal,
+                    headers: { 'Accept-Language': 'id' }
+                });
+                clearTimeout(timeoutId);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0 && data[0].lat && data[0].lon) {
+                        return {
+                            lat: Number(parseFloat(data[0].lat).toFixed(6)),
+                            lng: Number(parseFloat(data[0].lon).toFixed(6)),
+                            source: 'nominatim'
+                        };
+                    }
+                }
+            } catch (err) {
+                // Gunakan fallback presisi lokal jika API dibatasi / offline
+            }
+
+            return quickCoords;
+        }
 
         // ==================== WHATSAPP FORMATTER & GATEWAY HELPERS ====================
         function getWaSettings() {
@@ -2215,7 +2442,7 @@ const MANUAL_FIREBASE_CONFIG = {
                 localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(RAW_MATERIALS));
             }
 
-            // 2. Seed Demo Users (Mitra & Pusat HQ)
+            // 2. Seed Demo Users (Mitra dengan Koordinat Peta Akurat & Pusat HQ)
             if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
                 const defaultUsers = [
                     {
@@ -2227,7 +2454,9 @@ const MANUAL_FIREBASE_CONFIG = {
                         phone: '081234567890',
                         password: '123',
                         cityId: 'MKS',
-                        address: 'Jl. Boulevard No. 45, Panakkukang, Makassar'
+                        address: 'Jl. Boulevard No. 45, Panakkukang, Makassar',
+                        lat: -5.158420,
+                        lng: 119.446180
                     },
                     {
                         partnerId: 'UG-MTR-002',
@@ -2238,7 +2467,9 @@ const MANUAL_FIREBASE_CONFIG = {
                         phone: '085299887766',
                         password: '123',
                         cityId: 'PRE',
-                        address: 'Jl. Sultan Hasanuddin No. 88, Parepare'
+                        address: 'Jl. Sultan Hasanuddin No. 88, Parepare',
+                        lat: -4.013512,
+                        lng: 119.625549
                     },
                     {
                         partnerId: 'UG-MTR-003',
@@ -2249,7 +2480,9 @@ const MANUAL_FIREBASE_CONFIG = {
                         phone: '081344556677',
                         password: '123',
                         cityId: 'MKS',
-                        address: 'Jl. Wahid Hasyim No. 22, Sungguminasa, Gowa'
+                        address: 'Jl. Wahid Hasyim No. 22, Sungguminasa, Gowa',
+                        lat: -5.206350,
+                        lng: 119.448820
                     },
                     {
                         partnerId: 'UG-MTR-004',
@@ -2260,7 +2493,9 @@ const MANUAL_FIREBASE_CONFIG = {
                         phone: '082188776655',
                         password: '123',
                         cityId: 'KDI',
-                        address: 'Jl. Abdullah Silondae No. 104, Mandonga, Kendari'
+                        address: 'Jl. Abdullah Silondae No. 104, Mandonga, Kendari',
+                        lat: -3.972201,
+                        lng: 122.514900
                     },
                     {
                         partnerId: 'UG-HQ-000',
@@ -2271,14 +2506,31 @@ const MANUAL_FIREBASE_CONFIG = {
                         phone: '081333555114',
                         password: '123',
                         cityId: 'MKS',
-                        address: 'Jl. Perintis Kemerdekaan KM 10, Tamalanrea, Makassar'
+                        address: 'Jl. Perintis Kemerdekaan KM 10, Tamalanrea, Makassar',
+                        lat: HQ_WAREHOUSE_COORDS.lat,
+                        lng: HQ_WAREHOUSE_COORDS.lng
                     }
                 ];
                 localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(defaultUsers));
+            } else {
+                // Pastikan user lama memiliki koordinat peta valid
+                const existingUsers = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+                let patched = false;
+                existingUsers.forEach(u => {
+                    if (u.role === 'mitra' && (typeof u.lat !== 'number' || typeof u.lng !== 'number')) {
+                        const resolved = resolveQuickPartnerCoords(u.address, u.cityId, u.partnerId);
+                        u.lat = resolved.lat;
+                        u.lng = resolved.lng;
+                        patched = true;
+                    }
+                });
+                if (patched) {
+                    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(existingUsers));
+                }
             }
             cloudCache.users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
 
-            // 3. Seed Initial Orders with HPP snapshot (varied order counts per partner for ranking)
+            // 3. Seed Initial Orders with HPP snapshot
             if (!localStorage.getItem(STORAGE_KEYS.ORDERS)) {
                 const seedOrders = [
                     {
@@ -2539,7 +2791,8 @@ const MANUAL_FIREBASE_CONFIG = {
             renderHqProductsTable();
             renderHqAdminsTable();
             renderHqWaLogs();
-            showToast('Data demo & database pusat berhasil direset ke kondisi awal!', 'info');
+            renderHqPartnersMap();
+            showToast('Data demo, koordinat peta & database pusat berhasil direset ke kondisi awal!', 'info');
         }
 
         // ==================== 3. AUTHENTICATION & DUAL ROLE SWITCHER ====================
@@ -2636,8 +2889,9 @@ const MANUAL_FIREBASE_CONFIG = {
             showToast(`Selamat datang kembali, ${user.outletName}!`);
         }
 
-        function handleRegisterSubmit(e) {
+        async function handleRegisterSubmit(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('reg-submit-btn');
             const outletName = document.getElementById('reg-outlet').value.trim();
             const ownerName = document.getElementById('reg-owner').value.trim();
             const email = document.getElementById('reg-email').value.trim().toLowerCase();
@@ -2652,9 +2906,17 @@ const MANUAL_FIREBASE_CONFIG = {
                 return;
             }
 
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Memetakan Alamat & Mendaftar...';
+            }
+
             const mitraCount = users.filter(u => u.role === 'mitra').length + 1;
+            const partnerId = 'UG-MTR-' + String(mitraCount).padStart(3, '0');
+            const coords = await geocodeAddressWithFallback(address, cityId, partnerId);
+
             const newUser = {
-                partnerId: 'UG-MTR-' + String(mitraCount).padStart(3, '0'),
+                partnerId,
                 role: 'mitra',
                 outletName,
                 ownerName,
@@ -2662,15 +2924,22 @@ const MANUAL_FIREBASE_CONFIG = {
                 phone,
                 password,
                 cityId,
-                address
+                address,
+                lat: coords.lat,
+                lng: coords.lng
             };
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Daftar & Masuk Sekarang';
+            }
 
             users.push(newUser);
             cloudCache.users = users;
             localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
             cloudUpsert('users', newUser.partnerId, newUser);
             setActiveSession(newUser);
-            showToast(`Registrasi berhasil & tersinkron ke Cloud! ID Mitra Anda: ${newUser.partnerId}`);
+            showToast(`Registrasi berhasil & titik lokasi dipetakan (${coords.lat}, ${coords.lng})! ID Mitra: ${newUser.partnerId}`);
         }
 
         function setActiveSession(user) {
@@ -2730,6 +2999,7 @@ const MANUAL_FIREBASE_CONFIG = {
                 renderHqPartnersDatabase();
                 renderHqProductsTable();
                 renderHqAdminsTable();
+                setTimeout(() => renderHqPartnersMap(), 120);
             } else {
                 pusatDesktopNav.classList.add('hidden');
                 pusatDesktopNav.classList.remove('md:flex');
@@ -2840,6 +3110,12 @@ const MANUAL_FIREBASE_CONFIG = {
                 if (btnOverview) btnOverview.className = activeDesktop;
                 if (bOverview) bOverview.className = activeMobile;
                 renderHqDashboard();
+                setTimeout(() => {
+                    if (state.hqMapInstance) {
+                        state.hqMapInstance.invalidateSize();
+                    }
+                    renderHqPartnersMap();
+                }, 100);
             } else if (tab === 'partners') {
                 partnersTab.classList.remove('hidden');
                 if (btnPartners) btnPartners.className = activeDesktop;
@@ -3727,39 +4003,48 @@ const MANUAL_FIREBASE_CONFIG = {
             const idx = allOrders.findIndex(o => o.orderId === orderId);
             if (idx === -1) return;
 
-            const flow = ['Menunggu Pembayaran', 'Diproses Gudang UGIEE', 'Dalam Pengiriman Ekspedisi', 'Selesai'];
-            const order = allOrders[idx];
-            const currentIdx = flow.indexOf(order.status);
-            if (currentIdx < flow.length - 1) {
-                const nextStatus = flow[currentIdx + 1];
-                const nowStr = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-                order.status = nextStatus;
-                if (!order.paidAt) order.paidAt = nowStr;
-                if (!Array.isArray(order.trackingHistory)) order.trackingHistory = [];
-                order.trackingHistory.push({
-                    status: nextStatus,
-                    time: nowStr,
-                    note: `Status diperbarui ke "${nextStatus}" (Resi: ${order.trackingNumber})`
-                });
-                cloudCache.orders = allOrders;
-                localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(allOrders));
-                cloudUpsert('orders', order.orderId, order);
+            const flow = [
+                'Menunggu Pembayaran',
+                'Diproses Gudang UGIEE',
+                'Dalam Pengiriman Ekspedisi',
+                'Selesai'
+            ];
+            const currentIdx = flow.indexOf(allOrders[idx].status);
+            if (currentIdx === -1 || currentIdx >= flow.length - 1) return;
 
-                const waTrackMsg = buildWaTrackingMessage(order);
-                logWhatsAppAutomation({
-                    orderId: order.orderId,
-                    direction: 'HQ_TO_MITRA',
-                    recipientName: `${order.outletName} (${order.ownerName})`,
-                    recipientPhone: order.phone,
-                    eventType: `Update Tracking: ${nextStatus}`,
-                    messageText: waTrackMsg
-                });
-
-                renderOrders();
-                renderHqDashboard();
-                renderHqPartnersDatabase();
-                showToast(`Status ${orderId} -> ${nextStatus}. Notifikasi WA Tracking otomatis dikirim!`);
+            const nextStatus = flow[currentIdx + 1];
+            const nowStr = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+            allOrders[idx].status = nextStatus;
+            if (!allOrders[idx].paidAt) {
+                allOrders[idx].paidAt = nowStr;
             }
+            if (!Array.isArray(allOrders[idx].trackingHistory)) allOrders[idx].trackingHistory = [];
+            allOrders[idx].trackingHistory.push({
+                status: nextStatus,
+                time: nowStr,
+                note: nextStatus === 'Dalam Pengiriman Ekspedisi'
+                    ? `Diserahkan ke ${allOrders[idx].courierName} (No. Resi: ${allOrders[idx].trackingNumber})`
+                    : `Status diperbarui menjadi ${nextStatus}`
+            });
+
+            cloudCache.orders = allOrders;
+            localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(allOrders));
+            cloudUpsert('orders', allOrders[idx].orderId, allOrders[idx]);
+
+            const waMsg = buildWaTrackingMessage(allOrders[idx]);
+            logWhatsAppAutomation({
+                orderId: allOrders[idx].orderId,
+                direction: 'HQ_TO_MITRA',
+                recipientName: `${allOrders[idx].outletName} (${allOrders[idx].ownerName})`,
+                recipientPhone: allOrders[idx].phone,
+                eventType: `Update Tracking: ${nextStatus}`,
+                messageText: waMsg
+            });
+
+            renderOrders();
+            renderHqDashboard();
+            renderHqPartnersDatabase();
+            showToast(`Status ${orderId} -> "${nextStatus}" + Notifikasi WA Mitra terkirim!`);
         }
 
         function openHqTrackingModal(orderId) {
@@ -3770,10 +4055,10 @@ const MANUAL_FIREBASE_CONFIG = {
             document.getElementById('hq-track-order-id').value = order.orderId;
             document.getElementById('hq-track-order-subtitle').textContent = `${order.orderId} • ${order.createdAt}`;
             document.getElementById('hq-track-outlet-name').textContent = order.outletName;
-            document.getElementById('hq-track-partner-wa').textContent = `${order.phone} (${order.ownerName})`;
+            document.getElementById('hq-track-partner-wa').textContent = `${order.ownerName} (${order.phone})`;
             document.getElementById('hq-track-courier').textContent = order.courierName;
             document.getElementById('hq-track-status-select').value = order.status;
-            document.getElementById('hq-track-resi-input').value = order.trackingNumber;
+            document.getElementById('hq-track-resi-input').value = order.trackingNumber || '';
             document.getElementById('hq-track-note-input').value = '';
 
             const modal = document.getElementById('hq-tracking-modal');
@@ -3788,184 +4073,201 @@ const MANUAL_FIREBASE_CONFIG = {
         }
 
         function generateAutoResi() {
-            const auto = 'UGX' + Math.floor(100000000 + Math.random() * 900000000);
-            document.getElementById('hq-track-resi-input').value = auto;
+            const randomDigits = Math.floor(100000000 + Math.random() * 900000000);
+            document.getElementById('hq-track-resi-input').value = 'UGX' + randomDigits;
         }
 
         function submitHqTrackingUpdate(e) {
             e.preventDefault();
             const orderId = document.getElementById('hq-track-order-id').value;
-            const newStatus = document.getElementById('hq-track-status-select').value;
-            const newResi = document.getElementById('hq-track-resi-input').value.trim().toUpperCase();
-            const note = document.getElementById('hq-track-note-input').value.trim();
+            const nextStatus = document.getElementById('hq-track-status-select').value;
+            const nextResi = document.getElementById('hq-track-resi-input').value.trim().toUpperCase();
+            const customNote = document.getElementById('hq-track-note-input').value.trim();
 
             const allOrders = JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
             const idx = allOrders.findIndex(o => o.orderId === orderId);
             if (idx === -1) return;
 
-            const order = allOrders[idx];
             const nowStr = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-
-            order.status = newStatus;
-            order.trackingNumber = newResi;
-            if (newStatus !== 'Menunggu Pembayaran' && !order.paidAt) order.paidAt = nowStr;
-            if (!Array.isArray(order.trackingHistory)) order.trackingHistory = [];
-            order.trackingHistory.push({
-                status: newStatus,
+            allOrders[idx].status = nextStatus;
+            allOrders[idx].trackingNumber = nextResi;
+            if (nextStatus !== 'Menunggu Pembayaran' && !allOrders[idx].paidAt) {
+                allOrders[idx].paidAt = nowStr;
+            }
+            if (!Array.isArray(allOrders[idx].trackingHistory)) allOrders[idx].trackingHistory = [];
+            allOrders[idx].trackingHistory.push({
+                status: nextStatus,
                 time: nowStr,
-                note: note || `Status diperbarui oleh Pusat ke "${newStatus}" • Resi: ${newResi}`
+                note: customNote || `Update Admin Pusat: ${nextStatus} • Resi ${nextResi}`
             });
 
             cloudCache.orders = allOrders;
             localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(allOrders));
-            cloudUpsert('orders', order.orderId, order);
+            cloudUpsert('orders', allOrders[idx].orderId, allOrders[idx]);
+
+            const waMsg = buildWaTrackingMessage(allOrders[idx], customNote);
+            logWhatsAppAutomation({
+                orderId: allOrders[idx].orderId,
+                direction: 'HQ_TO_MITRA',
+                recipientName: `${allOrders[idx].outletName} (${allOrders[idx].ownerName})`,
+                recipientPhone: allOrders[idx].phone,
+                eventType: `Update Resi (${nextResi}) & Status: ${nextStatus}`,
+                messageText: waMsg
+            });
+
             closeHqTrackingModal();
+            renderOrders();
             renderHqDashboard();
             renderHqPartnersDatabase();
-            renderOrders();
-
-            const waTrackMsg = buildWaTrackingMessage(order, note);
-            logWhatsAppAutomation({
-                orderId: order.orderId,
-                direction: 'HQ_TO_MITRA',
-                recipientName: `${order.outletName} (${order.ownerName})`,
-                recipientPhone: order.phone,
-                eventType: `Update Status (${newStatus}) & Resi ${newResi}`,
-                messageText: waTrackMsg
-            });
 
             openWaConfirmBanner({
-                title: 'Update Tracking WA Terkirim ke Mitra!',
-                desc: `Status pesanan ${order.orderId} diperbarui ke "${newStatus}" dengan No. Resi ${newResi}. Klik di bawah untuk membuka WhatsApp langsung ke nomor Mitra.`,
-                targetPhone: order.phone,
-                ctaText: `Kirim Update Tracking WA ke Mitra (${order.phone})`,
-                messageText: waTrackMsg
+                title: 'Status & Resi Diperbarui + WA Siap!',
+                desc: `Log notifikasi pelacakan telah tercatat. Klik tombol di bawah untuk langsung mengirim update nomor resi ${nextResi} ke WhatsApp Mitra (${allOrders[idx].phone}).`,
+                targetPhone: allOrders[idx].phone,
+                ctaText: `Kirim Update Resi ke WA ${allOrders[idx].ownerName}`,
+                messageText: waMsg
             });
-            showToast(`Status & Resi ${order.orderId} disimpan! Notifikasi WhatsApp Mitra siap dikirim.`);
+            showToast(`Resi & tracking ${orderId} diperbarui!`);
         }
 
         function renderOrders() {
-            if (!state.currentUser) return;
-            const allOrders = JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
-            const userOrders = allOrders.filter(o => o.partnerEmail === state.currentUser.email);
-            const waCfg = getWaSettings();
+            const listEl = document.getElementById('orders-list');
+            const badgeEl = document.getElementById('nav-orders-badge');
+            const bnavOrdersBadge = document.getElementById('bnav-orders-badge');
+            const statOrdersEl = document.getElementById('stat-total-orders');
+            if (!listEl || !state.currentUser) return;
 
-            const statTotalOrders = document.getElementById('stat-total-orders');
-            const navBadge = document.getElementById('nav-orders-badge');
-            const bnavBadge = document.getElementById('bnav-orders-badge');
-            if (statTotalOrders) statTotalOrders.textContent = userOrders.length;
-            if (navBadge) navBadge.textContent = userOrders.length;
-            if (bnavBadge) {
+            const allOrders = JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
+            const userOrders = state.currentUser.role === 'pusat'
+                ? allOrders
+                : allOrders.filter(o => o.partnerId === state.currentUser.partnerId || o.partnerEmail === state.currentUser.email);
+
+            if (badgeEl) badgeEl.textContent = userOrders.length;
+            if (statOrdersEl) statOrdersEl.textContent = userOrders.length;
+
+            if (bnavOrdersBadge) {
                 if (userOrders.length > 0) {
-                    bnavBadge.textContent = userOrders.length;
-                    bnavBadge.classList.remove('hidden');
-                    bnavBadge.classList.add('flex');
+                    bnavOrdersBadge.textContent = userOrders.length;
+                    bnavOrdersBadge.classList.remove('hidden');
+                    bnavOrdersBadge.classList.add('flex');
                 } else {
-                    bnavBadge.classList.add('hidden');
+                    bnavOrdersBadge.classList.add('hidden');
+                    bnavOrdersBadge.classList.remove('flex');
                 }
             }
 
-            const container = document.getElementById('orders-list');
-            if (!container) return;
-
             if (userOrders.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-3xl p-10 border border-slate-200 text-center">
-                        <i class="fa-solid fa-receipt text-3xl text-slate-300 mb-2"></i>
-                        <p class="text-sm font-bold text-slate-700">Belum ada riwayat pesanan bahan baku</p>
-                        <p class="text-xs text-slate-400 mt-1">Silakan pilih bahan baku dari katalog untuk mulai memesan.</p>
+                listEl.innerHTML = `
+                    <div class="bg-white rounded-3xl p-12 border border-slate-200 text-center space-y-3">
+                        <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-2xl">
+                            <i class="fa-solid fa-file-invoice"></i>
+                        </div>
+                        <h3 class="text-base font-extrabold text-slate-800">Belum Ada Riwayat Pesanan</h3>
+                        <p class="text-xs text-slate-500 max-w-md mx-auto">Mulai pesan stok bahan baku untuk outlet Anda melalui menu Katalog Bahan Baku.</p>
+                        <button onclick="switchMainView('catalog')" class="px-5 py-2.5 rounded-xl bg-ugiee-600 text-white font-bold text-xs">
+                            Buka Katalog Bahan Baku
+                        </button>
                     </div>
                 `;
                 return;
             }
 
-            const statusBadgeStyles = {
-                'Menunggu Pembayaran': 'bg-amber-100 text-amber-800 border-amber-200',
-                'Diproses Gudang UGIEE': 'bg-sky-100 text-sky-800 border-sky-200',
-                'Dalam Pengiriman Ekspedisi': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-                'Selesai': 'bg-emerald-100 text-emerald-800 border-emerald-200'
-            };
+            const steps = [
+                'Menunggu Pembayaran',
+                'Diproses Gudang UGIEE',
+                'Dalam Pengiriman Ekspedisi',
+                'Selesai'
+            ];
 
-            container.innerHTML = userOrders.map(order => {
-                const badgeClass = statusBadgeStyles[order.status] || 'bg-slate-100 text-slate-800';
+            listEl.innerHTML = userOrders.map(order => {
+                const currentStepIdx = steps.indexOf(order.status);
                 const isUnpaid = order.status === 'Menunggu Pembayaran';
-                const isComplete = order.status === 'Selesai';
+                const waCfg = getWaSettings();
                 const waConfirmUrl = getWaDirectUrl(waCfg.hqPhone, buildWaPaymentMessage(order));
 
-                const steps = ['Menunggu Pembayaran', 'Diproses Gudang UGIEE', 'Dalam Pengiriman Ekspedisi', 'Selesai'];
-                const stepIdx = steps.indexOf(order.status);
+                const statusBadgeColors = {
+                    'Menunggu Pembayaran': 'bg-amber-100 text-amber-800 border-amber-200',
+                    'Diproses Gudang UGIEE': 'bg-sky-100 text-sky-800 border-sky-200',
+                    'Dalam Pengiriman Ekspedisi': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                    'Selesai': 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                };
 
                 return `
                     <div class="bg-white rounded-3xl border border-ugiee-200/80 shadow-xs overflow-hidden">
-                        <div class="px-5 sm:px-6 py-4 bg-slate-50 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex flex-wrap items-center gap-2.5">
-                                <span class="font-mono font-extrabold text-sm text-ugiee-900">${order.orderId}</span>
-                                <span class="text-slate-300">•</span>
-                                <span class="text-xs text-slate-500"><i class="fa-regular fa-calendar mr-1"></i>${order.createdAt}</span>
-                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border ${badgeClass}">
-                                    ${order.status}
-                                </span>
+                        <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div class="space-y-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="font-mono font-black text-sm text-ugiee-950">${order.orderId}</span>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusBadgeColors[order.status] || 'bg-slate-100 text-slate-700'}">
+                                        ${order.status}
+                                    </span>
+                                    <span class="text-xs text-slate-400">• ${order.createdAt}</span>
+                                </div>
+                                <p class="text-xs text-slate-600">
+                                    <strong>${order.outletName}</strong> • Tujuan: ${order.destinationCity}
+                                </p>
                             </div>
-                            <div class="flex items-center gap-2 text-xs">
-                                <span class="text-slate-500">Resi:</span>
-                                <span class="font-mono font-bold px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800">${order.trackingNumber}</span>
-                                <button onclick="copyToClipboardFallback('${order.trackingNumber}', 'Nomor Resi')" class="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-600" title="Salin Resi">
-                                    <i class="fa-regular fa-copy"></i>
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                ${isUnpaid ? `
+                                    <button onclick="openPaymentModal('${order.orderId}')" class="px-3.5 py-2 rounded-xl bg-amberbrand-500 hover:bg-amberbrand-600 text-ugiee-950 font-extrabold text-xs shadow-xs">
+                                        Bayar Sekarang (${formatRupiah(order.grandTotal)})
+                                    </button>
+                                ` : `
+                                    <a href="${waConfirmUrl}" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition">
+                                        <i class="fa-brands fa-whatsapp text-sm"></i> Konfirmasi WA Pusat
+                                    </a>
+                                `}
+                                <button onclick="openInvoiceModal('${order.orderId}')" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5">
+                                    <i class="fa-solid fa-route text-ugiee-700"></i> Detail Tracking &amp; Invoice
                                 </button>
+                                ${order.status === 'Dalam Pengiriman Ekspedisi' ? `
+                                    <button onclick="advanceOrderStatus('${order.orderId}')" class="px-3.5 py-2 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-xs">
+                                        Konfirmasi Pesanan Diterima
+                                    </button>
+                                ` : ''}
                             </div>
                         </div>
 
-                        <div class="px-5 sm:px-6 pt-4 pb-1 bg-white">
-                            <div class="grid grid-cols-4 gap-2 text-[10px] sm:text-xs">
-                                ${['1. Pembayaran', '2. Proses Gudang', '3. Dikirim Kargo', '4. Diterima'].map((label, idx) => {
-                                    const active = idx <= stepIdx;
+                        <!-- Progress Stepper -->
+                        <div class="px-5 sm:px-6 py-4 bg-slate-50/70 border-b border-slate-100">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                ${steps.map((stepLabel, idx) => {
+                                    const completed = idx <= currentStepIdx;
+                                    const active = idx === currentStepIdx;
                                     return `
-                                        <div class="flex flex-col gap-1">
-                                            <div class="h-1.5 rounded-full ${active ? 'bg-ugiee-700' : 'bg-slate-200'}"></div>
-                                            <span class="${active ? 'font-bold text-ugiee-900' : 'text-slate-400'} truncate">${label}</span>
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 ${
+                                                completed ? 'bg-ugiee-600 text-amberbrand-400' : 'bg-slate-200 text-slate-500'
+                                            } ${active ? 'ring-4 ring-ugiee-700/15' : ''}">
+                                                ${completed ? '<i class="fa-solid fa-check"></i>' : idx + 1}
+                                            </div>
+                                            <span class="text-[11px] font-bold leading-tight ${completed ? 'text-slate-900' : 'text-slate-400'}">
+                                                ${stepLabel}
+                                            </span>
                                         </div>
                                     `;
                                 }).join('')}
                             </div>
                         </div>
 
-                        <div class="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
-                            <div class="lg:col-span-7 space-y-2">
-                                <div class="flex flex-wrap gap-1.5">
-                                    ${order.items.map(it => `
-                                        <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-semibold">
-                                            ${it.name} <strong>(${it.qty}x)</strong>
-                                        </span>
-                                    `).join('')}
-                                </div>
-                                <p class="text-xs text-slate-500">
-                                    <i class="fa-solid fa-truck text-ugiee-700 mr-1"></i> ${order.courierName} (${order.totalWeight} kg) • Tujuan: ${order.destinationCity}
+                        <!-- Items & Tracking Resi Summary -->
+                        <div class="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                            <div class="space-y-1">
+                                <p class="text-slate-500">
+                                    <i class="fa-solid fa-truck text-ugiee-700 mr-1.5"></i>
+                                    Ekspedisi: <strong>${order.courierName}</strong> (${order.totalWeight} kg) • No. Resi:
+                                    <span onclick="copyToClipboardFallback('${order.trackingNumber}', 'Nomor Resi')" class="font-mono font-extrabold text-ugiee-900 bg-ugiee-50 px-2 py-0.5 rounded border border-ugiee-200 cursor-pointer hover:bg-ugiee-100" title="Klik untuk salin resi">
+                                        ${order.trackingNumber} <i class="fa-regular fa-copy text-[10px] ml-1"></i>
+                                    </span>
+                                </p>
+                                <p class="text-slate-600">
+                                    Item: ${order.items.map(i => `${i.name} (${i.qty}x)`).join(', ')}
                                 </p>
                             </div>
-
-                            <div class="lg:col-span-5 flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                                <div class="lg:text-right">
-                                    <span class="text-[11px] text-slate-400 block">Total Tagihan (${order.paymentMethod})</span>
-                                    <span class="text-lg font-black text-ugiee-950">${formatRupiah(order.grandTotal)}</span>
-                                </div>
-
-                                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto lg:w-full justify-end">
-                                    ${isUnpaid ? `
-                                        <button onclick="openPaymentModal('${order.orderId}')" class="px-3.5 py-2 rounded-xl bg-amberbrand-500 hover:bg-amberbrand-600 text-ugiee-950 font-extrabold text-xs shadow-xs transition">
-                                            Bayar Sekarang
-                                        </button>
-                                    ` : (!isComplete ? `
-                                        <button onclick="advanceOrderStatus('${order.orderId}')" class="px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs transition" title="Simulasi progres pengiriman logistik & WA tracking">
-                                            <i class="fa-solid fa-forward-step mr-1"></i>Simulasi Kirim
-                                        </button>
-                                    ` : '')}
-                                    <a href="${waConfirmUrl}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5">
-                                        <i class="fa-brands fa-whatsapp text-sm"></i> WA Pusat
-                                    </a>
-                                    <button onclick="openInvoiceModal('${order.orderId}')" class="px-3.5 py-2 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-xs transition flex items-center gap-1.5">
-                                        <i class="fa-solid fa-route"></i> Lacak &amp; Invoice
-                                    </button>
-                                </div>
+                            <div class="sm:text-right shrink-0">
+                                <span class="text-[11px] text-slate-400 block">Total Transaksi</span>
+                                <span class="text-base font-black text-ugiee-950">${formatRupiah(order.grandTotal)}</span>
                             </div>
                         </div>
                     </div>
@@ -3978,144 +4280,154 @@ const MANUAL_FIREBASE_CONFIG = {
             const order = allOrders.find(o => o.orderId === orderId);
             if (!order) return;
 
+            const isPaid = order.status !== 'Menunggu Pembayaran';
             const waCfg = getWaSettings();
             const isPusat = state.currentUser && state.currentUser.role === 'pusat';
-            const waBtn = document.getElementById('invoice-wa-direct-btn');
-            const waBtnLabel = document.getElementById('invoice-wa-btn-label');
 
-            if (isPusat) {
-                waBtn.href = getWaDirectUrl(order.phone, buildWaTrackingMessage(order));
-                waBtnLabel.textContent = `Kirim Tracking WA ke Mitra (${order.phone})`;
-            } else {
-                waBtn.href = getWaDirectUrl(waCfg.hqPhone, buildWaPaymentMessage(order));
-                waBtnLabel.textContent = `Konfirmasi WA ke Pusat (${waCfg.hqPhone})`;
+            const waDirectBtn = document.getElementById('invoice-wa-direct-btn');
+            const waBtnLabel = document.getElementById('invoice-wa-btn-label');
+            if (waDirectBtn && waBtnLabel) {
+                if (isPusat) {
+                    waDirectBtn.href = getWaDirectUrl(order.phone, buildWaTrackingMessage(order));
+                    waBtnLabel.textContent = `Kirim Tracking ke WA Mitra (${order.phone})`;
+                } else {
+                    waDirectBtn.href = getWaDirectUrl(waCfg.hqPhone, buildWaPaymentMessage(order));
+                    waBtnLabel.textContent = `Konfirmasi ke WA Pusat (${waCfg.hqPhone})`;
+                }
             }
 
-            const allWaLogs = JSON.parse(localStorage.getItem(STORAGE_KEYS.WA_LOGS) || '[]');
-            const orderWaLogs = allWaLogs.filter(l => l.orderId === order.orderId);
-            const timeline = Array.isArray(order.trackingHistory) && order.trackingHistory.length
-                ? order.trackingHistory
-                : [{ status: order.status, time: order.createdAt, note: `Nomor Resi: ${order.trackingNumber}` }];
+            const steps = [
+                { key: 'Menunggu Pembayaran', title: 'Order Dibuat', icon: 'fa-file-invoice' },
+                { key: 'Diproses Gudang UGIEE', title: 'Diproses Gudang', icon: 'fa-boxes-packing' },
+                { key: 'Dalam Pengiriman Ekspedisi', title: 'Dikirim Ekspedisi', icon: 'fa-truck-fast' },
+                { key: 'Selesai', title: 'Diterima Outlet', icon: 'fa-house-circle-check' }
+            ];
+            const activeStepIdx = steps.findIndex(s => s.key === order.status);
+            const timelineLogs = Array.isArray(order.trackingHistory) && order.trackingHistory.length > 0
+                ? [...order.trackingHistory].reverse()
+                : [{ status: order.status, time: order.createdAt, note: 'Pesanan tercatat di sistem Supply Chain UGIEE' }];
 
-            const container = document.getElementById('printable-invoice');
-            container.innerHTML = `
-                <div class="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b-2 border-slate-200">
-                    <div>
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-ugiee-600 text-amberbrand-300 flex items-center justify-center font-extrabold">
-                                <i class="fa-solid fa-boxes-stacked"></i>
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-extrabold text-ugiee-950 leading-none">UGIEE SUPPLY CHAIN</h2>
-                                <p class="text-xs text-slate-500">PT UGIEE Mabbarakka Indonesia — Pusat Distribusi Bahan Baku</p>
-                            </div>
+            const invEl = document.getElementById('printable-invoice');
+            invEl.innerHTML = `
+                <!-- Invoice Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b-2 border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-ugiee-600 text-amberbrand-400 flex items-center justify-center text-xl font-black">
+                            UG!
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-black text-ugiee-950 tracking-tight">PT UGIEE MABBARAKKA INDONESIA</h2>
+                            <p class="text-xs text-slate-500">Divisi Supply Chain &amp; Distribusi Bahan Baku Kemitraan</p>
+                            <p class="text-[11px] text-slate-400">Jl. Perintis Kemerdekaan KM 10, Makassar • NPWP: 09.412.883.1-805.000</p>
                         </div>
                     </div>
                     <div class="sm:text-right">
-                        <span class="px-3 py-1 rounded-lg text-xs font-extrabold uppercase ${order.status === 'Menunggu Pembayaran' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
-                            ${order.status}
+                        <span class="inline-block px-3 py-1 rounded-lg font-extrabold text-xs uppercase ${
+                            isPaid ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+                        }">
+                            ${isPaid ? 'LUNAS / PAID' : 'BELUM LUNAS'}
                         </span>
-                        <p class="font-mono font-bold text-sm mt-2">${order.orderId}</p>
-                        <p class="text-xs text-slate-500">Tanggal: ${order.createdAt}</p>
+                        <p class="font-mono font-black text-base text-slate-900 mt-1.5">${order.orderId}</p>
+                        <p class="text-[11px] text-slate-500">Tanggal: ${order.createdAt}</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 no-print">
-                    <div class="p-4 rounded-2xl bg-ugiee-50/70 border border-ugiee-200 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-xs font-extrabold uppercase tracking-wider text-ugiee-900">
-                                <i class="fa-solid fa-truck-fast mr-1 text-ugiee-700"></i> Live Tracking Ekspedisi
-                            </h4>
-                            <span class="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-white border border-ugiee-200 text-ugiee-900">${order.trackingNumber}</span>
+                <!-- LIVE TRACKING & EXPEDITION TIMELINE (NO-PRINT INTERACTIVE) -->
+                <div class="p-4 sm:p-5 rounded-2xl bg-ugiee-50/70 border border-ugiee-200 space-y-4 no-print">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-ugiee-700 block">Live Tracking Pengiriman Ekspedisi</span>
+                            <p class="text-xs sm:text-sm font-extrabold text-slate-900">
+                                ${order.courierName} • No. Resi:
+                                <span onclick="copyToClipboardFallback('${order.trackingNumber}', 'Nomor Resi')" class="font-mono text-ugiee-800 underline cursor-pointer">${order.trackingNumber}</span>
+                            </p>
                         </div>
-                        <div class="space-y-2.5 border-l-2 border-ugiee-600 ml-2 pl-3.5">
-                            ${timeline.slice().reverse().map((step, i) => `
-                                <div class="relative">
-                                    <span class="w-2.5 h-2.5 rounded-full ${i === 0 ? 'bg-amberbrand-500 ring-4 ring-amberbrand-500/20' : 'bg-ugiee-700'} absolute -left-[19px] top-1"></span>
-                                    <p class="text-xs font-bold text-slate-900">${step.status}</p>
-                                    <p class="text-[11px] text-slate-600">${step.note}</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">${step.time}</p>
+                        <span class="text-[11px] font-bold text-slate-600 bg-white px-3 py-1 rounded-xl border border-slate-200 self-start sm:self-auto">
+                            Estimasi: ${order.eta}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        ${steps.map((st, idx) => {
+                            const done = idx <= activeStepIdx;
+                            return `
+                                <div class="p-2.5 rounded-xl border ${done ? 'bg-ugiee-600 text-white border-ugiee-600' : 'bg-white text-slate-400 border-slate-200'} flex items-center gap-2">
+                                    <i class="fa-solid ${st.icon} ${done ? 'text-amberbrand-400' : 'text-slate-300'} text-xs"></i>
+                                    <span class="text-[11px] font-bold leading-tight">${st.title}</span>
                                 </div>
-                            `).join('')}
-                        </div>
+                            `;
+                        }).join('')}
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2.5">
-                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-emerald-900 flex items-center justify-between">
-                            <span><i class="fa-brands fa-whatsapp mr-1 text-emerald-600 text-sm"></i> Log Notifikasi WhatsApp</span>
-                            <span class="px-2 py-0.5 rounded-full bg-emerald-200/70 text-emerald-900 text-[10px]">${orderWaLogs.length} Pesan</span>
-                        </h4>
-                        ${orderWaLogs.length === 0 ? `
-                            <p class="text-[11px] text-slate-500">Belum ada riwayat notifikasi otomatis pada pesanan ini. Gunakan tombol hijau di atas untuk mengirim pesan WhatsApp.</p>
-                        ` : `
-                            <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
-                                ${orderWaLogs.map(w => `
-                                    <div class="p-2.5 rounded-xl bg-white border border-emerald-200/80 text-[11px]">
-                                        <div class="flex items-center justify-between font-bold text-emerald-800">
-                                            <span>${w.eventType}</span>
-                                            <span class="text-[10px] font-normal text-slate-400">${w.timestamp}</span>
-                                        </div>
-                                        <p class="text-slate-600 mt-0.5">Tujuan: <strong>${w.recipientName}</strong></p>
-                                    </div>
-                                `).join('')}
+                    <div class="space-y-2 pt-1 border-t border-ugiee-200/70">
+                        <p class="text-[10px] font-extrabold uppercase text-slate-500">Riwayat Log Perjalanan &amp; WhatsApp:</p>
+                        ${timelineLogs.map((log, i) => `
+                            <div class="flex items-start gap-2.5 text-xs">
+                                <span class="w-2 h-2 rounded-full mt-1.5 shrink-0 ${i === 0 ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : 'bg-slate-400'}"></span>
+                                <div>
+                                    <span class="font-bold text-slate-800">${log.status}</span>
+                                    <span class="text-[11px] text-slate-400 ml-1.5">(${log.time})</span>
+                                    <p class="text-[11px] text-slate-600">${log.note}</p>
+                                </div>
                             </div>
-                        `}
+                        `).join('')}
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                        <span class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Diterbitkan Untuk Mitra:</span>
-                        <p class="font-extrabold text-sm text-slate-900">${order.outletName}</p>
-                        <p class="text-slate-600 mt-0.5">PIC: ${order.ownerName} (${order.phone})</p>
-                        <p class="text-slate-600 mt-0.5">${order.destinationAddress}</p>
-                        <p class="font-semibold text-ugiee-800 mt-1">${order.destinationCity}</p>
+                <!-- Recipient & Shipping Details -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Ditagihkan Kepada Mitra</span>
+                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${order.outletName}</p>
+                        <p class="text-slate-600">PIC: ${order.ownerName} (${order.phone})</p>
+                        <p class="text-slate-500 mt-1">${order.destinationAddress} — ${order.destinationCity}</p>
                     </div>
-                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                        <span class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Informasi Pengiriman &amp; Bayar:</span>
-                        <p class="font-bold text-slate-800">Ekspedisi: ${order.courierName}</p>
-                        <p class="text-slate-600 mt-0.5">No. Resi: <span class="font-mono font-bold text-slate-900">${order.trackingNumber}</span></p>
-                        <p class="text-slate-600 mt-0.5">Total Berat: ${order.totalWeight} kg • ETA: ${order.eta}</p>
-                        <p class="text-slate-600 mt-0.5">Metode Bayar: ${order.paymentMethod} (${order.bankName})</p>
+                    <div class="sm:text-right">
+                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Logistik &amp; Pembayaran</span>
+                        <p class="font-bold text-slate-800 mt-0.5">${order.courierName} (${order.totalWeight} kg)</p>
+                        <p class="font-mono text-slate-700">No. Resi: <strong>${order.trackingNumber}</strong></p>
+                        <p class="text-slate-600 mt-1">Metode: ${order.paymentMethod} (${order.bankName})</p>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+                <!-- Items Table -->
+                <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-ugiee-600 text-white">
-                                <th class="py-3 px-4 font-bold">SKU</th>
-                                <th class="py-3 px-4 font-bold">Nama Bahan Baku</th>
-                                <th class="py-3 px-4 font-bold text-center">Qty</th>
-                                <th class="py-3 px-4 font-bold text-right">Harga Satuan</th>
-                                <th class="py-3 px-4 font-bold text-right">Subtotal</th>
+                                <th class="py-2.5 px-3 rounded-tl-xl font-bold">SKU</th>
+                                <th class="py-2.5 px-3 font-bold">Deskripsi Bahan Baku</th>
+                                <th class="py-2.5 px-3 text-center font-bold">Qty</th>
+                                <th class="py-2.5 px-3 text-right font-bold">Harga Satuan</th>
+                                <th class="py-2.5 px-3 rounded-tr-xl text-right font-bold">Subtotal</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-200">
-                            ${order.items.map(it => `
+                        <tbody class="divide-y divide-slate-200 border-b border-slate-200">
+                            ${order.items.map(item => `
                                 <tr>
-                                    <td class="py-3 px-4 font-mono font-bold text-slate-600">${it.sku}</td>
-                                    <td class="py-3 px-4 font-semibold text-slate-900">${it.name}</td>
-                                    <td class="py-3 px-4 text-center font-bold">${it.qty}</td>
-                                    <td class="py-3 px-4 text-right">${formatRupiah(it.price)}</td>
-                                    <td class="py-3 px-4 text-right font-bold">${formatRupiah(it.lineTotal)}</td>
+                                    <td class="py-3 px-3 font-mono font-bold text-slate-600">${item.sku}</td>
+                                    <td class="py-3 px-3 font-bold text-slate-900">${item.name}</td>
+                                    <td class="py-3 px-3 text-center">${item.qty} ${item.unit}</td>
+                                    <td class="py-3 px-3 text-right">${formatRupiah(item.price)}</td>
+                                    <td class="py-3 px-3 text-right font-bold text-slate-900">${formatRupiah(item.lineTotal)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
                 </div>
 
+                <!-- Totals -->
                 <div class="flex justify-end">
-                    <div class="w-full sm:w-80 space-y-2 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div class="w-full sm:w-72 space-y-1.5 text-xs">
                         <div class="flex justify-between text-slate-600">
-                            <span>Subtotal Bahan Baku</span>
-                            <span class="font-bold text-slate-800">${formatRupiah(order.subtotal)}</span>
+                            <span>Subtotal Produk</span>
+                            <span class="font-bold">${formatRupiah(order.subtotal)}</span>
                         </div>
                         <div class="flex justify-between text-slate-600">
-                            <span>Ongkos Kirim (${order.totalWeight} kg)</span>
-                            <span class="font-bold text-slate-800">${formatRupiah(order.shippingCost)}</span>
+                            <span>Biaya Ekspedisi (${order.totalWeight} kg)</span>
+                            <span class="font-bold">${formatRupiah(order.shippingCost)}</span>
                         </div>
-                        <div class="flex justify-between text-base font-extrabold text-ugiee-950 pt-2 border-t border-slate-300">
+                        <div class="flex justify-between text-base font-black text-ugiee-950 pt-2 border-t-2 border-slate-300">
                             <span>TOTAL TAGIHAN</span>
                             <span>${formatRupiah(order.grandTotal)}</span>
                         </div>
@@ -4134,17 +4446,308 @@ const MANUAL_FIREBASE_CONFIG = {
             modal.classList.remove('flex');
         }
 
-        // ==================== 8. DASHBOARD INDUK (PUSAT / HQ ANALYTICS & MASTER HPP) ====================
-        function calculateOrderHpp(order) {
-            if (typeof order.totalHpp === 'number' && order.totalHpp > 0) {
-                return order.totalHpp;
+        // ==================== 8. INTERACTIVE MAP (LEAFLET.JS) FOR MITRA SPREAD (HQ) ====================
+        function getPartnerMetricsMap() {
+            const allOrders = JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            const mitraUsers = users.filter(u => u.role === 'mitra');
+
+            const partnerStats = mitraUsers.map(u => {
+                const matchingOrders = allOrders.filter(o =>
+                    o.partnerId === u.partnerId ||
+                    (o.partnerEmail && o.partnerEmail.toLowerCase() === u.email.toLowerCase())
+                );
+                const paidOrders = matchingOrders.filter(o => o.status !== 'Menunggu Pembayaran');
+                const totalRevenue = paidOrders.reduce((acc, o) => acc + Number(o.subtotal || 0), 0);
+                const totalHpp = paidOrders.reduce((acc, o) => acc + Number(o.totalHpp || 0), 0);
+                const coords = (typeof u.lat === 'number' && typeof u.lng === 'number')
+                    ? { lat: u.lat, lng: u.lng }
+                    : resolveQuickPartnerCoords(u.address, u.cityId, u.partnerId);
+
+                return {
+                    ...u,
+                    lat: coords.lat,
+                    lng: coords.lng,
+                    orderCount: matchingOrders.length,
+                    paidOrderCount: paidOrders.length,
+                    totalRevenue,
+                    totalProfit: totalRevenue - totalHpp
+                };
+            });
+
+            // Urutkan peringkat berdasarkan jumlah orderan terbanyak
+            partnerStats.sort((a, b) => b.orderCount - a.orderCount || b.totalRevenue - a.totalRevenue);
+            partnerStats.forEach((p, idx) => { p.rank = idx + 1; });
+            return partnerStats;
+        }
+
+        function initHqPartnersMap() {
+            const mapEl = document.getElementById('hq-partners-map');
+            if (!mapEl || typeof L === 'undefined') return;
+
+            if (!state.hqMapInstance) {
+                state.hqMapInstance = L.map('hq-partners-map', {
+                    center: [-4.55, 120.25],
+                    zoom: 7,
+                    zoomControl: true
+                });
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap • UGIEE GIS'
+                }).addTo(state.hqMapInstance);
+
+                // Tambahkan Pin Gudang Pusat UGIEE Makassar
+                const hqIcon = L.divIcon({
+                    className: 'ugiee-map-pin',
+                    html: `
+                        <div style="width:36px;height:36px;border-radius:14px;background:#063129;border:3px solid #FBC14D;color:#FBC14D;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(6,49,41,0.35);font-size:14px;">
+                            <i class="fa-solid fa-warehouse"></i>
+                        </div>
+                    `,
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 18],
+                    popupAnchor: [0, -18]
+                });
+
+                state.hqWarehouseMarker = L.marker([HQ_WAREHOUSE_COORDS.lat, HQ_WAREHOUSE_COORDS.lng], { icon: hqIcon })
+                    .addTo(state.hqMapInstance)
+                    .bindPopup(`
+                        <div style="font-family:Inter,sans-serif;">
+                            <span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#063129;color:#FBC14D;font-size:10px;font-weight:800;text-transform:uppercase;">PUSAT DISTRIBUSI</span>
+                            <h4 style="margin:6px 0 2px;font-size:13px;font-weight:800;color:#0f172a;">${HQ_WAREHOUSE_COORDS.name}</h4>
+                            <p style="margin:0;font-size:11px;color:#475569;">${HQ_WAREHOUSE_COORDS.address}</p>
+                        </div>
+                    `);
             }
-            return order.items.reduce((sum, item) => {
-                if (typeof item.lineHpp === 'number') return sum + item.lineHpp;
-                const prod = RAW_MATERIALS.find(p => p.sku === item.sku);
-                const unitHpp = item.hpp || (prod ? prod.hpp : Math.round(item.price * 0.65));
-                return sum + (unitHpp * item.qty);
-            }, 0);
+        }
+
+        function renderHqPartnersMap() {
+            const listEl = document.getElementById('hq-map-outlet-list');
+            const badgeEl = document.getElementById('hq-map-count-badge');
+            if (!listEl) return;
+
+            initHqPartnersMap();
+
+            const zoneFilter = document.getElementById('hq-map-zone-filter')?.value || 'ALL';
+            const keyword = (document.getElementById('hq-map-search-input')?.value || '').trim().toLowerCase();
+
+            const allMitras = getPartnerMetricsMap();
+            const filtered = allMitras.filter(m => {
+                const matchZone = zoneFilter === 'ALL' || m.cityId === zoneFilter;
+                const matchKey = !keyword ||
+                    m.outletName.toLowerCase().includes(keyword) ||
+                    m.ownerName.toLowerCase().includes(keyword) ||
+                    m.address.toLowerCase().includes(keyword) ||
+                    m.partnerId.toLowerCase().includes(keyword);
+                return matchZone && matchKey;
+            });
+
+            if (badgeEl) {
+                badgeEl.textContent = `${filtered.length} Outlet Terpetakan`;
+            }
+
+            // Bersihkan marker lama pada peta
+            if (state.hqMapInstance) {
+                Object.values(state.hqMapMarkers).forEach(marker => state.hqMapInstance.removeLayer(marker));
+            }
+            state.hqMapMarkers = {};
+
+            // Pasang marker baru untuk setiap mitra terfilter
+            filtered.forEach(m => {
+                const isTop1 = m.rank === 1 && m.orderCount > 0;
+                const pinBg = isTop1 ? '#F7A928' : '#15987E';
+                const pinText = isTop1 ? '#063129' : '#FFFFFF';
+                const pinBorder = isTop1 ? '#063129' : '#FFFFFF';
+                const zoneObj = SHIPPING_ZONES.find(z => z.id === m.cityId) || SHIPPING_ZONES[0];
+                const waUrl = getWaDirectUrl(m.phone, `Halo *${m.ownerName}* (${m.outletName}), pesan dari Kantor Pusat UGIEE terkait operasional & stok outlet Anda.`);
+
+                if (state.hqMapInstance && typeof L !== 'undefined') {
+                    const markerIcon = L.divIcon({
+                        className: 'ugiee-map-pin',
+                        html: `
+                            <div style="position:relative;width:36px;height:36px;border-radius:999px;background:${pinBg};border:3px solid ${pinBorder};color:${pinText};display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(15,23,42,0.28);font-weight:900;font-size:12px;">
+                                <i class="fa-solid fa-store"></i>
+                                <span style="position:absolute;top:-6px;right:-7px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;background:#063129;color:#FBC14D;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #ffffff;">
+                                    ${m.orderCount}
+                                </span>
+                            </div>
+                        `,
+                        iconSize: [36, 36],
+                        iconAnchor: [18, 18],
+                        popupAnchor: [0, -18]
+                    });
+
+                    const popupHtml = `
+                        <div style="font-family:Inter,sans-serif;line-height:1.4;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;">
+                                <span style="padding:2px 7px;border-radius:6px;background:#F3F7F4;border:1px solid #C7D8C7;color:#0B4B3F;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;">${m.partnerId}</span>
+                                <span style="padding:2px 7px;border-radius:999px;background:${isTop1 ? '#FEF3C7' : '#E2ECE5'};color:${isTop1 ? '#92400E' : '#0E6453'};font-size:10px;font-weight:800;">Rank #${m.rank}</span>
+                            </div>
+                            <h4 style="margin:2px 0;font-size:13px;font-weight:800;color:#0f172a;">${m.outletName}</h4>
+                            <p style="margin:0 0 6px;font-size:11px;color:#475569;">PIC: <strong>${m.ownerName}</strong> (${m.phone})</p>
+                            <p style="margin:0 0 8px;font-size:11px;color:#334155;background:#f8fafc;padding:6px 8px;border-radius:8px;border:1px solid #e2e8f0;">
+                                <i class="fa-solid fa-location-dot" style="color:#15987E;margin-right:4px;"></i>${m.address}
+                                <span style="display:block;color:#64748b;font-size:10px;margin-top:2px;">${zoneObj.city}</span>
+                            </p>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;font-size:11px;">
+                                <div style="padding:5px 7px;border-radius:8px;background:#F3F7F4;">
+                                    <span style="display:block;font-size:9px;color:#64748b;text-transform:uppercase;font-weight:700;">Total Order</span>
+                                    <strong style="color:#063129;">${m.orderCount}x Order</strong>
+                                </div>
+                                <div style="padding:5px 7px;border-radius:8px;background:#F3F7F4;">
+                                    <span style="display:block;font-size:9px;color:#64748b;text-transform:uppercase;font-weight:700;">Total Belanja</span>
+                                    <strong style="color:#063129;">${formatRupiah(m.totalRevenue)}</strong>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:6px;">
+                                <button type="button" onclick="openPartnerDetailModal('${m.partnerId}')" style="flex:1;padding:6px 8px;border-radius:8px;background:#15987E;color:#ffffff;font-size:11px;font-weight:700;border:none;cursor:pointer;">
+                                    Detail Mitra
+                                </button>
+                                <a href="${waUrl}" target="_blank" rel="noopener noreferrer" style="padding:6px 9px;border-radius:8px;background:#10b981;color:#063129;font-size:11px;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                                    <i class="fa-brands fa-whatsapp"></i> WA
+                                </a>
+                            </div>
+                        </div>
+                    `;
+
+                    const marker = L.marker([m.lat, m.lng], { icon: markerIcon })
+                        .addTo(state.hqMapInstance)
+                        .bindPopup(popupHtml);
+                    state.hqMapMarkers[m.partnerId] = marker;
+                }
+            });
+
+            // Render daftar outlet di panel samping peta
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-6 text-center text-xs text-slate-400">
+                        <i class="fa-solid fa-map-pin text-2xl text-slate-300 mb-2 block"></i>
+                        Tidak ada outlet mitra yang sesuai dengan filter wilayah/pencarian ini.
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(m => {
+                const zoneObj = SHIPPING_ZONES.find(z => z.id === m.cityId) || SHIPPING_ZONES[0];
+                const isTop1 = m.rank === 1 && m.orderCount > 0;
+                return `
+                    <div onclick="focusPartnerOnMap('${m.partnerId}')" class="p-3 rounded-2xl bg-white hover:bg-ugiee-50/90 border border-slate-200 hover:border-ugiee-400 transition cursor-pointer shadow-2xs group">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-extrabold ${isTop1 ? 'bg-amberbrand-500 text-ugiee-950' : 'bg-ugiee-100 text-ugiee-800'}">
+                                        #${m.rank}
+                                    </span>
+                                    <span class="text-[10px] font-mono font-bold text-slate-400">${m.partnerId}</span>
+                                </div>
+                                <h4 class="text-xs font-extrabold text-slate-900 group-hover:text-ugiee-800 truncate mt-1">${m.outletName}</h4>
+                                <p class="text-[11px] text-slate-500 truncate mt-0.5"><i class="fa-solid fa-location-dot text-ugiee-600 mr-1"></i>${m.address}</p>
+                            </div>
+                            <span class="px-2 py-1 rounded-xl bg-ugiee-50 border border-ugiee-200 text-ugiee-900 font-black text-[11px] shrink-0">
+                                ${m.orderCount}x
+                            </span>
+                        </div>
+                        <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                            <span>${zoneObj.city.split('(')[0].trim()}</span>
+                            <span class="font-bold text-ugiee-800">${formatRupiah(m.totalRevenue)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function focusPartnerOnMap(partnerId) {
+            if (state.hqSubTab !== 'overview') {
+                switchHqTab('overview');
+            }
+            setTimeout(() => {
+                initHqPartnersMap();
+                const marker = state.hqMapMarkers[partnerId];
+                if (marker && state.hqMapInstance) {
+                    const latLng = marker.getLatLng();
+                    state.hqMapInstance.flyTo(latLng, 15, { duration: 1.1 });
+                    marker.openPopup();
+                    document.getElementById('hq-partners-map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 120);
+        }
+
+        function fitAllPartnerMarkers() {
+            initHqPartnersMap();
+            if (!state.hqMapInstance) return;
+            const markersList = Object.values(state.hqMapMarkers);
+            if (state.hqWarehouseMarker) markersList.push(state.hqWarehouseMarker);
+            if (markersList.length === 0) return;
+
+            const group = L.featureGroup(markersList);
+            state.hqMapInstance.fitBounds(group.getBounds().pad(0.18));
+        }
+
+        async function syncAllPartnerCoordinates(notify = false) {
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            let updatedCount = 0;
+
+            for (const u of users) {
+                if (u.role === 'mitra') {
+                    const coords = await geocodeAddressWithFallback(u.address, u.cityId, u.partnerId);
+                    u.lat = coords.lat;
+                    u.lng = coords.lng;
+                    await cloudUpsert('users', u.partnerId, u);
+                    updatedCount++;
+                }
+            }
+
+            cloudCache.users = users;
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+            renderHqPartnersMap();
+            fitAllPartnerMarkers();
+            if (notify) {
+                showToast(`Koordinat ${updatedCount} outlet mitra berhasil disinkronkan dengan alamat terdaftar!`);
+            }
+        }
+
+        // ==================== 9. DASHBOARD INDUK (PUSAT / PROFITABILITY, HPP & WA LOGS) ====================
+        function renderHqWaLogs() {
+            const container = document.getElementById('hq-wa-logs-list');
+            if (!container) return;
+
+            const logs = JSON.parse(localStorage.getItem(STORAGE_KEYS.WA_LOGS) || '[]');
+            if (logs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 col-span-full text-center py-6">Belum ada aktivitas notifikasi WhatsApp otomatis.</p>`;
+                return;
+            }
+
+            container.innerHTML = logs.slice(0, 12).map(log => {
+                const isMitraToHq = log.direction === 'MITRA_TO_HQ';
+                const waUrl = getWaDirectUrl(log.recipientPhone, log.messageText);
+                return `
+                    <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between gap-2.5 text-xs">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
+                                    isMitraToHq ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800'
+                                }">
+                                    ${isMitraToHq ? 'MITRA → PUSAT' : 'PUSAT → MITRA'}
+                                </span>
+                                <span class="text-[10px] text-slate-400">${log.timestamp}</span>
+                            </div>
+                            <p class="font-extrabold text-slate-900">${log.eventType}</p>
+                            <p class="text-[11px] text-slate-600 mt-0.5">Tujuan: <strong>${log.recipientName}</strong> (${log.recipientPhone})</p>
+                            <p class="text-[11px] font-mono text-ugiee-800 mt-0.5">Ref: ${log.orderId}</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                                <i class="fa-solid fa-check-double"></i> ${log.deliveryStatus}
+                            </span>
+                            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-1">
+                                <i class="fa-brands fa-whatsapp"></i> Buka Pesan
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderHqDashboard() {
@@ -4153,30 +4756,31 @@ const MANUAL_FIREBASE_CONFIG = {
 
             const paidOrders = allOrders.filter(o => o.status !== 'Menunggu Pembayaran');
 
-            let totalProductRevenue = 0;
-            let totalHppCost = 0;
-            let totalShippingRevenue = 0;
+            let totalRevenue = 0;
+            let totalHpp = 0;
+            let totalShipping = 0;
 
             paidOrders.forEach(o => {
-                totalProductRevenue += Number(o.subtotal || 0);
-                totalHppCost += calculateOrderHpp(o);
-                totalShippingRevenue += Number(o.shippingCost || 0);
+                totalRevenue += Number(o.subtotal || 0);
+                totalHpp += Number(o.totalHpp || 0);
+                totalShipping += Number(o.shippingCost || 0);
             });
 
-            const netProfit = totalProductRevenue - totalHppCost;
-            const profitMarginPct = totalProductRevenue > 0
-                ? ((netProfit / totalProductRevenue) * 100).toFixed(1)
-                : '0.0';
+            const netProfit = totalRevenue - totalHpp;
+            const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : '0.0';
 
-            const revEl = document.getElementById('hq-kpi-revenue');
-            if (!revEl) return;
+            const kpiRev = document.getElementById('hq-kpi-revenue');
+            if (kpiRev) {
+                kpiRev.textContent = formatRupiah(totalRevenue);
+                document.getElementById('hq-kpi-hpp').textContent = formatRupiah(totalHpp);
+                document.getElementById('hq-kpi-profit').textContent = formatRupiah(netProfit);
+                document.getElementById('hq-kpi-margin-badge').textContent = `${profitMargin}% Margin`;
+                document.getElementById('hq-kpi-orders').textContent = `${paidOrders.length} Lunas / ${allOrders.length} Total`;
+                document.getElementById('hq-kpi-shipping').textContent = formatRupiah(totalShipping);
+            }
 
-            revEl.textContent = formatRupiah(totalProductRevenue);
-            document.getElementById('hq-kpi-hpp').textContent = formatRupiah(totalHppCost);
-            document.getElementById('hq-kpi-profit').textContent = formatRupiah(netProfit);
-            document.getElementById('hq-kpi-margin-badge').textContent = `${profitMarginPct}% Margin`;
-            document.getElementById('hq-kpi-orders').textContent = `${paidOrders.length} Lunas / ${allOrders.length} Total`;
-            document.getElementById('hq-kpi-shipping').textContent = formatRupiah(totalShippingRevenue);
+            renderHqChart(paidOrders);
+            renderHqWaLogs();
 
             const filteredOrders = allOrders.filter(o => {
                 if (filterVal === 'PAID') return o.status !== 'Menunggu Pembayaran';
@@ -4185,107 +4789,75 @@ const MANUAL_FIREBASE_CONFIG = {
             });
 
             const tbody = document.getElementById('hq-transactions-tbody');
-            if (tbody) {
-                if (filteredOrders.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Tidak ada transaksi sesuai filter.</td></tr>`;
-                } else {
-                    tbody.innerHTML = filteredOrders.map(o => {
-                        const orderHpp = calculateOrderHpp(o);
-                        const orderProfit = Number(o.subtotal || 0) - orderHpp;
-                        const isPaid = o.status !== 'Menunggu Pembayaran';
-                        const waTrackUrl = getWaDirectUrl(o.phone, buildWaTrackingMessage(o));
+            if (!tbody) return;
 
-                        return `
-                            <tr class="hover:bg-slate-50/80 transition">
-                                <td class="py-3.5 px-5">
-                                    <span class="font-mono font-bold text-slate-900 block">${o.orderId}</span>
-                                    <span class="text-[11px] text-slate-400">${o.createdAt}</span>
-                                </td>
-                                <td class="py-3.5 px-4">
-                                    <span class="font-bold text-slate-800 block">${o.outletName}</span>
-                                    <span class="text-[11px] text-emerald-700 font-semibold"><i class="fa-brands fa-whatsapp mr-1"></i>${o.phone} • ${o.ownerName}</span>
-                                </td>
-                                <td class="py-3.5 px-4 text-right font-bold text-slate-900">${formatRupiah(o.subtotal)}</td>
-                                <td class="py-3.5 px-4 text-right font-semibold text-amber-700">${formatRupiah(orderHpp)}</td>
-                                <td class="py-3.5 px-4 text-right text-slate-600">${formatRupiah(o.shippingCost)}</td>
-                                <td class="py-3.5 px-4 text-right font-extrabold ${isPaid ? 'text-ugiee-800' : 'text-slate-400'}">
-                                    +${formatRupiah(orderProfit)}
-                                </td>
-                                <td class="py-3.5 px-4 text-center">
-                                    <div class="flex flex-col items-center gap-1.5">
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                                            ${o.status}
-                                        </span>
-                                        <span class="font-mono text-[10px] text-slate-500">Resi: <strong>${o.trackingNumber}</strong></span>
-                                        <div class="flex items-center gap-1.5 mt-0.5">
-                                            <button onclick="openHqTrackingModal('${o.orderId}')" class="px-2.5 py-1 rounded-lg bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[10px] transition" title="Update Status & Nomor Resi">
-                                                <i class="fa-solid fa-pen-to-square mr-1"></i>Resi/Status
-                                            </button>
-                                            <a href="${waTrackUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] transition" title="Kirim Update Tracking ke WhatsApp Mitra">
-                                                <i class="fa-brands fa-whatsapp"></i> WA
-                                            </a>
-                                            <button onclick="openInvoiceModal('${o.orderId}')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px]" title="Lihat Invoice">
-                                                <i class="fa-solid fa-file-invoice"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
-                }
-            }
-
-            renderHqChart(allOrders);
-            renderHqWaLogs();
-        }
-
-        function renderHqWaLogs() {
-            const container = document.getElementById('hq-wa-logs-list');
-            if (!container) return;
-
-            const logs = JSON.parse(localStorage.getItem(STORAGE_KEYS.WA_LOGS) || '[]');
-            if (logs.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-6 text-xs text-slate-400">Belum ada riwayat pesan WhatsApp Gateway.</div>`;
+            if (filteredOrders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-10 text-center text-slate-400 text-xs">Tidak ada transaksi sesuai filter yang dipilih.</td>
+                    </tr>
+                `;
                 return;
             }
 
-            container.innerHTML = logs.slice(0, 12).map(log => {
-                const isToMitra = log.direction === 'HQ_TO_MITRA';
-                const directUrl = getWaDirectUrl(log.recipientPhone, log.messageText);
+            tbody.innerHTML = filteredOrders.map(o => {
+                const sub = Number(o.subtotal || 0);
+                const hpp = Number(o.totalHpp || 0);
+                const profit = sub - hpp;
+                const isPaid = o.status !== 'Menunggu Pembayaran';
+                const waMitraUrl = getWaDirectUrl(o.phone, buildWaTrackingMessage(o));
+
                 return `
-                    <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between gap-2.5">
-                        <div>
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold ${isToMitra ? 'bg-sky-100 text-sky-800' : 'bg-emerald-100 text-emerald-800'}">
-                                    ${isToMitra ? 'PUSAT → MITRA' : 'MITRA → PUSAT'}
+                    <tr class="hover:bg-slate-50/90 transition">
+                        <td class="py-3.5 px-5">
+                            <span class="font-mono font-extrabold text-slate-900 block">${o.orderId}</span>
+                            <span class="text-[11px] text-slate-400">${o.createdAt}</span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="font-bold text-slate-800 block">${o.outletName}</span>
+                            <span class="text-[11px] text-slate-500">${o.ownerName} • <i class="fa-brands fa-whatsapp text-emerald-600"></i> ${o.phone}</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-bold text-slate-900">${formatRupiah(sub)}</td>
+                        <td class="py-3.5 px-4 text-right font-semibold text-amber-700">${formatRupiah(hpp)}</td>
+                        <td class="py-3.5 px-4 text-right text-slate-500">${formatRupiah(o.shippingCost)}</td>
+                        <td class="py-3.5 px-4 text-right font-black ${isPaid ? 'text-emerald-700' : 'text-slate-400'}">
+                            +${formatRupiah(profit)}
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            <div class="flex flex-col items-center gap-1.5">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                    isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                }">
+                                    ${o.status}
                                 </span>
-                                <span class="font-mono text-[10px] font-bold text-slate-500">${log.orderId}</span>
+                                <span class="font-mono text-[10px] text-slate-500">Resi: <strong>${o.trackingNumber}</strong></span>
+                                <div class="flex flex-wrap items-center justify-center gap-1">
+                                    <button onclick="openHqTrackingModal('${o.orderId}')" class="px-2.5 py-1 rounded-lg bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[10px]" title="Ubah status & nomor resi">
+                                        <i class="fa-solid fa-pen-to-square mr-0.5"></i> Resi &amp; Status
+                                    </button>
+                                    <a href="${waMitraUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-[10px]" title="Kirim tracking ke WhatsApp Mitra">
+                                        <i class="fa-brands fa-whatsapp"></i> WA
+                                    </a>
+                                    <button onclick="openInvoiceModal('${o.orderId}')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px]">
+                                        Invoice
+                                    </button>
+                                </div>
                             </div>
-                            <p class="text-xs font-extrabold text-slate-900 mt-2">${log.eventType}</p>
-                            <p class="text-[11px] text-slate-600 mt-0.5">Tujuan: <strong>${log.recipientName}</strong></p>
-                            <p class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-clock mr-1"></i>${log.timestamp}</p>
-                        </div>
-                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-emerald-700"><i class="fa-solid fa-check-double mr-1"></i>${log.deliveryStatus}</span>
-                            <a href="${directUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-[10px] border border-emerald-200 transition">
-                                <i class="fa-brands fa-whatsapp mr-1"></i>Kirim Ulang WA
-                            </a>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
                 `;
             }).join('');
         }
 
-        function renderHqChart(allOrders) {
+        function renderHqChart(paidOrders) {
             const canvas = document.getElementById('hqProfitChart');
             if (!canvas || typeof Chart === 'undefined') return;
 
-            const recentOrders = [...allOrders].reverse().slice(-8);
-            const labels = recentOrders.map(o => o.orderId.replace('INV-UG-', ''));
-            const revenues = recentOrders.map(o => Number(o.subtotal || 0));
-            const hpps = recentOrders.map(o => calculateOrderHpp(o));
-            const profits = recentOrders.map((o, i) => revenues[i] - hpps[i]);
+            const recent = [...paidOrders].slice(0, 8).reverse();
+            const labels = recent.map(o => `${o.orderId.replace('INV-UG-', '')}\n(${o.outletName.replace('UGIEE Outlet ', '')})`);
+            const revenueData = recent.map(o => Number(o.subtotal || 0));
+            const hppData = recent.map(o => Number(o.totalHpp || 0));
+            const profitData = recent.map(o => Number(o.subtotal || 0) - Number(o.totalHpp || 0));
 
             if (state.hqChartInstance) {
                 state.hqChartInstance.destroy();
@@ -4298,21 +4870,21 @@ const MANUAL_FIREBASE_CONFIG = {
                     datasets: [
                         {
                             label: 'Omzet Produk (Rp)',
-                            data: revenues,
+                            data: revenueData,
                             backgroundColor: '#15987E',
-                            borderRadius: 6
+                            borderRadius: 8
                         },
                         {
                             label: 'Modal Pokok / HPP (Rp)',
-                            data: hpps,
+                            data: hppData,
                             backgroundColor: '#F7A928',
-                            borderRadius: 6
+                            borderRadius: 8
                         },
                         {
                             label: 'Keuntungan Bersih (Rp)',
-                            data: profits,
+                            data: profitData,
                             backgroundColor: '#10b981',
-                            borderRadius: 6
+                            borderRadius: 8
                         }
                     ]
                 },
@@ -4323,7 +4895,9 @@ const MANUAL_FIREBASE_CONFIG = {
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
-                                label: ctx => `${ctx.dataset.label}: ${formatRupiah(ctx.raw)}`
+                                label: function(ctx) {
+                                    return `${ctx.dataset.label}: ${formatRupiah(ctx.raw)}`;
+                                }
                             }
                         }
                     },
@@ -4331,168 +4905,168 @@ const MANUAL_FIREBASE_CONFIG = {
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                font: { size: 10 },
-                                callback: val => 'Rp ' + (val / 1000).toLocaleString('id-ID') + 'k'
-                            }
+                                font: { size: 11, family: 'Inter' },
+                                callback: value => 'Rp ' + (value / 1000).toLocaleString('id-ID') + 'k'
+                            },
+                            grid: { color: '#f1f5f9' }
                         },
                         x: {
-                            ticks: { font: { size: 11, weight: 'bold' } }
+                            ticks: { font: { size: 10, family: 'Inter', weight: '600' } },
+                            grid: { display: false }
                         }
                     }
                 }
             });
         }
 
-        // ==================== 8B. DATABASE MITRA TERDAFTAR & PERINGKAT ORDERAN (PUSAT) ====================
-        function getPartnerMetricsList() {
-            const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-            const allOrders = JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
-            const mitraUsers = allUsers.filter(u => u.role === 'mitra');
-
-            return mitraUsers.map(m => {
-                const partnerOrders = allOrders.filter(o =>
-                    (o.partnerId && o.partnerId === m.partnerId) ||
-                    (o.partnerEmail && o.partnerEmail.toLowerCase() === m.email.toLowerCase())
-                );
-                const paidOrders = partnerOrders.filter(o => o.status !== 'Menunggu Pembayaran');
-
-                let totalRevenue = 0;
-                let totalHpp = 0;
-                let totalShipping = 0;
-
-                paidOrders.forEach(o => {
-                    totalRevenue += Number(o.subtotal || 0);
-                    totalHpp += calculateOrderHpp(o);
-                    totalShipping += Number(o.shippingCost || 0);
-                });
-
-                const totalProfit = totalRevenue - totalHpp;
-                const latestOrder = partnerOrders[0] || null;
-                const zoneObj = SHIPPING_ZONES.find(z => z.id === m.cityId) || SHIPPING_ZONES[0];
-
-                return {
-                    ...m,
-                    zoneObj,
-                    orders: partnerOrders,
-                    orderCount: partnerOrders.length,
-                    paidCount: paidOrders.length,
-                    unpaidCount: partnerOrders.length - paidOrders.length,
-                    totalRevenue,
-                    totalHpp,
-                    totalShipping,
-                    totalProfit,
-                    latestOrderDate: latestOrder ? latestOrder.createdAt : 'Belum ada transaksi'
-                };
-            });
-        }
-
+        // ==================== 10. DATABASE MITRA TERDAFTAR & TRANSAKSI (PUSAT) ====================
         function renderHqPartnersDatabase() {
             const tbody = document.getElementById('hq-partners-tbody');
-            const navPartnersBadge = document.getElementById('nav-hq-partners-badge');
-            const enriched = getPartnerMetricsList();
+            const navBadge = document.getElementById('nav-hq-partners-badge');
 
-            if (navPartnersBadge) navPartnersBadge.textContent = enriched.length;
-            if (!tbody) return;
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            const allOrders = JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
+            const mitraUsers = users.filter(u => u.role === 'mitra');
 
-            const rankedByOrder = [...enriched].sort((a, b) =>
-                b.orderCount - a.orderCount || b.totalRevenue - a.totalRevenue
-            );
+            if (navBadge) navBadge.textContent = mitraUsers.length;
 
-            const activePartners = enriched.filter(p => p.orderCount > 0);
-            const totalPartnerOrders = enriched.reduce((sum, p) => sum + p.orderCount, 0);
-            const topPartner = rankedByOrder[0] || null;
+            const enrichedPartners = mitraUsers.map(u => {
+                const matchingOrders = allOrders.filter(o =>
+                    o.partnerId === u.partnerId ||
+                    (o.partnerEmail && o.partnerEmail.toLowerCase() === u.email.toLowerCase())
+                );
+                const paidOrders = matchingOrders.filter(o => o.status !== 'Menunggu Pembayaran');
+
+                const totalOrdersCount = matchingOrders.length;
+                const paidOrdersCount = paidOrders.length;
+                const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.subtotal || 0), 0);
+                const totalHpp = paidOrders.reduce((sum, o) => sum + Number(o.totalHpp || 0), 0);
+                const totalProfit = totalRevenue - totalHpp;
+                const lastOrderDate = matchingOrders.length > 0 ? matchingOrders[0].createdAt : 'Belum ada transaksi';
+
+                return {
+                    ...u,
+                    matchingOrders,
+                    totalOrdersCount,
+                    paidOrdersCount,
+                    totalRevenue,
+                    totalHpp,
+                    totalProfit,
+                    lastOrderDate
+                };
+            });
+
+            const activeMitraCount = enrichedPartners.filter(p => p.totalOrdersCount > 0).length;
+            const totalAccumulatedOrders = enrichedPartners.reduce((sum, p) => sum + p.totalOrdersCount, 0);
+
+            const byOrderCount = [...enrichedPartners].sort((a, b) => b.totalOrdersCount - a.totalOrdersCount || b.totalRevenue - a.totalRevenue);
+            const topPartner = byOrderCount[0];
 
             const kpiTotalEl = document.getElementById('hq-partner-kpi-total');
             if (kpiTotalEl) {
-                kpiTotalEl.textContent = `${enriched.length} Outlet`;
-                document.getElementById('hq-partner-kpi-active').textContent = `${activePartners.length} Outlet`;
-                document.getElementById('hq-partner-kpi-orders').textContent = `${totalPartnerOrders} Order`;
+                kpiTotalEl.textContent = `${mitraUsers.length} Outlet`;
+                document.getElementById('hq-partner-kpi-active').textContent = `${activeMitraCount} Outlet`;
+                document.getElementById('hq-partner-kpi-orders').textContent = `${totalAccumulatedOrders} Order`;
                 document.getElementById('hq-partner-kpi-top-name').textContent = topPartner ? topPartner.outletName : '-';
                 document.getElementById('hq-partner-kpi-top-count').textContent = topPartner
-                    ? `${topPartner.orderCount} Orderan (${formatRupiah(topPartner.totalRevenue)})`
+                    ? `${topPartner.totalOrdersCount} Orderan (${formatRupiah(topPartner.totalRevenue)})`
                     : '0 Orderan';
             }
 
-            const keyword = (document.getElementById('hq-partner-search')?.value || '').trim().toLowerCase();
-            const sortMode = document.getElementById('hq-partner-sort')?.value || 'ORDERS_DESC';
+            if (!tbody) return;
 
-            let filtered = enriched.filter(p => {
+            const keyword = (document.getElementById('hq-partner-search')?.value || '').trim().toLowerCase();
+            const sortBy = document.getElementById('hq-partner-sort')?.value || 'ORDERS_DESC';
+
+            let filtered = enrichedPartners.filter(p => {
                 if (!keyword) return true;
-                return p.outletName.toLowerCase().includes(keyword) ||
+                const zoneObj = SHIPPING_ZONES.find(z => z.id === p.cityId);
+                const zoneCity = zoneObj ? zoneObj.city.toLowerCase() : '';
+                return (
+                    p.outletName.toLowerCase().includes(keyword) ||
                     p.ownerName.toLowerCase().includes(keyword) ||
                     p.partnerId.toLowerCase().includes(keyword) ||
-                    p.email.toLowerCase().includes(keyword) ||
                     p.phone.toLowerCase().includes(keyword) ||
-                    p.zoneObj.city.toLowerCase().includes(keyword);
+                    p.address.toLowerCase().includes(keyword) ||
+                    zoneCity.includes(keyword)
+                );
             });
 
             filtered.sort((a, b) => {
-                if (sortMode === 'REVENUE_DESC') return b.totalRevenue - a.totalRevenue || b.orderCount - a.orderCount;
-                if (sortMode === 'PROFIT_DESC') return b.totalProfit - a.totalProfit || b.orderCount - a.orderCount;
-                if (sortMode === 'NAME_ASC') return a.outletName.localeCompare(b.outletName);
-                return b.orderCount - a.orderCount || b.totalRevenue - a.totalRevenue;
+                if (sortBy === 'REVENUE_DESC') return b.totalRevenue - a.totalRevenue || b.totalOrdersCount - a.totalOrdersCount;
+                if (sortBy === 'PROFIT_DESC') return b.totalProfit - a.totalProfit || b.totalOrdersCount - a.totalOrdersCount;
+                if (sortBy === 'NAME_ASC') return a.outletName.localeCompare(b.outletName);
+                return b.totalOrdersCount - a.totalOrdersCount || b.totalRevenue - a.totalRevenue;
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-400">Tidak ada data mitra yang sesuai pencarian.</td></tr>`;
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="py-10 text-center text-slate-400 text-xs">Tidak ada data mitra terdaftar yang sesuai dengan pencarian.</td>
+                    </tr>
+                `;
                 return;
             }
 
-            tbody.innerHTML = filtered.map((p, idx) => {
-                const rank = idx + 1;
-                let rankBadge = `<span class="w-7 h-7 rounded-xl bg-slate-100 text-slate-600 font-extrabold inline-flex items-center justify-center">${rank}</span>`;
-                if (sortMode === 'ORDERS_DESC' && p.orderCount > 0) {
-                    if (rank === 1) {
-                        rankBadge = `<span class="w-8 h-8 rounded-xl bg-amberbrand-500 text-ugiee-950 font-black inline-flex items-center justify-center shadow-xs" title="Peringkat #1 Orderan Terbanyak"><i class="fa-solid fa-crown"></i></span>`;
-                    } else if (rank === 2) {
-                        rankBadge = `<span class="w-7 h-7 rounded-xl bg-slate-200 text-slate-800 font-black inline-flex items-center justify-center">#2</span>`;
-                    } else if (rank === 3) {
-                        rankBadge = `<span class="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 font-black inline-flex items-center justify-center">#3</span>`;
-                    }
-                }
+            tbody.innerHTML = filtered.map((p, index) => {
+                const rank = index + 1;
+                const zoneObj = SHIPPING_ZONES.find(z => z.id === p.cityId) || SHIPPING_ZONES[0];
+                const waUrl = getWaDirectUrl(p.phone, `Halo *${p.ownerName}* (*${p.outletName}*), salam hangat dari Tim Supply Chain Pusat UGIEE!`);
 
-                const waChatUrl = getWaDirectUrl(
-                    p.phone,
-                    `Halo *${p.ownerName}* (*${p.outletName}*), kami dari *Kantor Pusat UGIEE Supply Chain* ingin mengonfirmasi kebutuhan stok bahan baku outlet Anda.`
-                );
+                let rankBadge = `<span class="w-7 h-7 rounded-xl bg-slate-100 text-slate-600 font-extrabold text-xs inline-flex items-center justify-center">#${rank}</span>`;
+                if (rank === 1 && p.totalOrdersCount > 0) {
+                    rankBadge = `<span class="w-8 h-8 rounded-xl bg-amberbrand-500 text-ugiee-950 font-black text-xs inline-flex items-center justify-center shadow-xs" title="Peringkat 1 Orderan Terbanyak"><i class="fa-solid fa-crown"></i></span>`;
+                } else if (rank === 2 && p.totalOrdersCount > 0) {
+                    rankBadge = `<span class="w-7 h-7 rounded-xl bg-slate-200 text-slate-800 font-black text-xs inline-flex items-center justify-center">#2</span>`;
+                } else if (rank === 3 && p.totalOrdersCount > 0) {
+                    rankBadge = `<span class="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 font-black text-xs inline-flex items-center justify-center">#3</span>`;
+                }
 
                 return `
                     <tr class="hover:bg-slate-50/90 transition">
                         <td class="py-3.5 px-4 text-center">${rankBadge}</td>
                         <td class="py-3.5 px-4">
-                            <span class="font-mono font-bold text-[11px] px-2 py-0.5 rounded bg-ugiee-50 text-ugiee-900 border border-ugiee-200 inline-block">${p.partnerId}</span>
+                            <span class="font-mono font-bold text-[11px] text-ugiee-800 bg-ugiee-50 px-2 py-0.5 rounded border border-ugiee-200">${p.partnerId}</span>
                             <p class="font-extrabold text-slate-900 mt-1">${p.outletName}</p>
-                            <p class="text-[11px] text-slate-400">${p.email}</p>
+                            <span class="text-[11px] text-slate-400">Terakhir order: ${p.lastOrderDate}</span>
                         </td>
                         <td class="py-3.5 px-4">
                             <p class="font-bold text-slate-800">${p.ownerName}</p>
-                            <a href="${waChatUrl}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-emerald-700 hover:underline font-semibold inline-flex items-center gap-1 mt-0.5">
-                                <i class="fa-brands fa-whatsapp"></i> ${p.phone}
-                            </a>
+                            <p class="text-[11px] text-emerald-700 font-semibold mt-0.5"><i class="fa-brands fa-whatsapp mr-1"></i>${p.phone}</p>
+                            <p class="text-[11px] text-slate-400">${p.email}</p>
                         </td>
-                        <td class="py-3.5 px-4 max-w-[220px]">
-                            <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px] inline-block">${p.zoneObj.zone.split('—')[0].trim()}</span>
-                            <p class="text-[11px] text-slate-600 mt-1 line-clamp-2" title="${p.address}">${p.address}</p>
+                        <td class="py-3.5 px-4 max-w-[230px]">
+                            <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px] inline-block">${zoneObj.city.split('(')[0].trim()}</span>
+                            <p class="text-[11px] text-slate-600 mt-1 line-clamp-2">${p.address}</p>
                         </td>
                         <td class="py-3.5 px-4 text-center">
-                            <span class="px-3 py-1 rounded-full font-black text-xs inline-flex items-center gap-1.5 ${
-                                p.orderCount > 0 ? 'bg-ugiee-600 text-amberbrand-300' : 'bg-slate-100 text-slate-500'
+                            <span class="px-3 py-1 rounded-full font-black text-xs inline-block ${
+                                p.totalOrdersCount > 0 ? 'bg-ugiee-600 text-amberbrand-300' : 'bg-slate-100 text-slate-400'
                             }">
-                                <i class="fa-solid fa-bag-shopping text-[10px]"></i> ${p.orderCount}x Order
+                                ${p.totalOrdersCount}x Order
                             </span>
-                            <span class="text-[10px] text-slate-400 block mt-1">Terakhir: ${p.latestOrderDate}</span>
+                            <span class="text-[10px] text-slate-400 block mt-1">${p.paidOrdersCount} Lunas</span>
                         </td>
-                        <td class="py-3.5 px-4 text-right">
-                            <span class="font-extrabold text-slate-900 block">${formatRupiah(p.totalRevenue)}</span>
-                            <span class="text-[10px] text-slate-400">${p.paidCount} lunas${p.unpaidCount > 0 ? ` • ${p.unpaidCount} pending` : ''}</span>
+                        <td class="py-3.5 px-4 text-right font-extrabold text-slate-900">
+                            ${formatRupiah(p.totalRevenue)}
                         </td>
-                        <td class="py-3.5 px-4 text-right font-extrabold text-emerald-700">
+                        <td class="py-3.5 px-4 text-right font-black text-emerald-700">
                             +${formatRupiah(p.totalProfit)}
                         </td>
                         <td class="py-3.5 px-4 text-center">
-                            <button onclick="openPartnerDetailModal('${p.partnerId}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] shadow-2xs transition inline-flex items-center gap-1.5">
-                                <i class="fa-solid fa-list-check text-amberbrand-400"></i> Detail (${p.orderCount})
-                            </button>
+                            <div class="flex flex-col items-center gap-1.5">
+                                <button onclick="openPartnerDetailModal('${p.partnerId}')" class="px-3 py-1.5 rounded-lg bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition w-full max-w-[125px]">
+                                    <i class="fa-solid fa-eye mr-1"></i> Detail (${p.totalOrdersCount})
+                                </button>
+                                <div class="flex items-center gap-1 w-full max-w-[125px]">
+                                    <button onclick="focusPartnerOnMap('${p.partnerId}')" class="flex-1 px-2 py-1 rounded-lg bg-amberbrand-500/20 hover:bg-amberbrand-500/40 text-ugiee-900 font-bold text-[10px] transition" title="Fokus ke titik outlet di peta">
+                                        <i class="fa-solid fa-location-dot"></i> Peta
+                                    </button>
+                                    <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="flex-1 px-2 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-[10px] transition text-center">
+                                        <i class="fa-brands fa-whatsapp"></i> WA
+                                    </a>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -4500,70 +5074,84 @@ const MANUAL_FIREBASE_CONFIG = {
         }
 
         function openPartnerDetailModal(partnerId) {
-            const enriched = getPartnerMetricsList();
-            const partner = enriched.find(p => p.partnerId === partnerId);
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            const allOrders = JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
+            const partner = users.find(u => u.partnerId === partnerId);
             if (!partner) return;
+
+            const zoneObj = SHIPPING_ZONES.find(z => z.id === partner.cityId) || SHIPPING_ZONES[0];
+            const partnerOrders = allOrders.filter(o =>
+                o.partnerId === partner.partnerId ||
+                (o.partnerEmail && o.partnerEmail.toLowerCase() === partner.email.toLowerCase())
+            );
+            const paidOrders = partnerOrders.filter(o => o.status !== 'Menunggu Pembayaran');
+            const unpaidCount = partnerOrders.length - paidOrders.length;
+
+            const totalRevenue = paidOrders.reduce((s, o) => s + Number(o.subtotal || 0), 0);
+            const totalHpp = paidOrders.reduce((s, o) => s + Number(o.totalHpp || 0), 0);
+            const totalProfit = totalRevenue - totalHpp;
+            const avgOrder = paidOrders.length > 0 ? Math.round(totalRevenue / paidOrders.length) : 0;
 
             document.getElementById('pdm-outlet-name').textContent = partner.outletName;
             document.getElementById('pdm-partner-id').textContent = partner.partnerId;
-            document.getElementById('pdm-pic-info').textContent = `${partner.ownerName} • ${partner.phone} • ${partner.zoneObj.city}`;
+            document.getElementById('pdm-pic-info').textContent = `${partner.ownerName} • ${partner.phone} • ${zoneObj.city}`;
+            document.getElementById('pdm-wa-btn').href = getWaDirectUrl(
+                partner.phone,
+                `Halo *${partner.ownerName}* (*${partner.outletName}*), kami dari Tim Supply Chain Pusat UGIEE ingin mengonfirmasi kebutuhan stok outlet Anda.`
+            );
+
+            const focusBtn = document.getElementById('pdm-focus-map-btn');
+            if (focusBtn) {
+                focusBtn.onclick = () => {
+                    closePartnerDetailModal();
+                    focusPartnerOnMap(partner.partnerId);
+                };
+            }
 
             document.getElementById('pdm-owner-name').textContent = partner.ownerName;
             document.getElementById('pdm-email').textContent = partner.email;
             document.getElementById('pdm-phone').textContent = partner.phone;
-            document.getElementById('pdm-zone').textContent = partner.zoneObj.city;
+            document.getElementById('pdm-zone').textContent = `${zoneObj.city} [${zoneObj.zone}]`;
             document.getElementById('pdm-address').textContent = partner.address;
+            const latVal = typeof partner.lat === 'number' ? partner.lat : resolveQuickPartnerCoords(partner.address, partner.cityId, partner.partnerId).lat;
+            const lngVal = typeof partner.lng === 'number' ? partner.lng : resolveQuickPartnerCoords(partner.address, partner.cityId, partner.partnerId).lng;
+            document.getElementById('pdm-coords').textContent = `GPS: ${latVal}, ${lngVal}`;
 
-            document.getElementById('pdm-stat-orders').textContent = `${partner.orderCount} Order`;
-            document.getElementById('pdm-stat-paid-split').textContent = `${partner.paidCount} Lunas • ${partner.unpaidCount} Pending`;
-            document.getElementById('pdm-stat-revenue').textContent = formatRupiah(partner.totalRevenue);
+            document.getElementById('pdm-stat-orders').textContent = `${partnerOrders.length} Order`;
+            document.getElementById('pdm-stat-paid-split').textContent = `${paidOrders.length} Lunas • ${unpaidCount} Pending`;
+            document.getElementById('pdm-stat-revenue').textContent = formatRupiah(totalRevenue);
+            document.getElementById('pdm-stat-avg').textContent = formatRupiah(avgOrder);
+            document.getElementById('pdm-stat-profit').textContent = `+${formatRupiah(totalProfit)}`;
 
-            const avgOrderVal = partner.paidCount > 0 ? Math.round(partner.totalRevenue / partner.paidCount) : 0;
-            document.getElementById('pdm-stat-avg').textContent = formatRupiah(avgOrderVal);
-            document.getElementById('pdm-stat-profit').textContent = `+${formatRupiah(partner.totalProfit)}`;
-
-            document.getElementById('pdm-wa-btn').href = getWaDirectUrl(
-                partner.phone,
-                `Halo *${partner.ownerName}* (*${partner.outletName}*), pesan dari *Admin Pusat UGIEE Supply Chain*.`
-            );
-
-            const ordersListEl = document.getElementById('pdm-orders-list');
-            if (partner.orders.length === 0) {
-                ordersListEl.innerHTML = `
-                    <div class="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center text-xs text-slate-500">
-                        Mitra ini belum melakukan transaksi orderan bahan baku.
+            const listEl = document.getElementById('pdm-orders-list');
+            if (partnerOrders.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center text-xs text-slate-500">
+                        Mitra ini sudah terdaftar di database namun belum melakukan transaksi pemesanan bahan baku.
                     </div>
                 `;
             } else {
-                ordersListEl.innerHTML = partner.orders.map(o => {
-                    const oHpp = calculateOrderHpp(o);
-                    const oProfit = Number(o.subtotal || 0) - oHpp;
+                listEl.innerHTML = partnerOrders.map(o => {
                     const isPaid = o.status !== 'Menunggu Pembayaran';
-
+                    const orderProfit = Number(o.subtotal || 0) - Number(o.totalHpp || 0);
                     return `
-                        <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                             <div class="space-y-1">
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <span class="font-mono font-extrabold text-xs text-ugiee-900">${o.orderId}</span>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                                        ${o.status}
-                                    </span>
-                                    <span class="text-[11px] text-slate-400">${o.createdAt}</span>
+                                    <span class="font-mono font-black text-slate-900">${o.orderId}</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                        isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                    }">${o.status}</span>
+                                    <span class="text-slate-400">• ${o.createdAt}</span>
                                 </div>
-                                <p class="text-[11px] text-slate-600">
-                                    ${o.items.map(it => `${it.name} (${it.qty}x)`).join(', ')}
-                                </p>
-                                <p class="text-[10px] text-slate-500 font-mono">
-                                    Ekspedisi: ${o.courierName} • Resi: <strong>${o.trackingNumber}</strong>
-                                </p>
+                                <p class="text-slate-600">${o.items.map(i => `${i.name} (${i.qty}x)`).join(', ')}</p>
+                                <p class="text-[11px] text-slate-400">Ekspedisi: ${o.courierName} • Resi: <strong class="font-mono text-slate-700">${o.trackingNumber}</strong></p>
                             </div>
-                            <div class="flex items-center justify-between sm:justify-end gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
-                                <div class="text-left sm:text-right">
-                                    <span class="text-xs font-black text-slate-900 block">${formatRupiah(o.subtotal)}</span>
-                                    <span class="text-[10px] font-bold text-emerald-700">Laba: +${formatRupiah(oProfit)}</span>
-                                </div>
-                                <button onclick="closePartnerDetailModal(); openInvoiceModal('${o.orderId}');" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] transition">
-                                    Invoice
+                            <div class="sm:text-right shrink-0 space-y-1">
+                                <p class="font-black text-slate-900 text-sm">${formatRupiah(o.subtotal)}</p>
+                                <p class="text-[11px] font-bold text-emerald-700">Profit Pusat: +${formatRupiah(orderProfit)}</p>
+                                <button onclick="closePartnerDetailModal(); openInvoiceModal('${o.orderId}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px]">
+                                    Buka Invoice &amp; Tracking
                                 </button>
                             </div>
                         </div>
@@ -4587,8 +5175,10 @@ const MANUAL_FIREBASE_CONFIG = {
             document.getElementById('hq-np-owner').value = '';
             document.getElementById('hq-np-email').value = '';
             document.getElementById('hq-np-phone').value = '';
-            document.getElementById('hq-np-password').value = '123';
             document.getElementById('hq-np-address').value = '';
+            document.getElementById('hq-np-password').value = '123';
+            document.getElementById('hq-np-lat').value = '';
+            document.getElementById('hq-np-lng').value = '';
             const modal = document.getElementById('hq-new-partner-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -4600,8 +5190,22 @@ const MANUAL_FIREBASE_CONFIG = {
             modal.classList.remove('flex');
         }
 
-        function submitHqNewPartner(e) {
+        async function detectHqNewPartnerCoords() {
+            const address = document.getElementById('hq-np-address').value.trim();
+            const cityId = document.getElementById('hq-np-city').value;
+            if (!address) {
+                showToast('Isi alamat lengkap outlet terlebih dahulu sebelum mendeteksi koordinat.', 'error');
+                return;
+            }
+            const coords = await geocodeAddressWithFallback(address, cityId, address);
+            document.getElementById('hq-np-lat').value = coords.lat;
+            document.getElementById('hq-np-lng').value = coords.lng;
+            showToast(`Titik koordinat berhasil dideteksi (${coords.lat}, ${coords.lng})!`);
+        }
+
+        async function submitHqNewPartner(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('hq-np-submit-btn');
             const outletName = document.getElementById('hq-np-outlet').value.trim();
             const ownerName = document.getElementById('hq-np-owner').value.trim();
             const email = document.getElementById('hq-np-email').value.trim().toLowerCase();
@@ -4609,16 +5213,30 @@ const MANUAL_FIREBASE_CONFIG = {
             const cityId = document.getElementById('hq-np-city').value;
             const password = document.getElementById('hq-np-password').value.trim();
             const address = document.getElementById('hq-np-address').value.trim();
+            const manualLat = parseFloat(document.getElementById('hq-np-lat').value);
+            const manualLng = parseFloat(document.getElementById('hq-np-lng').value);
 
             const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
             if (users.some(u => u.email.toLowerCase() === email)) {
-                showToast('Email mitra sudah terdaftar di sistem!', 'error');
+                showToast('Email mitra sudah terdaftar di database!', 'error');
                 return;
             }
 
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Memetakan & Menyimpan...';
+            }
+
             const mitraCount = users.filter(u => u.role === 'mitra').length + 1;
+            const partnerId = 'UG-MTR-' + String(mitraCount).padStart(3, '0');
+
+            let finalCoords = { lat: manualLat, lng: manualLng };
+            if (Number.isNaN(manualLat) || Number.isNaN(manualLng)) {
+                finalCoords = await geocodeAddressWithFallback(address, cityId, partnerId);
+            }
+
             const newPartner = {
-                partnerId: 'UG-MTR-' + String(mitraCount).padStart(3, '0'),
+                partnerId,
                 role: 'mitra',
                 outletName,
                 ownerName,
@@ -4626,223 +5244,73 @@ const MANUAL_FIREBASE_CONFIG = {
                 phone,
                 password,
                 cityId,
-                address
+                address,
+                lat: finalCoords.lat,
+                lng: finalCoords.lng
             };
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Simpan ke Database & Peta';
+            }
 
             users.push(newPartner);
             cloudCache.users = users;
             localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
             cloudUpsert('users', newPartner.partnerId, newPartner);
+
             closeHqNewPartnerModal();
             renderHqPartnersDatabase();
-            showToast(`Mitra ${outletName} (${newPartner.partnerId}) berhasil didaftarkan & tersinkron ke Cloud!`);
+            renderHqPartnersMap();
+            showToast(`Mitra ${outletName} (${newPartner.partnerId}) ditambahkan & dipetakan (${finalCoords.lat}, ${finalCoords.lng})!`);
         }
 
-        // ==================== 8C. MANAJEMEN AKUN ADMIN PUSAT (HQ) ====================
-        function renderHqAdminsTable() {
-            const tbody = document.getElementById('hq-admins-tbody');
-            const badge = document.getElementById('nav-hq-admins-badge');
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-            const pusatUsers = users.filter(u => u.role === 'pusat');
-
-            if (badge) badge.textContent = pusatUsers.length;
-            if (!tbody) return;
-
-            tbody.innerHTML = pusatUsers.map(adm => {
-                const isCurrentSession = state.currentUser && state.currentUser.partnerId === adm.partnerId;
-                return `
-                    <tr class="hover:bg-slate-50/90 transition">
-                        <td class="py-3.5 px-5">
-                            <div class="flex items-center gap-2">
-                                <span class="font-mono font-bold text-[11px] px-2 py-0.5 rounded bg-ugiee-50 text-ugiee-900 border border-ugiee-200">${adm.partnerId}</span>
-                                ${isCurrentSession ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Sedang Aktif</span>` : ''}
-                            </div>
-                            <p class="font-extrabold text-slate-900 mt-1">${adm.outletName}</p>
-                        </td>
-                        <td class="py-3.5 px-4 font-bold text-slate-800">${adm.ownerName}</td>
-                        <td class="py-3.5 px-4 font-mono text-slate-700">${adm.email}</td>
-                        <td class="py-3.5 px-4 text-emerald-700 font-semibold">${adm.phone || '-'}</td>
-                        <td class="py-3.5 px-4">
-                            <span class="font-mono text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold">••••••••</span>
-                        </td>
-                        <td class="py-3.5 px-5 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="openHqAdminModal('${adm.partnerId}')" class="px-3 py-1.5 rounded-lg bg-ugiee-50 hover:bg-ugiee-100 text-ugiee-800 font-bold text-[11px] border border-ugiee-200 transition inline-flex items-center gap-1" title="Ubah Email, Sandi & Profil Admin">
-                                    <i class="fa-solid fa-pen"></i> Edit Akun
-                                </button>
-                                ${pusatUsers.length > 1 && !isCurrentSession ? `
-                                    <button onclick="deleteHqAdmin('${adm.partnerId}')" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition" title="Hapus Akun Admin">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function openHqAdminModal(adminId = null) {
-            const modal = document.getElementById('hq-admin-modal');
-            const titleEl = document.getElementById('hq-admin-modal-title');
-            const editIdEl = document.getElementById('hq-adm-edit-id');
-
-            if (adminId) {
-                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-                const adm = users.find(u => u.partnerId === adminId && u.role === 'pusat');
-                if (!adm) return;
-
-                titleEl.innerHTML = `<i class="fa-solid fa-user-shield text-amberbrand-400"></i> Edit Akun Admin Pusat (${adm.partnerId})`;
-                editIdEl.value = adm.partnerId;
-                document.getElementById('hq-adm-division').value = adm.outletName;
-                document.getElementById('hq-adm-owner').value = adm.ownerName;
-                document.getElementById('hq-adm-email').value = adm.email;
-                document.getElementById('hq-adm-phone').value = adm.phone || '';
-                document.getElementById('hq-adm-password').value = adm.password;
-                document.getElementById('hq-adm-address').value = adm.address || '';
-            } else {
-                titleEl.innerHTML = `<i class="fa-solid fa-user-plus text-amberbrand-400"></i> Tambah Akun Admin Pusat Baru`;
-                editIdEl.value = '';
-                document.getElementById('hq-adm-division').value = 'Admin Logistik & Finance Pusat';
-                document.getElementById('hq-adm-owner').value = '';
-                document.getElementById('hq-adm-email').value = '';
-                document.getElementById('hq-adm-phone').value = '';
-                document.getElementById('hq-adm-password').value = '';
-                document.getElementById('hq-adm-address').value = 'Jl. Perintis Kemerdekaan KM 10, Tamalanrea, Makassar';
-            }
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeHqAdminModal() {
-            const modal = document.getElementById('hq-admin-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function submitHqAdminForm(e) {
-            e.preventDefault();
-            const editId = document.getElementById('hq-adm-edit-id').value;
-            const outletName = document.getElementById('hq-adm-division').value.trim();
-            const ownerName = document.getElementById('hq-adm-owner').value.trim();
-            const email = document.getElementById('hq-adm-email').value.trim().toLowerCase();
-            const phone = document.getElementById('hq-adm-phone').value.trim();
-            const password = document.getElementById('hq-adm-password').value.trim();
-            const address = document.getElementById('hq-adm-address').value.trim();
-
-            if (password.length < 3) {
-                showToast('Kata sandi minimal 3 karakter!', 'error');
-                return;
-            }
-
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-            const duplicateEmail = users.some(u => u.email.toLowerCase() === email && u.partnerId !== editId);
-            if (duplicateEmail) {
-                showToast('Email tersebut sudah digunakan oleh akun lain!', 'error');
-                return;
-            }
-
-            if (editId) {
-                const idx = users.findIndex(u => u.partnerId === editId);
-                if (idx !== -1) {
-                    users[idx] = {
-                        ...users[idx],
-                        outletName,
-                        ownerName,
-                        email,
-                        phone,
-                        password,
-                        address
-                    };
-                    cloudUpsert('users', editId, users[idx]);
-
-                    if (state.currentUser && state.currentUser.partnerId === editId) {
-                        state.currentUser = users[idx];
-                        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(users[idx]));
-                        updatePartnerUI();
-                    }
-                    showToast(`Akun Admin Pusat (${editId}) berhasil diperbarui & tersinkron ke Cloud!`);
-                }
-            } else {
-                const pusatCount = users.filter(u => u.role === 'pusat').length;
-                const newAdminId = 'UG-HQ-' + String(pusatCount).padStart(3, '0');
-                const newAdmin = {
-                    partnerId: newAdminId,
-                    role: 'pusat',
-                    outletName,
-                    ownerName,
-                    email,
-                    phone,
-                    password,
-                    cityId: 'MKS',
-                    address
-                };
-                users.push(newAdmin);
-                cloudUpsert('users', newAdmin.partnerId, newAdmin);
-                showToast(`Akun Admin Pusat baru (${newAdminId}) berhasil ditambahkan!`);
-            }
-
-            cloudCache.users = users;
-            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-            closeHqAdminModal();
-            renderHqAdminsTable();
-        }
-
-        function deleteHqAdmin(adminId) {
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-            const pusatUsers = users.filter(u => u.role === 'pusat');
-            if (pusatUsers.length <= 1) {
-                showToast('Minimal harus tersisa 1 akun Admin Pusat!', 'error');
-                return;
-            }
-            const nextUsers = users.filter(u => u.partnerId !== adminId);
-            cloudCache.users = nextUsers;
-            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(nextUsers));
-            cloudRemove('users', adminId);
-            renderHqAdminsTable();
-            showToast(`Akun Admin Pusat ${adminId} berhasil dihapus.`, 'info');
-        }
-
+        // ==================== 11. MASTER DATA BAHAN BAKU & HPP MANAGEMENT (PUSAT) ====================
         function renderHqProductsTable() {
             const tbody = document.getElementById('hq-products-tbody');
             if (!tbody) return;
 
-            tbody.innerHTML = RAW_MATERIALS.map(p => {
-                const unitProfit = Number(p.price) - Number(p.hpp || 0);
-                const marginPct = p.price > 0 ? ((unitProfit / p.price) * 100).toFixed(0) : 0;
-                const imgUrl = getProductImageUrl(p);
-                const fallbackUrl = getProductFallbackUrl(p);
+            tbody.innerHTML = RAW_MATERIALS.map(prod => {
+                const unitProfit = prod.price - (prod.hpp || 0);
+                const marginPct = prod.price > 0 ? ((unitProfit / prod.price) * 100).toFixed(1) : '0.0';
+                const imgUrl = getProductImageUrl(prod);
+                const fallbackUrl = getProductFallbackUrl(prod);
 
                 return `
-                    <tr class="hover:bg-slate-50/80 transition">
+                    <tr class="hover:bg-slate-50/90 transition">
                         <td class="py-3.5 px-5">
                             <div class="flex items-center gap-3">
-                                <img src="${imgUrl}" alt="${p.name}" onerror="this.onerror=null;this.src='${fallbackUrl}'" class="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0 bg-slate-100">
+                                <img src="${imgUrl}" alt="${prod.name}" onerror="this.onerror=null;this.src='${fallbackUrl}'" class="w-11 h-11 rounded-xl object-cover border border-slate-200 shrink-0 bg-slate-100">
                                 <div>
-                                    <span class="font-mono font-bold text-ugiee-800 block">${p.sku}</span>
-                                    <span class="font-bold text-slate-900">${p.name}</span>
+                                    <span class="font-mono font-bold text-[11px] text-ugiee-800 bg-ugiee-50 px-2 py-0.5 rounded border border-ugiee-200">${prod.sku}</span>
+                                    <p class="font-extrabold text-slate-900 mt-1">${prod.name}</p>
                                 </div>
                             </div>
                         </td>
                         <td class="py-3.5 px-4">
-                            <span class="text-slate-700 font-semibold block">${p.category}</span>
-                            <span class="text-[11px] text-slate-400">${p.unit} • ${p.weight} kg</span>
+                            <span class="font-semibold text-slate-700 block">${prod.category}</span>
+                            <span class="text-[11px] text-slate-400">${prod.unit} (${prod.weight} kg)</span>
                         </td>
-                        <td class="py-3.5 px-4 text-right font-bold text-slate-900">${formatRupiah(p.price)}</td>
-                        <td class="py-3.5 px-4 text-right font-semibold text-amber-700">${formatRupiah(p.hpp || 0)}</td>
+                        <td class="py-3.5 px-4 text-right font-extrabold text-slate-900">${formatRupiah(prod.price)}</td>
+                        <td class="py-3.5 px-4 text-right font-bold text-amber-700">${formatRupiah(prod.hpp || 0)}</td>
                         <td class="py-3.5 px-4 text-right">
-                            <span class="font-extrabold text-ugiee-800 block">+${formatRupiah(unitProfit)}</span>
-                            <span class="text-[10px] text-slate-400">${marginPct}% margin</span>
+                            <span class="font-black text-emerald-700 block">+${formatRupiah(unitProfit)}</span>
+                            <span class="text-[10px] font-bold text-emerald-600">${marginPct}% margin</span>
                         </td>
-                        <td class="py-3.5 px-4 text-center font-bold">${p.stock}</td>
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full font-bold text-[11px] ${
+                                prod.stock > 20 ? 'bg-slate-100 text-slate-800' : 'bg-rose-100 text-rose-700'
+                            }">
+                                ${prod.stock} unit
+                            </span>
+                        </td>
                         <td class="py-3.5 px-5 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="openProductModal('${p.sku}')" class="p-2 rounded-lg bg-slate-100 hover:bg-ugiee-100 text-ugiee-800 transition" title="Edit HPP & Harga">
-                                    <i class="fa-solid fa-pen"></i>
+                                <button onclick="openProductModal('${prod.sku}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-ugiee-600 hover:text-white text-slate-700 font-bold text-[11px] transition">
+                                    <i class="fa-solid fa-pen"></i> Edit
                                 </button>
-                                <button onclick="deleteProduct('${p.sku}')" class="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition" title="Hapus Bahan Baku">
-                                    <i class="fa-solid fa-trash-can"></i>
+                                <button onclick="deleteProduct('${prod.sku}')" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 font-bold text-[11px] transition">
+                                    <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                         </td>
@@ -4852,22 +5320,22 @@ const MANUAL_FIREBASE_CONFIG = {
         }
 
         function previewProductImage(url) {
-            const previewEl = document.getElementById('prod-image-preview');
-            if (!previewEl) return;
+            const imgEl = document.getElementById('prod-image-preview');
+            if (!imgEl) return;
             const cat = document.getElementById('prod-category')?.value || 'Tepung & Premiks';
-            previewEl.src = (url && url.startsWith('http')) ? url : (CATEGORY_DEFAULT_IMAGES[cat] || 'https://placehold.co/300x200/15987E/FBC14D?text=UGIEE+Produk');
+            imgEl.src = (url && url.startsWith('http')) ? url : (CATEGORY_DEFAULT_IMAGES[cat] || 'https://placehold.co/300x200/15987E/FBC14D?text=UGIEE+Produk');
         }
 
-        function openProductModal(editSku = null) {
+        function openProductModal(sku = null) {
             const modal = document.getElementById('product-modal');
-            const title = document.getElementById('product-modal-title');
+            const titleEl = document.getElementById('product-modal-title');
             const editInput = document.getElementById('prod-edit-sku');
             const skuInput = document.getElementById('prod-sku');
 
-            if (editSku) {
-                const prod = RAW_MATERIALS.find(p => p.sku === editSku);
+            if (sku) {
+                const prod = RAW_MATERIALS.find(p => p.sku === sku);
                 if (!prod) return;
-                title.textContent = `Edit Bahan Baku & HPP (${prod.sku})`;
+                titleEl.textContent = `Edit Bahan Baku & HPP (${prod.sku})`;
                 editInput.value = prod.sku;
                 skuInput.value = prod.sku;
                 skuInput.readOnly = true;
@@ -4882,16 +5350,17 @@ const MANUAL_FIREBASE_CONFIG = {
                 previewProductImage(prod.image || '');
                 document.getElementById('prod-desc').value = prod.desc || '';
             } else {
-                title.textContent = 'Tambah Bahan Baku & Master HPP';
+                titleEl.textContent = 'Tambah Bahan Baku Baru & Master HPP';
                 editInput.value = '';
-                skuInput.value = '';
+                skuInput.value = 'UG-NEW-0' + (RAW_MATERIALS.length + 1);
                 skuInput.readOnly = false;
+                document.getElementById('prod-category').value = 'Tepung & Premiks';
                 document.getElementById('prod-name').value = '';
-                document.getElementById('prod-unit').value = '';
-                document.getElementById('prod-weight').value = '';
+                document.getElementById('prod-unit').value = 'Sak 10 kg';
+                document.getElementById('prod-weight').value = '10';
                 document.getElementById('prod-stock').value = '50';
-                document.getElementById('prod-hpp').value = '';
-                document.getElementById('prod-price').value = '';
+                document.getElementById('prod-hpp').value = '90000';
+                document.getElementById('prod-price').value = '140000';
                 document.getElementById('prod-image').value = '';
                 previewProductImage('');
                 document.getElementById('prod-desc').value = '';
@@ -4919,32 +5388,32 @@ const MANUAL_FIREBASE_CONFIG = {
             const hpp = parseInt(document.getElementById('prod-hpp').value, 10);
             const price = parseInt(document.getElementById('prod-price').value, 10);
             const rawImage = document.getElementById('prod-image').value.trim();
-            const image = rawImage.startsWith('http') ? rawImage : (CATEGORY_DEFAULT_IMAGES[category] || 'https://placehold.co/600x400/15987E/FBC14D?text=UGIEE+Produk');
+            const image = (rawImage && rawImage.startsWith('http')) ? rawImage : (CATEGORY_DEFAULT_IMAGES[category] || 'https://placehold.co/600x400/15987E/FBC14D?text=UGIEE+Produk');
             const desc = document.getElementById('prod-desc').value.trim();
 
             if (editSku) {
                 const idx = RAW_MATERIALS.findIndex(p => p.sku === editSku);
                 if (idx !== -1) {
-                    RAW_MATERIALS[idx] = { ...RAW_MATERIALS[idx], category, name, unit, weight, stock, hpp, price, image, desc };
+                    RAW_MATERIALS[idx] = { sku: editSku, category, name, unit, weight, stock, hpp, price, image, desc };
                     cloudUpsert('products', editSku, RAW_MATERIALS[idx]);
                 }
-                showToast(`Data ${sku} & HPP berhasil diperbarui & tersinkron ke Cloud!`);
+                showToast(`Data bahan baku & HPP ${editSku} berhasil diperbarui!`);
             } else {
                 if (RAW_MATERIALS.some(p => p.sku === sku)) {
-                    showToast(`Kode SKU ${sku} sudah ada! Gunakan kode unik.`, 'error');
+                    showToast(`Kode SKU ${sku} sudah digunakan!`, 'error');
                     return;
                 }
-                const newProd = { sku, name, category, unit, weight, hpp, price, stock, image, desc };
+                const newProd = { sku, category, name, unit, weight, stock, hpp, price, image, desc };
                 RAW_MATERIALS.push(newProd);
-                cloudUpsert('products', newProd.sku, newProd);
-                showToast(`Bahan baku baru ${name} ditambahkan ke katalog!`);
+                cloudUpsert('products', sku, newProd);
+                showToast(`Bahan baku baru ${name} berhasil ditambahkan!`);
             }
 
             localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(RAW_MATERIALS));
             closeProductModal();
             renderProducts();
+            renderCategoryFilters();
             renderHqProductsTable();
-            renderHqDashboard();
         }
 
         function deleteProduct(sku) {
@@ -4952,11 +5421,185 @@ const MANUAL_FIREBASE_CONFIG = {
             localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(RAW_MATERIALS));
             cloudRemove('products', sku);
             renderProducts();
+            renderCategoryFilters();
             renderHqProductsTable();
-            showToast(`Bahan baku ${sku} dihapus dari katalog.`, 'info');
+            showToast(`Produk ${sku} dihapus dari master data.`, 'info');
         }
 
-        // ==================== EXPOSE FUNCTIONS TO GLOBAL WINDOW FOR INLINE HANDLERS ====================
+        // ==================== 12. MANAJEMEN AKUN ADMIN PUSAT (HQ) ====================
+        function renderHqAdminsTable() {
+            const tbody = document.getElementById('hq-admins-tbody');
+            const navBadge = document.getElementById('nav-hq-admins-badge');
+
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            const pusatAdmins = users.filter(u => u.role === 'pusat');
+
+            if (navBadge) navBadge.textContent = pusatAdmins.length;
+            if (!tbody) return;
+
+            tbody.innerHTML = pusatAdmins.map(adm => {
+                const isSelf = state.currentUser && state.currentUser.partnerId === adm.partnerId;
+                return `
+                    <tr class="hover:bg-slate-50/90 transition">
+                        <td class="py-3.5 px-5">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-bold text-[11px] text-ugiee-900 bg-amberbrand-500/20 border border-amberbrand-400/50 px-2 py-0.5 rounded">${adm.partnerId}</span>
+                                ${isSelf ? '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">Sedang Aktif</span>' : ''}
+                            </div>
+                            <p class="font-extrabold text-slate-900 mt-1">${adm.outletName}</p>
+                        </td>
+                        <td class="py-3.5 px-4 font-bold text-slate-800">${adm.ownerName}</td>
+                        <td class="py-3.5 px-4 font-mono text-slate-700">${adm.email}</td>
+                        <td class="py-3.5 px-4 text-emerald-700 font-semibold">
+                            <i class="fa-brands fa-whatsapp mr-1"></i>${adm.phone}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="font-mono font-bold bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-800">
+                                ${adm.password}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-5 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="openHqAdminModal('${adm.partnerId}')" class="px-3 py-1.5 rounded-lg bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition">
+                                    <i class="fa-solid fa-pen mr-1"></i> Edit Akun
+                                </button>
+                                ${pusatAdmins.length > 1 ? `
+                                    <button onclick="deleteHqAdmin('${adm.partnerId}')" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 font-bold text-[11px] transition" title="Hapus akun admin pusat">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openHqAdminModal(adminId = null) {
+            const modal = document.getElementById('hq-admin-modal');
+            const titleEl = document.getElementById('hq-admin-modal-title');
+            const editIdEl = document.getElementById('hq-adm-edit-id');
+
+            if (adminId) {
+                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+                const adm = users.find(u => u.partnerId === adminId && u.role === 'pusat');
+                if (!adm) return;
+
+                titleEl.innerHTML = `<i class="fa-solid fa-user-pen text-amberbrand-400"></i> Edit Akun Admin Pusat (${adm.partnerId})`;
+                editIdEl.value = adm.partnerId;
+                document.getElementById('hq-adm-division').value = adm.outletName;
+                document.getElementById('hq-adm-owner').value = adm.ownerName;
+                document.getElementById('hq-adm-email').value = adm.email;
+                document.getElementById('hq-adm-phone').value = adm.phone;
+                document.getElementById('hq-adm-password').value = adm.password;
+                document.getElementById('hq-adm-address').value = adm.address || 'Jl. Perintis Kemerdekaan KM 10, Tamalanrea, Makassar';
+            } else {
+                titleEl.innerHTML = `<i class="fa-solid fa-user-plus text-amberbrand-400"></i> Tambah Akun Admin Pusat Baru`;
+                editIdEl.value = '';
+                document.getElementById('hq-adm-division').value = '';
+                document.getElementById('hq-adm-owner').value = '';
+                document.getElementById('hq-adm-email').value = '';
+                document.getElementById('hq-adm-phone').value = '081333555114';
+                document.getElementById('hq-adm-password').value = '';
+                document.getElementById('hq-adm-address').value = 'Jl. Perintis Kemerdekaan KM 10, Tamalanrea, Makassar';
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeHqAdminModal() {
+            const modal = document.getElementById('hq-admin-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function submitHqAdminForm(e) {
+            e.preventDefault();
+            const editId = document.getElementById('hq-adm-edit-id').value;
+            const outletName = document.getElementById('hq-adm-division').value.trim();
+            const ownerName = document.getElementById('hq-adm-owner').value.trim();
+            const email = document.getElementById('hq-adm-email').value.trim().toLowerCase();
+            const phone = document.getElementById('hq-adm-phone').value.trim();
+            const password = document.getElementById('hq-adm-password').value.trim();
+            const address = document.getElementById('hq-adm-address').value.trim();
+
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            const duplicate = users.find(u => u.email.toLowerCase() === email && u.partnerId !== editId);
+            if (duplicate) {
+                showToast('Email sudah digunakan oleh akun lain! Gunakan email yang berbeda.', 'error');
+                return;
+            }
+
+            if (editId) {
+                const idx = users.findIndex(u => u.partnerId === editId);
+                if (idx !== -1) {
+                    users[idx] = {
+                        ...users[idx],
+                        outletName,
+                        ownerName,
+                        email,
+                        phone,
+                        password,
+                        address
+                    };
+                    cloudUpsert('users', editId, users[idx]);
+
+                    if (state.currentUser && state.currentUser.partnerId === editId) {
+                        state.currentUser = users[idx];
+                        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(users[idx]));
+                        updatePartnerUI();
+                    }
+                }
+                showToast(`Akun Admin Pusat (${email}) berhasil diperbarui!`);
+            } else {
+                const hqCount = users.filter(u => u.role === 'pusat').length;
+                const newId = 'UG-HQ-' + String(hqCount).padStart(3, '0');
+                const newAdmin = {
+                    partnerId: newId,
+                    role: 'pusat',
+                    outletName,
+                    ownerName,
+                    email,
+                    phone,
+                    password,
+                    cityId: 'MKS',
+                    address,
+                    lat: HQ_WAREHOUSE_COORDS.lat,
+                    lng: HQ_WAREHOUSE_COORDS.lng
+                };
+                users.push(newAdmin);
+                cloudUpsert('users', newId, newAdmin);
+                showToast(`Akun Admin Pusat baru (${email}) berhasil ditambahkan!`);
+            }
+
+            cloudCache.users = users;
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+            closeHqAdminModal();
+            renderHqAdminsTable();
+        }
+
+        function deleteHqAdmin(adminId) {
+            let users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            const pusatAdmins = users.filter(u => u.role === 'pusat');
+            if (pusatAdmins.length <= 1) {
+                showToast('Minimal harus ada 1 akun Admin Pusat yang aktif!', 'error');
+                return;
+            }
+            if (state.currentUser && state.currentUser.partnerId === adminId) {
+                showToast('Anda tidak dapat menghapus akun Admin Pusat yang sedang Anda gunakan!', 'error');
+                return;
+            }
+
+            users = users.filter(u => u.partnerId !== adminId);
+            cloudCache.users = users;
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+            cloudRemove('users', adminId);
+            renderHqAdminsTable();
+            showToast(`Akun Admin Pusat ${adminId} berhasil dihapus.`, 'info');
+        }
+
+        // ==================== EXPOSE FUNCTIONS TO GLOBAL WINDOW FOR INLINE EVENT HANDLERS ====================
         Object.assign(window, {
             switchAuthTab,
             handleLoginSubmit,
@@ -4964,7 +5607,6 @@ const MANUAL_FIREBASE_CONFIG = {
             logoutUser,
             switchMainView,
             switchHqTab,
-            toggleCartDrawer,
             selectCategory,
             renderProducts,
             selectRecipeCategory,
@@ -4975,6 +5617,7 @@ const MANUAL_FIREBASE_CONFIG = {
             addToCart,
             updateCartQty,
             clearCart,
+            toggleCartDrawer,
             handleShippingInputChange,
             selectCourier,
             selectPaymentMethod,
@@ -4988,10 +5631,6 @@ const MANUAL_FIREBASE_CONFIG = {
             closeHqTrackingModal,
             generateAutoResi,
             submitHqTrackingUpdate,
-            openWaSettingsModal,
-            closeWaSettingsModal,
-            saveWaSettings,
-            closeWaConfirmBanner,
             openInvoiceModal,
             closeInvoiceModal,
             renderHqDashboard,
@@ -5000,40 +5639,52 @@ const MANUAL_FIREBASE_CONFIG = {
             closePartnerDetailModal,
             openHqNewPartnerModal,
             closeHqNewPartnerModal,
+            detectHqNewPartnerCoords,
             submitHqNewPartner,
-            renderHqAdminsTable,
+            openProductModal,
+            closeProductModal,
+            previewProductImage,
+            saveProductForm,
+            deleteProduct,
             openHqAdminModal,
             closeHqAdminModal,
             submitHqAdminForm,
             deleteHqAdmin,
-            previewProductImage,
-            openProductModal,
-            closeProductModal,
-            saveProductForm,
-            deleteProduct,
+            openWaSettingsModal,
+            closeWaSettingsModal,
+            saveWaSettings,
+            closeWaConfirmBanner,
+            copyToClipboardFallback,
             resetDemoSystem,
-            copyToClipboardFallback
+            renderHqPartnersMap,
+            focusPartnerOnMap,
+            fitAllPartnerMarkers,
+            syncAllPartnerCoordinates
         });
 
-        // ==================== 9. INITIALIZATION ON PAGE LOAD ====================
-        document.addEventListener('DOMContentLoaded', () => {
+        // ==================== BOOTSTRAP ON WINDOW LOAD ====================
+        window.addEventListener('DOMContentLoaded', () => {
             seedInitialData();
             populateCitySelects();
 
             const savedCart = localStorage.getItem(STORAGE_KEYS.CART);
-            if (savedCart) state.cart = JSON.parse(savedCart);
+            if (savedCart) {
+                state.cart = JSON.parse(savedCart);
+            }
 
             const savedSession = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
             if (savedSession) {
-                try {
-                    const parsedUser = JSON.parse(savedSession);
-                    setActiveSession(parsedUser);
-                } catch (err) {
-                    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-                }
+                const parsedUser = JSON.parse(savedSession);
+                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+                const validUser = users.find(u => u.email.toLowerCase() === parsedUser.email.toLowerCase()) || parsedUser;
+                setActiveSession(validUser);
+            } else {
+                renderCategoryFilters();
+                renderProducts();
+                updateCartUI();
             }
 
-            // Initialize Cloud Firestore Live Sync
+            // Initialize real-time Cloud Database connection
             initCloudDatabase();
         });
     </script>
