@@ -650,17 +650,26 @@
                     </div>
                 </div>
 
-                <!-- Chart.js Profitability Analytics Panel -->
+                <!-- Chart.js Profitability Analytics Panel (TOTAL KESELURUHAN) -->
                 <div class="bg-white rounded-3xl border border-ugiee-200/80 shadow-xs p-6">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
                         <div>
                             <h2 class="text-base sm:text-lg font-extrabold text-slate-900">Analisis Grafik Omzet, Modal HPP &amp; Laba Bersih</h2>
-                            <p class="text-xs text-slate-500">Perbandingan performa keuangan setiap transaksi order mitra yang masuk.</p>
+                            <p class="text-xs text-slate-500">Akumulasi total keseluruhan dari seluruh pembelian mitra yang sudah lunas.</p>
                         </div>
-                        <div class="flex items-center gap-3 text-[11px] font-bold">
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-ugiee-800 inline-block"></span> Omzet Produk</span>
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-amberbrand-500 inline-block"></span> Modal (HPP)</span>
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-emerald-500 inline-block"></span> Laba Bersih</span>
+                        <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold">
+                            <span class="px-2.5 py-1 rounded-xl bg-ugiee-50 border border-ugiee-200 text-ugiee-950 flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-sm bg-[#0E6453] inline-block"></span>
+                                Omzet: <strong id="hq-chart-total-revenue">Rp 0</strong>
+                            </span>
+                            <span class="px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-950 flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-sm bg-[#F7A928] inline-block"></span>
+                                HPP: <strong id="hq-chart-total-hpp">Rp 0</strong>
+                            </span>
+                            <span class="px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-sm bg-[#10B981] inline-block"></span>
+                                Laba Bersih: <strong id="hq-chart-total-profit">Rp 0</strong>
+                            </span>
                         </div>
                     </div>
                     <div class="h-72 w-full">
@@ -1067,113 +1076,267 @@
                     <div class="grid grid-cols-2 gap-2.5">
                         <button type="button" id="pay-method-qris" onclick="selectPaymentMethod('QRIS')" class="p-3 rounded-2xl border-2 border-ugiee-700 bg-ugiee-50 text-left transition">
                             <div class="flex items-center justify-between">
-                                <span class="font-extrabold text-xs text-ugiee-950">QRIS Otomatis</span>
+                                <span class="font-extrabold text-xs text-ugiee-950">QRIS UGIEE</span>
                                 <i class="fa-solid fa-qrcode text-ugiee-700"></i>
                             </div>
-                            <p class="text-[10px] text-slate-500 mt-1">Verifikasi instan 24 jam</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Scan QRIS + Upload Bukti</p>
                         </button>
                         <button type="button" id="pay-method-transfer" onclick="selectPaymentMethod('TRANSFER')" class="p-3 rounded-2xl border border-slate-200 bg-white text-left transition">
                             <div class="flex items-center justify-between">
-                                <span class="font-extrabold text-xs text-slate-800">Virtual Account</span>
+                                <span class="font-extrabold text-xs text-slate-800">Transfer Bank</span>
                                 <i class="fa-solid fa-building-columns text-slate-500"></i>
                             </div>
-                            <p class="text-[10px] text-slate-500 mt-1">BCA / Mandiri / BRI</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Bank Jago / BRI + Bukti</p>
                         </button>
                     </div>
 
                     <div id="bank-selector-box" class="hidden mt-2.5">
                         <select id="checkout-bank-select" onchange="state.selectedBankCode = this.value" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
-                            <option value="BCA">BCA Virtual Account (8800-xxxx)</option>
-                            <option value="MANDIRI">Mandiri Virtual Account (8801-xxxx)</option>
-                            <option value="BRI">BRI BRIVA (8802-xxxx)</option>
+                            <option value="JAGO">Bank Jago — 1097 2987 6683 (a.n. ILHAM ISMAIL)</option>
+                            <option value="BRI">Bank BRI — 0219 0104 2766 508 (a.n. ILHAM ISMAIL)</option>
                         </select>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="checkout-footer-box" class="hidden p-6 bg-slate-50 border-t border-slate-200 space-y-3 shrink-0">
-            <div class="space-y-1.5 text-xs">
+        <!-- Cart Drawer Footer & Checkout CTA -->
+        <div id="checkout-footer-box" class="hidden p-5 bg-slate-50 border-t border-slate-200 space-y-3 shrink-0">
+            <div class="space-y-1 text-xs">
                 <div class="flex justify-between text-slate-600">
                     <span>Subtotal Bahan Baku</span>
-                    <span id="summary-subtotal" class="font-bold text-slate-800">Rp 0</span>
+                    <span id="cart-subtotal-label" class="font-bold text-slate-900">Rp 0</span>
                 </div>
                 <div class="flex justify-between text-slate-600">
-                    <span>Ongkir (<span id="summary-weight">0</span> kg)</span>
-                    <span id="summary-shipping" class="font-bold text-slate-800">Rp 0</span>
+                    <span>Estimasi Ongkir (<span id="cart-weight-label">0 kg</span>)</span>
+                    <span id="cart-shipping-label" class="font-bold text-ugiee-800">Rp 0</span>
                 </div>
-                <div class="flex justify-between text-base font-black text-ugiee-950 pt-2 border-t border-slate-200">
-                    <span>Total Pembayaran</span>
-                    <span id="summary-grand-total">Rp 0</span>
+                <div class="flex justify-between text-sm font-black text-ugiee-950 pt-2 border-t border-slate-200">
+                    <span>Total Tagihan</span>
+                    <span id="cart-grandtotal-label">Rp 0</span>
                 </div>
             </div>
 
-            <button onclick="processCheckoutOrder()" class="w-full py-3.5 px-5 rounded-2xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-extrabold text-sm shadow-lg shadow-ugiee-800/25 transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-shield-check text-amberbrand-400"></i>
+            <button type="button" onclick="submitCheckoutOrder()" class="w-full py-3.5 px-5 rounded-2xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-extrabold text-xs shadow-lg shadow-ugiee-700/25 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-lock"></i>
                 <span>Buat Pesanan &amp; Lanjut Pembayaran</span>
             </button>
         </div>
     </aside>
 
-    <!-- ==================== 4. PAYMENT GATEWAY MODAL (QRIS / VIRTUAL ACCOUNT) ==================== -->
+    <!-- ==================== 4. PAYMENT GATEWAY & UPLOAD BUKTI TRANSAKSI MODAL ==================== -->
     <div id="payment-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[60] hidden items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden my-auto">
+        <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden my-auto">
             <div class="px-6 py-4 bg-ugiee-600 text-white flex items-center justify-between">
                 <div>
-                    <h3 class="text-sm font-extrabold">Gerbang Pembayaran Mitra UGIEE</h3>
+                    <h3 class="text-sm font-extrabold">Pembayaran &amp; Upload Bukti Transaksi</h3>
                     <p id="pay-modal-order-id" class="text-[11px] font-mono text-amberbrand-300">INV-UG-0000</p>
                 </div>
-                <div class="px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-400/40 text-rose-200 font-mono text-xs font-bold">
+                <div class="px-2.5 py-1 rounded-lg bg-amberbrand-500/20 border border-amberbrand-400/40 text-amberbrand-300 font-mono text-xs font-bold">
                     <i class="fa-regular fa-clock mr-1"></i><span id="pay-countdown">14:59</span>
                 </div>
             </div>
 
-            <div class="p-6 space-y-5 text-center">
-                <div class="p-4 rounded-2xl bg-ugiee-50 border border-ugiee-200">
-                    <p class="text-[11px] uppercase font-bold text-ugiee-700">Total Tagihan Pembayaran</p>
-                    <p id="pay-modal-amount" class="text-2xl sm:text-3xl font-black text-ugiee-950 mt-1">Rp 0</p>
-                </div>
-
-                <div id="pay-qris-view" class="space-y-3">
-                    <div class="w-48 h-48 mx-auto p-3 rounded-2xl border-2 border-slate-200 bg-white shadow-inner flex flex-col items-center justify-center">
-                        <svg viewBox="0 0 100 100" class="w-full h-full text-slate-900 fill-current">
-                            <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
-                            <rect x="11" y="11" width="13" height="13"/>
-                            <rect x="70" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
-                            <rect x="76" y="11" width="13" height="13"/>
-                            <rect x="5" y="70" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
-                            <rect x="11" y="76" width="13" height="13"/>
-                            <rect x="40" y="10" width="8" height="8"/><rect x="52" y="18" width="8" height="14"/>
-                            <rect x="10" y="42" width="14" height="8"/><rect x="36" y="38" width="24" height="24" rx="4" fill="#15987E"/>
-                            <rect x="68" y="42" width="10" height="10"/><rect x="84" y="46" width="10" height="18"/>
-                            <rect x="40" y="70" width="12" height="12"/><rect x="60" y="68" width="14" height="8"/>
-                            <rect x="78" y="76" width="16" height="16"/><rect x="45" y="86" width="18" height="8"/>
-                        </svg>
+            <form onsubmit="submitPaymentProof(event)" class="p-5 sm:p-6 space-y-4 max-h-[84vh] overflow-y-auto">
+                <div class="p-3.5 rounded-2xl bg-ugiee-50 border border-ugiee-200 flex items-center justify-between">
+                    <div class="text-left">
+                        <p class="text-[10px] uppercase font-bold text-ugiee-700">Total Tagihan Pembayaran</p>
+                        <p id="pay-modal-amount" class="text-xl sm:text-2xl font-black text-ugiee-950">Rp 0</p>
                     </div>
-                    <p class="text-xs font-bold text-slate-700">NMID: ID1020260098412 • PT UGIEE Mabbarakka Indonesia</p>
-                    <p class="text-[11px] text-slate-500">Scan kode QRIS di atas melalui Mobile Banking atau E-Wallet.</p>
+                    <span id="pay-modal-method-badge" class="px-3 py-1 rounded-full bg-ugiee-700 text-white font-extrabold text-[11px]">QRIS</span>
                 </div>
 
-                <div id="pay-va-view" class="hidden space-y-3 text-left">
-                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                        <span id="pay-va-bank-name" class="text-xs font-extrabold text-ugiee-900 block">BCA Virtual Account</span>
-                        <div class="flex items-center justify-between gap-2 bg-white p-3 rounded-xl border border-slate-200">
-                            <span id="pay-va-number" class="font-mono font-black text-base text-slate-900">880012345678</span>
-                            <button type="button" onclick="copyVaNumber()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700">
+                <!-- QRIS OFFICIAL UGIEE SIGNATURE CARD -->
+                <div id="pay-qris-view" class="space-y-3">
+                    <div class="rounded-2xl border-2 border-slate-200 bg-white overflow-hidden shadow-xs">
+                        <!-- Header QRIS & GPN -->
+                        <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="font-black text-base tracking-tighter text-slate-900 border-2 border-slate-900 px-1.5 py-0.5 leading-none">QRIS</span>
+                                <span class="text-[10px] font-bold text-slate-600 leading-tight">QR Code Standar<br>Pembayaran Nasional</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-rose-600 text-white font-black text-[10px] tracking-wider">GPN</span>
+                        </div>
+
+                        <!-- Merchant Info & Official QR Matrix -->
+                        <div class="p-4 text-center space-y-2 relative">
+                            <div>
+                                <p class="font-black text-sm text-slate-950 tracking-tight uppercase">UGIEE SIGNATURE OFFICIAL RESTORAN</p>
+                                <p class="font-mono text-xs font-bold text-slate-700">NMID : ID2025454113452</p>
+                                <p class="font-mono text-[11px] font-extrabold text-ugiee-700">A01</p>
+                            </div>
+
+                            <div class="w-48 h-48 mx-auto p-2.5 rounded-2xl border-2 border-slate-900 bg-white shadow-inner flex items-center justify-center">
+                                <svg viewBox="0 0 29 29" shape-rendering="crispEdges" class="w-full h-full text-slate-950 fill-current">
+                                    <!-- Top-Left Finder Pattern -->
+                                    <path d="M0,0h7v7h-7z M1,1v5h5v-5z M2,2h3v3h-3z"/>
+                                    <!-- Top-Right Finder Pattern -->
+                                    <path d="M22,0h7v7h-7z M23,1v5h5v-5z M24,2h3v3h-3z"/>
+                                    <!-- Bottom-Left Finder Pattern -->
+                                    <path d="M0,22h7v7h-7z M1,23v5h5v-5z M2,24h3v3h-3z"/>
+                                    <!-- Alignment Pattern -->
+                                    <path d="M20,20h5v5h-5z M21,21v3h3v-3z M22,22h1v1h-1z"/>
+                                    <!-- Timing & Data Matrix Modules -->
+                                    <rect x="8" y="0" width="2" height="1"/><rect x="12" y="0" width="3" height="1"/><rect x="17" y="0" width="2" height="1"/>
+                                    <rect x="9" y="2" width="1" height="2"/><rect x="11" y="2" width="2" height="1"/><rect x="15" y="2" width="3" height="2"/><rect x="19" y="2" width="2" height="1"/>
+                                    <rect x="8" y="4" width="3" height="1"/><rect x="13" y="4" width="1" height="2"/><rect x="16" y="4" width="2" height="1"/><rect x="20" y="4" width="1" height="2"/>
+                                    <rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="12" y="6" width="1" height="1"/><rect x="14" y="6" width="1" height="1"/><rect x="16" y="6" width="1" height="1"/><rect x="18" y="6" width="1" height="1"/><rect x="20" y="6" width="1" height="1"/>
+                                    <rect x="0" y="8" width="2" height="1"/><rect x="4" y="8" width="3" height="1"/><rect x="9" y="8" width="2" height="2"/><rect x="13" y="8" width="3" height="1"/><rect x="18" y="8" width="2" height="1"/><rect x="22" y="8" width="1" height="2"/><rect x="25" y="8" width="3" height="1"/>
+                                    <rect x="1" y="10" width="3" height="1"/><rect x="6" y="10" width="1" height="1"/><rect x="8" y="10" width="1" height="2"/><rect x="12" y="10" width="2" height="2"/><rect x="16" y="10" width="3" height="1"/><rect x="21" y="10" width="1" height="1"/><rect x="24" y="10" width="2" height="2"/><rect x="27" y="10" width="2" height="1"/>
+                                    <rect x="0" y="12" width="1" height="2"/><rect x="3" y="12" width="2" height="1"/><rect x="6" y="12" width="1" height="1"/><rect x="10" y="12" width="1" height="3"/><rect x="15" y="12" width="2" height="2"/><rect x="19" y="12" width="3" height="1"/><rect x="23" y="12" width="1" height="2"/><rect x="26" y="12" width="2" height="1"/>
+                                    <rect x="2" y="14" width="3" height="2"/><rect x="6" y="14" width="1" height="1"/><rect x="8" y="14" width="1" height="2"/><rect x="12" y="14" width="2" height="1"/><rect x="18" y="14" width="2" height="2"/><rect x="21" y="14" width="2" height="1"/><rect x="25" y="14" width="3" height="2"/>
+                                    <rect x="0" y="16" width="2" height="1"/><rect x="6" y="16" width="1" height="1"/><rect x="10" y="16" width="3" height="2"/><rect x="15" y="16" width="2" height="1"/><rect x="20" y="16" width="1" height="2"/><rect x="23" y="16" width="2" height="1"/><rect x="27" y="16" width="2" height="1"/>
+                                    <rect x="1" y="18" width="3" height="2"/><rect x="6" y="18" width="1" height="1"/><rect x="8" y="18" width="2" height="1"/><rect x="14" y="18" width="3" height="2"/><rect x="18" y="18" width="1" height="2"/><rect x="22" y="18" width="3" height="1"/><rect x="26" y="18" width="2" height="2"/>
+                                    <rect x="0" y="20" width="1" height="1"/><rect x="3" y="20" width="2" height="1"/><rect x="6" y="20" width="1" height="1"/><rect x="9" y="20" width="3" height="1"/><rect x="13" y="20" width="1" height="2"/><rect x="16" y="20" width="2" height="1"/><rect x="26" y="20" width="2" height="1"/>
+                                    <rect x="8" y="22" width="2" height="2"/><rect x="11" y="22" width="2" height="1"/><rect x="15" y="22" width="3" height="2"/><rect x="26" y="22" width="3" height="1"/>
+                                    <rect x="8" y="25" width="1" height="2"/><rect x="10" y="25" width="3" height="1"/><rect x="14" y="25" width="2" height="2"/><rect x="18" y="25" width="2" height="1"/><rect x="21" y="25" width="2" height="2"/><rect x="25" y="25" width="3" height="1"/>
+                                    <rect x="9" y="27" width="3" height="2"/><rect x="13" y="27" width="1" height="2"/><rect x="17" y="27" width="3" height="2"/><rect x="24" y="27" width="2" height="2"/><rect x="27" y="27" width="2" height="2"/>
+                                </svg>
+                            </div>
+
+                            <div class="text-[10px] text-slate-500 pt-1">
+                                <p class="font-bold text-slate-700">SATU QRIS UNTUK SEMUA</p>
+                                <p>Dicetak oleh: 93600008 • Versi Cetak: 1.0-2025.11.14</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BANK TRANSFER OFFICIAL ACCOUNTS (BANK JAGO & BRI) -->
+                <div id="pay-va-view" class="hidden space-y-2.5 text-left">
+                    <p class="text-[11px] font-bold text-slate-600">Pilih &amp; salin nomor rekening tujuan transfer resmi UGIEE Pusat:</p>
+
+                    <!-- Rekening Bank Jago -->
+                    <div id="bank-card-JAGO" onclick="switchPaymentBank('JAGO')" class="p-3.5 rounded-2xl border-2 border-ugiee-700 bg-amber-50/40 cursor-pointer transition space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-amber-400 text-slate-950 font-black text-[11px]">BANK JAGO (Kantong Utama)</span>
+                            <span class="text-[10px] font-bold text-ugiee-800">a.n. ILHAM ISMAIL</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-slate-200">
+                            <span class="font-mono font-black text-base text-slate-900 tracking-wide">1097 2987 6683</span>
+                            <button type="button" onclick="event.stopPropagation(); copyBankAccount('109729876683', 'Bank Jago')" class="px-3 py-1.5 rounded-lg bg-ugiee-600 hover:bg-ugiee-700 text-white text-xs font-bold transition">
                                 <i class="fa-regular fa-copy mr-1"></i>Salin
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-500">Atas Nama: <strong>PT UGIEE Mabbarakka Indonesia</strong></p>
+                    </div>
+
+                    <!-- Rekening Bank BRI -->
+                    <div id="bank-card-BRI" onclick="switchPaymentBank('BRI')" class="p-3.5 rounded-2xl border border-slate-200 bg-sky-50/40 cursor-pointer transition space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-sky-700 text-white font-black text-[11px]">BANK BRI</span>
+                            <span class="text-[10px] font-bold text-sky-900">a.n. ILHAM ISMAIL</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-slate-200">
+                            <span class="font-mono font-black text-base text-slate-900 tracking-wide">0219 0104 2766 508</span>
+                            <button type="button" onclick="event.stopPropagation(); copyBankAccount('021901042766508', 'Bank BRI')" class="px-3 py-1.5 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold transition">
+                                <i class="fa-regular fa-copy mr-1"></i>Salin
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="pt-2 flex flex-col sm:flex-row gap-2">
+                <!-- UPLOAD BUKTI TRANSAKSI PEMBAYARAN -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 text-left">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-arrow-up text-ugiee-700"></i> Upload Bukti Transaksi / Struk Transfer *
+                        </label>
+                        <span class="text-[10px] font-bold text-rose-600">Wajib</span>
+                    </div>
+
+                    <div class="relative">
+                        <input type="file" id="payment-proof-file" accept="image/*" required onchange="handleProofFileChange(event)" class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-ugiee-600 file:text-white hover:file:bg-ugiee-700 cursor-pointer bg-white border border-slate-300 rounded-xl p-1.5">
+                    </div>
+
+                    <div id="payment-proof-preview-box" class="hidden space-y-2">
+                        <p class="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check"></i> Pratinjau Bukti Pembayaran Siap Dikirim:
+                        </p>
+                        <div class="relative rounded-xl overflow-hidden border border-slate-300 bg-white max-h-48 flex items-center justify-center">
+                            <img id="payment-proof-preview-img" src="" alt="Pratinjau Bukti Transfer" class="max-h-48 w-auto object-contain">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Pengirim / Catatan Transfer (Opsional)</label>
+                        <input type="text" id="payment-proof-note" placeholder="Contoh: Transfer dari a.n. Andi Pratama pukul 14:20" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs outline-none focus:border-ugiee-700">
+                    </div>
+
+                    <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">
+                        <i class="fa-solid fa-shield-halved text-amber-600 mt-0.5 shrink-0"></i>
+                        <span>Pesanan akan berstatus <strong>Menunggu Verifikasi Admin Pusat</strong> dan segera diproses gudang setelah bukti transaksi dicek &amp; disetujui.</span>
+                    </div>
+                </div>
+
+                <div class="pt-1 flex flex-col sm:flex-row gap-2">
                     <button type="button" onclick="closePaymentModal()" class="py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs sm:w-1/3">
                         Bayar Nanti
                     </button>
-                    <button type="button" onclick="confirmPaymentSuccess()" class="py-3 px-5 rounded-xl bg-ugiee-700 hover:bg-ugiee-600 text-white font-bold text-xs shadow-lg shadow-ugiee-700/25 transition sm:w-2/3 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>Konfirmasi Lunas &amp; Kirim WA Otomatis</span>
+                    <button type="submit" class="py-3 px-5 rounded-xl bg-ugiee-700 hover:bg-ugiee-600 text-white font-extrabold text-xs shadow-lg shadow-ugiee-700/25 transition sm:w-2/3 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Kirim Bukti Transaksi ke Pusat</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== 4B. MODAL VERIFIKASI & PERSETUJUAN BUKTI PEMBAYARAN (ADMIN PUSAT) ==================== -->
+    <div id="hq-verify-proof-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[68] hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden my-auto">
+            <div class="px-6 py-4 bg-ugiee-700 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-amberbrand-500 text-ugiee-950 flex items-center justify-center font-black">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-extrabold">Verifikasi Bukti Transaksi Mitra</h3>
+                        <p id="hq-vp-subtitle" class="text-[11px] font-mono text-amberbrand-300">INV-UG-0000</p>
+                    </div>
+                </div>
+                <button onclick="closeHqVerifyProofModal()" class="p-2 rounded-xl bg-ugiee-800 hover:bg-ugiee-900 text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs max-h-[82vh] overflow-y-auto">
+                <input type="hidden" id="hq-vp-order-id">
+
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Outlet Mitra &amp; PIC</span>
+                        <p id="hq-vp-outlet" class="font-extrabold text-slate-900 text-sm mt-0.5">-</p>
+                        <p id="hq-vp-pic" class="text-slate-600">-</p>
+                    </div>
+                    <div class="sm:text-right">
+                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Nominal &amp; Tujuan Bayar</span>
+                        <p id="hq-vp-amount" class="font-black text-ugiee-900 text-base mt-0.5">Rp 0</p>
+                        <p id="hq-vp-method" class="font-bold text-emerald-700">-</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-extrabold text-slate-800">Lampiran Bukti Transaksi dari Mitra:</span>
+                        <span id="hq-vp-upload-time" class="text-[11px] text-slate-400">-</span>
+                    </div>
+                    <div id="hq-vp-image-container" class="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-100 p-3 flex items-center justify-center min-h-[200px]">
+                        <!-- Proof image rendered here -->
+                    </div>
+                    <p id="hq-vp-note" class="text-[11px] text-slate-600 bg-amber-50 p-2.5 rounded-xl border border-amber-200 hidden"></p>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Catatan Verifikasi Admin Pusat (Opsional / Alasan Jika Ditolak)</label>
+                    <input type="text" id="hq-vp-admin-note" placeholder="Contoh: Dana sudah masuk ke mutasi Bank Jago / QRIS" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-ugiee-700">
+                </div>
+
+                <div class="pt-2 flex flex-col sm:flex-row gap-2">
+                    <button type="button" onclick="rejectPaymentProof()" class="py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 font-extrabold text-xs transition sm:w-1/3 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-circle-xmark"></i> Tolak Bukti
+                    </button>
+                    <button type="button" onclick="approvePaymentProof()" class="py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/25 transition sm:w-2/3 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i> Setujui Pembayaran &amp; Proses Gudang
                     </button>
                 </div>
             </div>
@@ -1824,9 +1987,25 @@
         ];
 
         const BANK_ACCOUNTS = {
-            BCA: { name: 'Bank Central Asia (BCA)', vaPrefix: '8800' },
-            MANDIRI: { name: 'Bank Mandiri', vaPrefix: '8801' },
-            BRI: { name: 'Bank Rakyat Indonesia (BRI)', vaPrefix: '8802' }
+            JAGO: {
+                name: 'Bank Jago (Kantong Utama)',
+                accountNumber: '1097 2987 6683',
+                rawNumber: '109729876683',
+                holder: 'ILHAM ISMAIL'
+            },
+            BRI: {
+                name: 'Bank BRI',
+                accountNumber: '0219 0104 2766 508',
+                rawNumber: '021901042766508',
+                holder: 'ILHAM ISMAIL'
+            }
+        };
+
+        const QRIS_MERCHANT_INFO = {
+            merchantName: 'UGIEE SIGNATURE OFFICIAL RESTORAN',
+            nmid: 'ID2025454113452',
+            terminal: 'A01',
+            printedBy: '93600008'
         };
 
         const CATEGORY_DEFAULT_IMAGES = {
@@ -2208,8 +2387,9 @@
             selectedCityId: 'MKS',
             selectedCourierId: 'ugiee-fleet',
             selectedPaymentMethod: 'QRIS',
-            selectedBankCode: 'BCA',
+            selectedBankCode: 'JAGO',
             activePaymentOrderId: null,
+            uploadedProofDataUrl: '',
             countdownTimer: null,
             waConfig: {
                 hqPhone: '081333555114',
@@ -3466,56 +3646,65 @@
             }).join('');
 
             const totals = calculateCartTotals();
-            const courierContainer = document.getElementById('courier-options-list');
-            courierContainer.innerHTML = COURIERS.map(c => {
-                const estFee = Math.ceil(Math.round((totals.zone.baseFee + (totals.totalWeight * totals.zone.ratePerKg)) * c.multiplier) / 100) * 100;
-                const selected = state.selectedCourierId === c.id;
-                return `
-                    <button type="button" onclick="selectCourier('${c.id}')" class="w-full p-3 rounded-2xl border ${selected ? 'border-2 border-ugiee-700 bg-ugiee-50' : 'border-slate-200 bg-white'} flex items-center justify-between text-left transition">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-xl ${selected ? 'bg-ugiee-600 text-white' : 'bg-slate-100 text-slate-600'} flex items-center justify-center text-xs">
-                                <i class="fa-solid ${c.icon}"></i>
-                            </div>
-                            <div>
-                                <p class="text-xs font-extrabold text-slate-900">${c.name}</p>
-                                <p class="text-[10px] text-slate-500">${c.desc} • ${totals.zone.eta}</p>
-                            </div>
-                        </div>
-                        <span class="text-xs font-black text-ugiee-900">${formatRupiah(estFee)}</span>
-                    </button>
-                `;
-            }).join('');
 
-            document.getElementById('summary-subtotal').textContent = formatRupiah(totals.subtotal);
-            document.getElementById('summary-weight').textContent = totals.totalWeight;
-            document.getElementById('summary-shipping').textContent = formatRupiah(totals.shippingFee);
-            document.getElementById('summary-grand-total').textContent = formatRupiah(totals.grandTotal);
+            const courierList = document.getElementById('courier-options-list');
+            if (courierList) {
+                courierList.innerHTML = COURIERS.map(c => {
+                    const active = state.selectedCourierId === c.id;
+                    const estFee = totals.totalWeight > 0
+                        ? Math.ceil(Math.round((totals.zone.baseFee + (totals.totalWeight * totals.zone.ratePerKg)) * c.multiplier) / 100) * 100
+                        : 0;
+                    return `
+                        <button type="button" onclick="selectCourier('${c.id}')" class="w-full p-3 rounded-2xl border ${active ? 'border-2 border-ugiee-700 bg-ugiee-50' : 'border-slate-200 bg-white'} text-left flex items-center justify-between gap-3 transition">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-8 h-8 rounded-xl ${active ? 'bg-ugiee-600 text-white' : 'bg-slate-100 text-slate-600'} flex items-center justify-center shrink-0">
+                                    <i class="fa-solid ${c.icon} text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-extrabold text-slate-900 truncate">${c.name}</p>
+                                    <p class="text-[10px] text-slate-500 truncate">${c.desc} • ${totals.zone.eta}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-black ${active ? 'text-ugiee-900' : 'text-slate-700'} shrink-0">${formatRupiah(estFee)}</span>
+                        </button>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('cart-subtotal-label').textContent = formatRupiah(totals.subtotal);
+            document.getElementById('cart-weight-label').textContent = `${totals.totalWeight} kg`;
+            document.getElementById('cart-shipping-label').textContent = formatRupiah(totals.shippingFee);
+            document.getElementById('cart-grandtotal-label').textContent = formatRupiah(totals.grandTotal);
         }
 
-        window.processCheckoutOrder = function() {
+        window.submitCheckoutOrder = function() {
             if (!state.currentUser || state.cart.length === 0) return;
-            const address = document.getElementById('checkout-address-input').value.trim();
-            if (!address) {
-                showToast('Mohon isi alamat lengkap pengiriman outlet!', 'warning');
+
+            const addressInput = document.getElementById('checkout-address-input').value.trim();
+            if (!addressInput) {
+                showToast('Harap isi alamat lengkap penerima outlet terlebih dahulu!', 'warning');
                 return;
             }
 
             const totals = calculateCartTotals();
-            const orderNum = 2600 + state.orders.length + 1;
-            const orderId = `INV-UG-${orderNum}`;
+            const orderItems = [];
 
-            const orderItems = state.cart.map(c => {
-                const prod = state.products.find(p => p.sku === c.sku);
-                return {
+            for (const cItem of state.cart) {
+                const prod = state.products.find(p => p.sku === cItem.sku);
+                if (!prod || prod.stock < cItem.qty) {
+                    showToast(`Stok ${prod ? prod.name : cItem.sku} tidak mencukupi!`, 'error');
+                    return;
+                }
+                orderItems.push({
                     sku: prod.sku,
                     name: prod.name,
                     unit: prod.unit,
                     weight: prod.weight,
-                    hpp: prod.hpp || Math.round(prod.price * 0.65),
+                    hpp: prod.hpp,
                     price: prod.price,
-                    qty: c.qty
-                };
-            });
+                    qty: cItem.qty
+                });
+            }
 
             // Deduct warehouse stock
             orderItems.forEach(item => {
@@ -3526,20 +3715,23 @@
                 }
             });
 
+            const orderNum = 2601 + state.orders.length + Math.floor(Math.random() * 90);
+            const newOrderId = `INV-UG-${orderNum}`;
+
             const newOrder = {
-                id: orderId,
+                id: newOrderId,
                 partnerId: state.currentUser.id,
                 outletName: state.currentUser.outletName,
                 ownerName: state.currentUser.ownerName,
                 partnerPhone: state.currentUser.phone,
                 cityId: totals.zone.id,
                 cityName: totals.zone.city,
-                address,
+                address: addressInput,
                 courierId: totals.courier.id,
                 courierName: totals.courier.name,
                 paymentMethod: state.selectedPaymentMethod,
                 bankCode: state.selectedPaymentMethod === 'QRIS' ? 'QRIS' : state.selectedBankCode,
-                paymentStatus: 'BELUM_LUNAS',
+                paymentStatus: 'BELUM_BAYAR',
                 orderStatus: 'Menunggu Pembayaran',
                 resiNumber: 'Menunggu Verifikasi',
                 createdAt: getFormattedNow(),
@@ -3550,7 +3742,11 @@
                 shippingFee: totals.shippingFee,
                 grandTotal: totals.grandTotal,
                 trackingLogs: [
-                    { time: getFormattedNow(), title: 'Pesanan Dibuat oleh Mitra', note: `Menunggu penyelesaian pembayaran (${state.selectedPaymentMethod})` }
+                    {
+                        time: getFormattedNow(),
+                        title: 'Pesanan Dibuat oleh Mitra',
+                        note: `Menunggu pembayaran & upload bukti via ${state.selectedPaymentMethod}`
+                    }
                 ]
             };
 
@@ -3560,32 +3756,122 @@
             syncDocToCloud('orders', newOrder.id, newOrder);
 
             toggleCartDrawer(false);
-            updateBadgesAndCounters();
-            renderProducts();
-            openPaymentModal(orderId);
+            refreshActiveScreenUI();
+            openPaymentModal(newOrder.id);
+            showToast(`Pesanan ${newOrder.id} berhasil dibuat! Silakan lakukan pembayaran & upload bukti.`, 'success');
         };
 
-        // ==================== 10. PAYMENT GATEWAY & WHATSAPP AUTOMATION ====================
+        // ==================== 10. PAYMENT GATEWAY, UPLOAD BUKTI & VERIFIKASI ADMIN PUSAT ====================
+        function compressProofImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const maxDim = 760;
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) {
+                                h = Math.round((h * maxDim) / w);
+                                w = maxDim;
+                            } else {
+                                w = Math.round((w * maxDim) / h);
+                                h = maxDim;
+                            }
+                        }
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.72));
+                    };
+                    img.onerror = reject;
+                    img.src = ev.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.handleProofFileChange = async function(e) {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            try {
+                const compressedDataUrl = await compressProofImage(file);
+                state.uploadedProofDataUrl = compressedDataUrl;
+                const previewBox = document.getElementById('payment-proof-preview-box');
+                const previewImg = document.getElementById('payment-proof-preview-img');
+                if (previewImg && previewBox) {
+                    previewImg.src = compressedDataUrl;
+                    previewBox.classList.remove('hidden');
+                }
+            } catch (err) {
+                showToast('Gagal membaca file gambar bukti transfer. Coba pilih gambar lain.', 'error');
+            }
+        };
+
+        window.switchPaymentBank = function(bankCode) {
+            state.selectedBankCode = bankCode;
+            const jagoCard = document.getElementById('bank-card-JAGO');
+            const briCard = document.getElementById('bank-card-BRI');
+            if (jagoCard && briCard) {
+                if (bankCode === 'JAGO') {
+                    jagoCard.className = 'p-3.5 rounded-2xl border-2 border-ugiee-700 bg-amber-50/60 cursor-pointer transition space-y-1.5';
+                    briCard.className = 'p-3.5 rounded-2xl border border-slate-200 bg-sky-50/40 cursor-pointer transition space-y-1.5';
+                } else {
+                    briCard.className = 'p-3.5 rounded-2xl border-2 border-sky-700 bg-sky-50/70 cursor-pointer transition space-y-1.5';
+                    jagoCard.className = 'p-3.5 rounded-2xl border border-slate-200 bg-amber-50/30 cursor-pointer transition space-y-1.5';
+                }
+            }
+            const order = state.orders.find(o => o.id === state.activePaymentOrderId);
+            if (order) {
+                order.bankCode = bankCode;
+                const bankInfo = BANK_ACCOUNTS[bankCode] || BANK_ACCOUNTS.JAGO;
+                document.getElementById('pay-modal-method-badge').textContent = bankInfo.name;
+            }
+        };
+
+        window.copyBankAccount = function(accNum, bankLabel) {
+            const temp = document.createElement('textarea');
+            temp.value = accNum;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast(`Nomor rekening ${bankLabel} (${accNum}) berhasil disalin!`, 'success');
+        };
+
         window.openPaymentModal = function(orderId) {
             const order = state.orders.find(o => o.id === orderId);
             if (!order) return;
 
             state.activePaymentOrderId = orderId;
+            state.uploadedProofDataUrl = '';
+            const fileInput = document.getElementById('payment-proof-file');
+            if (fileInput) fileInput.value = '';
+            const previewBox = document.getElementById('payment-proof-preview-box');
+            if (previewBox) previewBox.classList.add('hidden');
+            const noteInput = document.getElementById('payment-proof-note');
+            if (noteInput) noteInput.value = '';
+
             document.getElementById('pay-modal-order-id').textContent = order.id;
             document.getElementById('pay-modal-amount').textContent = formatRupiah(order.grandTotal);
 
             const qrisView = document.getElementById('pay-qris-view');
             const vaView = document.getElementById('pay-va-view');
+            const methodBadge = document.getElementById('pay-modal-method-badge');
 
             if (order.paymentMethod === 'QRIS') {
                 qrisView.classList.remove('hidden');
                 vaView.classList.add('hidden');
+                methodBadge.textContent = 'QRIS UGIEE SIGNATURE';
             } else {
                 qrisView.classList.add('hidden');
                 vaView.classList.remove('hidden');
-                const bankInfo = BANK_ACCOUNTS[order.bankCode] || BANK_ACCOUNTS.BCA;
-                document.getElementById('pay-va-bank-name').textContent = bankInfo.name;
-                document.getElementById('pay-va-number').textContent = `${bankInfo.vaPrefix}${order.id.replace(/[^0-9]/g, '')}89`;
+                const initialBank = BANK_ACCOUNTS[order.bankCode] ? order.bankCode : 'JAGO';
+                switchPaymentBank(initialBank);
             }
 
             startPaymentCountdown(899);
@@ -3619,12 +3905,6 @@
             }, 1000);
         }
 
-        window.copyVaNumber = function() {
-            const va = document.getElementById('pay-va-number').textContent;
-            navigator.clipboard?.writeText(va);
-            showToast(`Nomor Virtual Account ${va} berhasil disalin!`, 'success');
-        };
-
         function logWhatsAppNotification(direction, recipientName, recipientPhone, orderId, messageText) {
             const logItem = {
                 id: 'WA-' + Date.now(),
@@ -3642,17 +3922,32 @@
             return logItem;
         }
 
-        window.confirmPaymentSuccess = function() {
+        window.submitPaymentProof = function(e) {
+            e.preventDefault();
             const order = state.orders.find(o => o.id === state.activePaymentOrderId);
             if (!order) return;
 
-            order.paymentStatus = 'LUNAS';
-            order.orderStatus = 'Diproses Gudang UGIEE';
-            order.resiNumber = 'Menunggu Resi Kargo';
+            if (!state.uploadedProofDataUrl) {
+                showToast('Harap pilih dan upload foto/screenshot bukti transaksi terlebih dahulu!', 'warning');
+                return;
+            }
+
+            const senderNote = document.getElementById('payment-proof-note')?.value.trim() || '';
+            const bankDetail = order.paymentMethod === 'QRIS'
+                ? `QRIS ${QRIS_MERCHANT_INFO.merchantName} (NMID: ${QRIS_MERCHANT_INFO.nmid})`
+                : `${(BANK_ACCOUNTS[order.bankCode] || BANK_ACCOUNTS.JAGO).name} - ${(BANK_ACCOUNTS[order.bankCode] || BANK_ACCOUNTS.JAGO).accountNumber} a.n. ILHAM ISMAIL`;
+
+            order.paymentStatus = 'MENUNGGU_VERIFIKASI';
+            order.orderStatus = 'Menunggu Verifikasi Admin Pusat';
+            order.paymentProofImage = state.uploadedProofDataUrl;
+            order.paymentProofNote = senderNote;
+            order.paymentProofUploadedAt = getFormattedNow();
+            order.paymentDestinationDetail = bankDetail;
+
             order.trackingLogs.push({
                 time: getFormattedNow(),
-                title: 'Pembayaran Lunas Terverifikasi',
-                note: `Dikonfirmasi via ${order.paymentMethod} • Diteruskan ke Gudang Pusat`
+                title: 'Bukti Transaksi Diupload Mitra',
+                note: `Metode: ${bankDetail}${senderNote ? ' • Catatan: ' + senderNote : ''} — Menunggu pengecekan & persetujuan Admin Pusat`
             });
 
             saveLocalData();
@@ -3660,16 +3955,16 @@
             closePaymentModal();
 
             const itemSummary = order.items.map(i => `• ${i.name} (${i.qty}x)`).join('\n');
-            const waText = `Halo *${state.waConfig.hqName}*,\n\nKonfirmasi Pembayaran Lunas Order Bahan Baku UGIEE:\n*No. Invoice:* ${order.id}\n*Outlet Mitra:* ${order.outletName} (${order.partnerId})\n*PIC:* ${order.ownerName}\n*Total Bayar:* ${formatRupiah(order.grandTotal)} (${order.paymentMethod})\n*Ekspedisi:* ${order.courierName}\n\n*Rincian Item:*\n${itemSummary}\n\nMohon diproses pengiriman ke alamat:\n${order.address}\nTerima kasih!`;
+            const waText = `Halo *${state.waConfig.hqName}*,\n\nSaya telah melakukan pembayaran & *upload bukti transaksi* pada Portal Mitra UGIEE:\n*No. Invoice:* ${order.id}\n*Outlet Mitra:* ${order.outletName} (${order.partnerId})\n*PIC:* ${order.ownerName}\n*Total Tagihan:* ${formatRupiah(order.grandTotal)}\n*Tujuan Pembayaran:* ${bankDetail}\n${senderNote ? `*Catatan Pengirim:* ${senderNote}\n` : ''}\n*Rincian Item:*\n${itemSummary}\n\nMohon dicek dan disetujui pada Dashboard Pusat agar pesanan segera diproses. Terima kasih!`;
 
             logWhatsAppNotification('MITRA -> PUSAT', state.waConfig.hqName, state.waConfig.hqPhone, order.id, waText);
 
             const waUrl = `https://wa.me/${formatWaInternational(state.waConfig.hqPhone)}?text=${encodeURIComponent(waText)}`;
-            document.getElementById('wa-banner-title').textContent = 'Pembayaran Lunas & Log WA Tercatat!';
-            document.getElementById('wa-banner-desc').textContent = `Notifikasi pesanan ${order.id} telah tercatat untuk ${state.waConfig.hqName} (${state.waConfig.hqPhone}).`;
+            document.getElementById('wa-banner-title').textContent = 'Bukti Transaksi Berhasil Diupload!';
+            document.getElementById('wa-banner-desc').textContent = `Bukti pembayaran untuk ${order.id} telah masuk ke antrean verifikasi Admin Pusat. Pesanan akan diproses setelah dicek & disetujui.`;
             document.getElementById('wa-banner-preview').textContent = waText;
             document.getElementById('wa-banner-direct-link').href = waUrl;
-            document.getElementById('wa-banner-cta-text').textContent = `Kirim Konfirmasi ke WA Pusat (${state.waConfig.hqPhone})`;
+            document.getElementById('wa-banner-cta-text').textContent = `Konfirmasi ke WA Admin Pusat (${state.waConfig.hqPhone})`;
 
             const bannerModal = document.getElementById('wa-confirm-banner-modal');
             bannerModal.classList.remove('hidden');
@@ -3703,12 +3998,26 @@
 
             container.innerHTML = myOrders.map(o => {
                 const isPaid = o.paymentStatus === 'LUNAS';
+                const isPendingVerify = o.paymentStatus === 'MENUNGGU_VERIFIKASI';
+                const isRejected = o.paymentStatus === 'DITOLAK';
+
                 const statusColors = {
                     'Menunggu Pembayaran': 'bg-amber-100 text-amber-800 border-amber-200',
+                    'Menunggu Verifikasi Admin Pusat': 'bg-purple-100 text-purple-800 border-purple-200',
+                    'Bukti Pembayaran Ditolak': 'bg-rose-100 text-rose-800 border-rose-200',
                     'Diproses Gudang UGIEE': 'bg-sky-100 text-sky-800 border-sky-200',
                     'Dalam Pengiriman Ekspedisi': 'bg-indigo-100 text-indigo-800 border-indigo-200',
                     'Selesai': 'bg-emerald-100 text-emerald-800 border-emerald-200'
                 };
+
+                let payBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700">BELUM UPLOAD BUKTI</span>`;
+                if (isPaid) {
+                    payBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700">LUNAS &amp; DISETUJUI</span>`;
+                } else if (isPendingVerify) {
+                    payBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-50 text-purple-700">MENUNGGU CEK PUSAT</span>`;
+                } else if (isRejected) {
+                    payBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800">BUKTI DITOLAK — UPLOAD ULANG</span>`;
+                }
 
                 return `
                     <div class="bg-white rounded-3xl border border-ugiee-200/80 shadow-xs p-5 sm:p-6 space-y-4">
@@ -3719,21 +4028,19 @@
                                     <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${statusColors[o.orderStatus] || 'bg-slate-100 text-slate-700'}">
                                         ${o.orderStatus}
                                     </span>
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${isPaid ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
-                                        ${isPaid ? 'LUNAS' : 'BELUM BAYAR'}
-                                    </span>
+                                    ${payBadgeHtml}
                                 </div>
                                 <p class="text-[11px] text-slate-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${o.createdAt} • ${o.courierName}</p>
                             </div>
 
                             <div class="flex flex-wrap items-center gap-2">
                                 ${!isPaid ? `
-                                    <button type="button" onclick="openPaymentModal('${o.id}')" class="px-4 py-2 rounded-xl bg-amberbrand-500 hover:bg-amberbrand-600 text-ugiee-950 font-extrabold text-xs shadow-xs transition">
-                                        <i class="fa-solid fa-wallet mr-1"></i> Bayar Sekarang
+                                    <button type="button" onclick="openPaymentModal('${o.id}')" class="px-4 py-2 rounded-xl ${isPendingVerify ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-amberbrand-500 hover:bg-amberbrand-600 text-ugiee-950'} font-extrabold text-xs shadow-xs transition">
+                                        <i class="fa-solid ${isPendingVerify ? 'fa-rotate' : 'fa-file-arrow-up'} mr-1"></i> ${isPendingVerify ? 'Ganti Bukti Bayar' : 'Bayar & Upload Bukti'}
                                     </button>
                                 ` : ''}
                                 <button type="button" onclick="openInvoiceModal('${o.id}')" class="px-4 py-2 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-xs transition flex items-center gap-1.5">
-                                    <i class="fa-solid fa-file-invoice"></i> Lacak Resi &amp; Invoice
+                                    <i class="fa-solid fa-file-invoice"></i> Detail, Bukti &amp; Invoice
                                 </button>
                             </div>
                         </div>
@@ -3800,9 +4107,20 @@
                         <span class="text-[10px] font-bold uppercase text-slate-400 block">Detail Pengiriman &amp; Pembayaran</span>
                         <p class="font-bold text-slate-800">${order.courierName}</p>
                         <p class="font-mono font-extrabold text-ugiee-800">Resi: ${order.resiNumber || '-'}</p>
-                        <p class="text-slate-600">Metode: <strong>${order.paymentMethod}</strong> (${order.paymentStatus})</p>
+                        <p class="text-slate-600">Metode: <strong>${order.paymentDestinationDetail || order.paymentMethod}</strong> (${order.paymentStatus})</p>
                     </div>
                 </div>
+
+                ${order.paymentProofImage ? `
+                    <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 no-print">
+                        <div class="space-y-1 text-xs">
+                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">BUKTI TRANSAKSI TERLAMPIR</span>
+                            <p class="font-bold text-slate-900">Waktu Upload: ${order.paymentProofUploadedAt || '-'}</p>
+                            ${order.paymentProofNote ? `<p class="text-slate-600">Catatan Mitra: ${order.paymentProofNote}</p>` : ''}
+                        </div>
+                        <img src="${order.paymentProofImage}" alt="Bukti Transaksi" class="h-28 w-auto rounded-xl border border-slate-300 bg-white object-contain shadow-xs">
+                    </div>
+                ` : ''}
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
@@ -3832,11 +4150,14 @@
                 <div class="flex flex-col sm:flex-row justify-between gap-4 pt-3 border-t border-slate-200 text-xs">
                     <div class="space-y-2 flex-1 no-print">
                         <h4 class="font-extrabold text-slate-800 uppercase text-[11px]">Riwayat Pelacakan Logistik</h4>
-                        <div class="space-y-2 border-l-2 border-ugiee-500 pl-3">
+                        <div class="space-y-2">
                             ${(order.trackingLogs || []).map(log => `
-                                <div>
-                                    <p class="font-bold text-slate-900">${log.title}</p>
-                                    <p class="text-[11px] text-slate-500">${log.time} — ${log.note}</p>
+                                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="font-bold text-ugiee-900">${log.title}</span>
+                                        <span class="text-[10px] text-slate-400">${log.time}</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 mt-0.5">${log.note}</p>
                                 </div>
                             `).join('')}
                         </div>
@@ -3949,8 +4270,9 @@
             // Render Transactions Table
             const filterVal = document.getElementById('hq-status-filter')?.value || 'ALL';
             const filteredOrders = state.orders.filter(o => {
+                if (filterVal === 'PENDING_VERIFY') return o.paymentStatus === 'MENUNGGU_VERIFIKASI';
                 if (filterVal === 'PAID') return o.paymentStatus === 'LUNAS';
-                if (filterVal === 'UNPAID') return o.paymentStatus !== 'LUNAS';
+                if (filterVal === 'UNPAID') return o.paymentStatus !== 'LUNAS' && o.paymentStatus !== 'MENUNGGU_VERIFIKASI';
                 return true;
             });
 
@@ -3959,8 +4281,15 @@
                 tbody.innerHTML = filteredOrders.map(o => {
                     const profit = (o.subtotal || 0) - (o.totalHpp || 0);
                     const isPaid = o.paymentStatus === 'LUNAS';
+                    const isPendingVerify = o.paymentStatus === 'MENUNGGU_VERIFIKASI';
+
+                    let badgeStyle = 'bg-amber-100 text-amber-800';
+                    if (isPaid) badgeStyle = 'bg-emerald-100 text-emerald-800';
+                    else if (isPendingVerify) badgeStyle = 'bg-purple-100 text-purple-800 animate-pulse';
+                    else if (o.paymentStatus === 'DITOLAK') badgeStyle = 'bg-rose-100 text-rose-800';
+
                     return `
-                        <tr class="hover:bg-slate-50/80 transition">
+                        <tr class="hover:bg-slate-50/80 transition ${isPendingVerify ? 'bg-purple-50/40' : ''}">
                             <td class="py-3.5 px-5">
                                 <span class="font-mono font-black text-ugiee-950 block">${o.id}</span>
                                 <span class="text-[11px] text-slate-400">${o.createdAt}</span>
@@ -3975,11 +4304,16 @@
                             <td class="py-3.5 px-4 text-right font-black text-emerald-700">+${formatRupiah(profit)}</td>
                             <td class="py-3.5 px-4 text-center">
                                 <div class="flex flex-col items-center gap-1.5">
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${badgeStyle}">
                                         ${o.orderStatus}
                                     </span>
                                     <span class="font-mono text-[10px] text-slate-500">Resi: ${o.resiNumber || '-'}</span>
-                                    <div class="flex items-center gap-1.5">
+                                    <div class="flex flex-wrap items-center justify-center gap-1.5">
+                                        ${isPendingVerify || o.paymentProofImage ? `
+                                            <button type="button" onclick="openHqVerifyProofModal('${o.id}')" class="px-2.5 py-1 rounded-lg ${isPendingVerify ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-xs' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'} font-extrabold text-[10px] transition">
+                                                <i class="fa-solid fa-file-circle-check mr-1"></i>${isPendingVerify ? 'Cek & Setujui Bukti' : 'Lihat Bukti'}
+                                            </button>
+                                        ` : ''}
                                         <button type="button" onclick="openHqTrackingModal('${o.id}')" class="px-2.5 py-1 rounded-lg bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[10px] transition">
                                             <i class="fa-solid fa-truck-fast mr-1"></i>Resi &amp; WA
                                         </button>
@@ -4018,11 +4352,17 @@
             const canvas = document.getElementById('hqProfitChart');
             if (!canvas || typeof Chart === 'undefined') return;
 
-            const recentOrders = [...state.orders].reverse().slice(-8);
-            const labels = recentOrders.map(o => `${o.id} (${o.outletName.replace('UGIEE Outlet ', '')})`);
-            const revData = recentOrders.map(o => o.subtotal || 0);
-            const hppData = recentOrders.map(o => o.totalHpp || 0);
-            const profitData = recentOrders.map(o => (o.subtotal || 0) - (o.totalHpp || 0));
+            const paidOrders = state.orders.filter(o => o.paymentStatus === 'LUNAS');
+            const totalRevenue = paidOrders.reduce((s, o) => s + (o.subtotal || 0), 0);
+            const totalHpp = paidOrders.reduce((s, o) => s + (o.totalHpp || 0), 0);
+            const netProfit = totalRevenue - totalHpp;
+
+            const revEl = document.getElementById('hq-chart-total-revenue');
+            const hppEl = document.getElementById('hq-chart-total-hpp');
+            const prfEl = document.getElementById('hq-chart-total-profit');
+            if (revEl) revEl.textContent = formatRupiah(totalRevenue);
+            if (hppEl) hppEl.textContent = formatRupiah(totalHpp);
+            if (prfEl) prfEl.textContent = formatRupiah(netProfit);
 
             if (state.profitChartInstance) {
                 state.profitChartInstance.destroy();
@@ -4031,26 +4371,55 @@
             state.profitChartInstance = new Chart(canvas.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels,
+                    labels: ['Total Keseluruhan Pembelian Mitra'],
                     datasets: [
-                        { label: 'Omzet Produk', data: revData, backgroundColor: '#0E6453', borderRadius: 6 },
-                        { label: 'Modal (HPP)', data: hppData, backgroundColor: '#F7A928', borderRadius: 6 },
-                        { label: 'Laba Bersih', data: profitData, backgroundColor: '#10B981', borderRadius: 6 }
+                        {
+                            label: 'Omzet Produk',
+                            data: [totalRevenue],
+                            backgroundColor: '#0E6453',
+                            borderRadius: 10,
+                            maxBarThickness: 96
+                        },
+                        {
+                            label: 'Modal (HPP)',
+                            data: [totalHpp],
+                            backgroundColor: '#F7A928',
+                            borderRadius: 10,
+                            maxBarThickness: 96
+                        },
+                        {
+                            label: 'Laba Bersih',
+                            data: [netProfit],
+                            backgroundColor: '#10B981',
+                            borderRadius: 10,
+                            maxBarThickness: 96
+                        }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.dataset.label}: ${formatRupiah(ctx.parsed.y)}`
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                callback: (v) => 'Rp ' + (v / 1000).toLocaleString('id-ID') + 'k',
+                                callback: (v) => 'Rp ' + Number(v).toLocaleString('id-ID'),
                                 font: { size: 10 }
                             }
                         },
-                        x: { ticks: { font: { size: 10 } } }
+                        x: {
+                            ticks: {
+                                font: { size: 12, weight: 'bold' }
+                            }
+                        }
                     }
                 }
             });
@@ -4423,16 +4792,23 @@
             }).join('');
         };
 
+        window.previewProductImage = function(url) {
+            const img = document.getElementById('prod-image-preview');
+            if (!img) return;
+            img.src = url || CATEGORY_DEFAULT_IMAGES[document.getElementById('prod-category')?.value] || 'https://placehold.co/300x200/15987E/FBC14D?text=UGIEE+Produk';
+        };
+
         window.openProductModal = function(editSku = null) {
             const modal = document.getElementById('product-modal');
             const title = document.getElementById('product-modal-title');
             const skuInput = document.getElementById('prod-sku');
+            const editInput = document.getElementById('prod-edit-sku');
 
             if (editSku) {
                 const prod = state.products.find(p => p.sku === editSku);
                 if (!prod) return;
-                title.textContent = `Edit Bahan Baku: ${prod.sku}`;
-                document.getElementById('prod-edit-sku').value = prod.sku;
+                title.textContent = `Edit Bahan Baku & HPP: ${prod.sku}`;
+                editInput.value = prod.sku;
                 skuInput.value = prod.sku;
                 skuInput.readOnly = true;
                 document.getElementById('prod-category').value = prod.category;
@@ -4444,20 +4820,22 @@
                 document.getElementById('prod-price').value = prod.price;
                 document.getElementById('prod-image').value = prod.image || '';
                 document.getElementById('prod-desc').value = prod.desc || '';
-                previewProductImage(prod.image || CATEGORY_DEFAULT_IMAGES[prod.category]);
+                previewProductImage(prod.image);
             } else {
                 title.textContent = 'Tambah Bahan Baku & Master HPP';
-                document.getElementById('prod-edit-sku').value = '';
+                editInput.value = '';
                 skuInput.value = '';
                 skuInput.readOnly = false;
+                document.getElementById('prod-category').value = 'Tepung & Premiks';
                 document.getElementById('prod-name').value = '';
                 document.getElementById('prod-unit').value = '';
-                document.getElementById('prod-weight').value = '5';
+                document.getElementById('prod-weight').value = '';
                 document.getElementById('prod-stock').value = '50';
                 document.getElementById('prod-hpp').value = '';
                 document.getElementById('prod-price').value = '';
                 document.getElementById('prod-image').value = '';
                 document.getElementById('prod-desc').value = '';
+                previewProductImage('');
             }
 
             modal.classList.remove('hidden');
@@ -4468,11 +4846,6 @@
             const modal = document.getElementById('product-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-        };
-
-        window.previewProductImage = function(url) {
-            const img = document.getElementById('prod-image-preview');
-            if (img && url) img.src = url;
         };
 
         window.saveProductForm = function(e) {
@@ -4486,27 +4859,27 @@
             const stock = parseInt(document.getElementById('prod-stock').value, 10) || 0;
             const hpp = parseInt(document.getElementById('prod-hpp').value, 10) || 0;
             const price = parseInt(document.getElementById('prod-price').value, 10) || 0;
-            const image = document.getElementById('prod-image').value.trim() || CATEGORY_DEFAULT_IMAGES[category];
+            const image = document.getElementById('prod-image').value.trim() || CATEGORY_DEFAULT_IMAGES[category] || '';
             const desc = document.getElementById('prod-desc').value.trim();
 
-            const productObj = { sku, category, name, unit, weight, stock, hpp, price, image, desc };
+            const prodObj = { sku, name, category, unit, weight, hpp, price, stock, image, desc };
 
             if (editSku) {
                 const idx = state.products.findIndex(p => p.sku === editSku);
-                if (idx !== -1) state.products[idx] = productObj;
+                if (idx !== -1) state.products[idx] = prodObj;
             } else {
                 if (state.products.some(p => p.sku === sku)) {
-                    showToast(`SKU ${sku} sudah ada di katalog!`, 'warning');
+                    showToast(`Kode SKU ${sku} sudah terdaftar!`, 'warning');
                     return;
                 }
-                state.products.push(productObj);
+                state.products.push(prodObj);
             }
 
             saveLocalData();
-            syncDocToCloud('products', productObj.sku, productObj);
+            syncDocToCloud('products', prodObj.sku, prodObj);
             closeProductModal();
             refreshActiveScreenUI();
-            showToast(`Bahan baku ${name} berhasil disimpan!`, 'success');
+            showToast(`Data bahan baku ${name} (${sku}) berhasil disimpan!`, 'success');
         };
 
         window.deleteProductItem = function(sku) {
@@ -4515,6 +4888,104 @@
             deleteDocFromCloud('products', sku);
             refreshActiveScreenUI();
             showToast(`Bahan baku ${sku} telah dihapus.`, 'info');
+        };
+
+        // HQ Payment Proof Verification & Approval Modal
+        window.openHqVerifyProofModal = function(orderId) {
+            const order = state.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            document.getElementById('hq-vp-order-id').value = order.id;
+            document.getElementById('hq-vp-subtitle').textContent = `${order.id} • ${order.createdAt}`;
+            document.getElementById('hq-vp-outlet').textContent = `${order.outletName} (${order.partnerId})`;
+            document.getElementById('hq-vp-pic').textContent = `PIC: ${order.ownerName} • WA: ${order.partnerPhone}`;
+            document.getElementById('hq-vp-amount').textContent = formatRupiah(order.grandTotal);
+            document.getElementById('hq-vp-method').textContent = order.paymentDestinationDetail || order.paymentMethod;
+            document.getElementById('hq-vp-upload-time').textContent = order.paymentProofUploadedAt ? `Diupload: ${order.paymentProofUploadedAt}` : '';
+            document.getElementById('hq-vp-admin-note').value = '';
+
+            const noteEl = document.getElementById('hq-vp-note');
+            if (order.paymentProofNote) {
+                noteEl.textContent = `Catatan Mitra: "${order.paymentProofNote}"`;
+                noteEl.classList.remove('hidden');
+            } else {
+                noteEl.classList.add('hidden');
+            }
+
+            const imgContainer = document.getElementById('hq-vp-image-container');
+            if (order.paymentProofImage) {
+                imgContainer.innerHTML = `<img src="${order.paymentProofImage}" alt="Bukti Transaksi Mitra" class="max-h-72 w-auto rounded-xl shadow-sm object-contain">`;
+            } else {
+                imgContainer.innerHTML = `<p class="text-xs text-slate-400">Mitra belum mengunggah gambar bukti pembayaran.</p>`;
+            }
+
+            const modal = document.getElementById('hq-verify-proof-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeHqVerifyProofModal = function() {
+            const modal = document.getElementById('hq-verify-proof-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.approvePaymentProof = function() {
+            const orderId = document.getElementById('hq-vp-order-id').value;
+            const adminNote = document.getElementById('hq-vp-admin-note').value.trim() || 'Dana telah diverifikasi masuk ke rekening/QRIS resmi UGIEE';
+            const order = state.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            order.paymentStatus = 'LUNAS';
+            order.orderStatus = 'Diproses Gudang UGIEE';
+            order.resiNumber = order.resiNumber && !order.resiNumber.startsWith('Menunggu') ? order.resiNumber : 'Menunggu Resi Kargo';
+            order.trackingLogs.push({
+                time: getFormattedNow(),
+                title: 'Pembayaran Dicek & Disetujui Admin Pusat',
+                note: `${adminNote} • Pesanan diteruskan ke Gudang Pusat untuk diproses`
+            });
+
+            saveLocalData();
+            syncDocToCloud('orders', order.id, order);
+            closeHqVerifyProofModal();
+
+            const waText = `Halo *${order.ownerName} (${order.outletName})*,\n\nPembayaran Anda telah *DICEK & DISETUJUI* oleh Admin Pusat UGIEE:\n*No. Invoice:* ${order.id}\n*Total Lunas:* ${formatRupiah(order.grandTotal)}\n*Status Pesanan:* Diproses Gudang UGIEE\n*Catatan Pusat:* ${adminNote}\n\nPesanan bahan baku Anda sedang disiapkan oleh tim gudang kami. Terima kasih!`;
+            logWhatsAppNotification('PUSAT -> MITRA', `${order.outletName} (${order.ownerName})`, order.partnerPhone, order.id, waText);
+
+            const waUrl = `https://wa.me/${formatWaInternational(order.partnerPhone)}?text=${encodeURIComponent(waText)}`;
+            document.getElementById('wa-banner-title').textContent = 'Pembayaran Disetujui & Masuk Proses Gudang!';
+            document.getElementById('wa-banner-desc').textContent = `Transaksi ${order.id} telah lunas dan otomatis dihitung ke laporan omzet & laba bersih pusat.`;
+            document.getElementById('wa-banner-preview').textContent = waText;
+            document.getElementById('wa-banner-direct-link').href = waUrl;
+            document.getElementById('wa-banner-cta-text').textContent = `Kirim Info Persetujuan ke WA Mitra (${order.partnerPhone})`;
+
+            const bannerModal = document.getElementById('wa-confirm-banner-modal');
+            bannerModal.classList.remove('hidden');
+            bannerModal.classList.add('flex');
+
+            refreshActiveScreenUI();
+            showToast(`Pembayaran ${order.id} disetujui & masuk antrean proses gudang!`, 'success');
+        };
+
+        window.rejectPaymentProof = function() {
+            const orderId = document.getElementById('hq-vp-order-id').value;
+            const reason = document.getElementById('hq-vp-admin-note').value.trim() || 'Bukti transfer tidak terbaca / nominal belum sesuai';
+            const order = state.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            order.paymentStatus = 'DITOLAK';
+            order.orderStatus = 'Bukti Pembayaran Ditolak';
+            order.trackingLogs.push({
+                time: getFormattedNow(),
+                title: 'Bukti Pembayaran Ditolak Admin Pusat',
+                note: `Alasan: ${reason} — Silakan upload ulang bukti transfer yang valid`
+            });
+
+            saveLocalData();
+            syncDocToCloud('orders', order.id, order);
+            closeHqVerifyProofModal();
+            refreshActiveScreenUI();
+            showToast(`Bukti pembayaran ${order.id} ditolak. Mitra diminta mengunggah ulang.`, 'warning');
         };
 
         // HQ Tracking Modal & WA Trigger
