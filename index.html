@@ -522,9 +522,6 @@
                     <button onclick="switchHqTab('partners'); openHqNewPartnerModal();" class="px-4 py-2.5 rounded-xl bg-ugiee-700 hover:bg-ugiee-600 text-white text-xs font-bold border border-ugiee-500 transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-user-plus text-amberbrand-400"></i> Daftarkan Mitra
                     </button>
-                    <button onclick="resetDemoSystem()" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-rose-600/80 text-white text-xs font-semibold border border-white/15 transition flex items-center justify-center gap-2" title="Kembalikan data awal sistem">
-                        <i class="fa-solid fa-rotate-left"></i> Reset Data
-                    </button>
                 </div>
             </div>
 
@@ -4737,25 +4734,6 @@
             deleteDocFromCloud('users', adminId);
             refreshActiveScreenUI();
             showToast(`Akun ${adminId} berhasil dihapus.`, 'info');
-        };
-
-        window.resetDemoSystem = function() {
-            state.users = JSON.parse(JSON.stringify(DEFAULT_USERS));
-            state.products = JSON.parse(JSON.stringify(DEFAULT_RAW_MATERIALS));
-            state.recipes = JSON.parse(JSON.stringify(DEFAULT_RECIPES));
-            state.orders = JSON.parse(JSON.stringify(DEFAULT_ORDERS));
-            state.cart = [];
-            state.waLogs = [];
-            saveLocalData();
-
-            if (cloudReady && db) {
-                state.users.forEach(u => syncDocToCloud('users', u.id, u));
-                state.products.forEach(p => syncDocToCloud('products', p.sku, p));
-                state.recipes.forEach(r => syncDocToCloud('recipes', r.id, r));
-                state.orders.forEach(o => syncDocToCloud('orders', o.id, o));
-            }
-            refreshActiveScreenUI();
-            showToast('Seluruh data sistem berhasil dikembalikan ke pengaturan awal!', 'success');
         };
 
         // ==================== 15. BOOTSTRAP APPLICATION ====================
