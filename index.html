@@ -2005,11 +2005,11 @@
         </div>
     </div>
 
-    <!-- ==================== APPLICATION LOGIC & CLOUD FIRESTORE SYNC ==================== -->
+    <!-- ==================== APPLICATION LOGIC & CLOUD FIREBASE RTDB SYNC ==================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+        import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
         // ==================== 1. MASTER REFERENCE DATA ====================
         const SHIPPING_ZONES = [
@@ -2467,10 +2467,23 @@
             hqFilterYear: 'ALL'
         };
 
-        // ==================== 3. CLOUD FIRESTORE INITIALIZATION ====================
+        // ==================== 3. CLOUD REALTIME DATABASE & ANALYTICS INITIALIZATION ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyB4v23rAro4ofdNRYzeQqw6pIy1eyt9EDI",
+            authDomain: "ugiee-supply-chain.firebaseapp.com",
+            databaseURL: "https://ugiee-supply-chain-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ugiee-supply-chain",
+            storageBucket: "ugiee-supply-chain.firebasestorage.app",
+            messagingSenderId: "942326025398",
+            appId: "1:942326025398:web:817a70a985a0e1598d6a17",
+            measurementId: "G-QXXJTP15BS"
+        };
+
+        let app = null;
+        let analytics = null;
         let db = null;
         let cloudReady = false;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ugiee-supply-chain-default';
+        const RTDB_ROOT = 'ugiee_portal';
 
         function updateCloudBadge(status, label) {
             const badge = document.getElementById('cloud-sync-badge');
@@ -2484,25 +2497,27 @@
             }
         }
 
-        async function initCloudSync() {
+        function initCloudSync() {
             try {
-                if (typeof __firebase_config === 'undefined' || !__firebase_config) {
-                    updateCloudBadge('offline', 'Mode Lokal');
-                    return;
+                app = initializeApp(firebaseConfig);
+                try {
+                    analytics = getAnalytics(app);
+                } catch (analyticsErr) {
+                    console.warn('Analytics skipped:', analyticsErr);
                 }
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
-                db = getFirestore(app);
+                db = getDatabase(app);
 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // Monitor koneksi Firebase Realtime Database secara real-time
+                onValue(ref(db, '.info/connected'), (snap) => {
+                    if (snap.val() === true) {
+                        cloudReady = true;
+                        updateCloudBadge('online', 'Cloud Aktif');
+                    } else {
+                        updateCloudBadge('offline', 'Menghubungkan...');
+                    }
+                });
 
                 cloudReady = true;
-                updateCloudBadge('online', 'Cloud Aktif');
                 attachCloudListeners();
             } catch (err) {
                 console.warn('Cloud sync fallback to localStorage:', err);
@@ -2510,21 +2525,17 @@
             }
         }
 
-        function getPublicCollection(colName) {
-            return collection(db, 'artifacts', appId, 'public', 'data', colName);
-        }
-
         function attachCloudListeners() {
-            if (!cloudReady || !db) return;
+            if (!db) return;
 
             // 1. Sync Users (Pusat & Mitra)
-            onSnapshot(getPublicCollection('users'), (snap) => {
-                if (snap.empty) {
-                    state.users.forEach(u => setDoc(doc(getPublicCollection('users'), u.id), u).catch(() => {}));
+            onValue(ref(db, `${RTDB_ROOT}/users`), (snap) => {
+                const val = snap.val();
+                if (!val) {
+                    state.users.forEach(u => set(ref(db, `${RTDB_ROOT}/users/${u.id}`), u).catch(() => {}));
                     return;
                 }
-                const cloudUsers = [];
-                snap.forEach(d => cloudUsers.push(d.data()));
+                const cloudUsers = Object.values(val).filter(Boolean);
                 if (cloudUsers.length > 0) {
                     state.users = cloudUsers;
                     saveLocalData();
@@ -2534,16 +2545,19 @@
                     }
                     refreshActiveScreenUI();
                 }
-            }, () => {});
+            }, (err) => {
+                console.warn('RTDB users listener error:', err);
+                updateCloudBadge('offline', 'Mode Lokal');
+            });
 
             // 2. Sync Products (Bahan Baku)
-            onSnapshot(getPublicCollection('products'), (snap) => {
-                if (snap.empty) {
-                    state.products.forEach(p => setDoc(doc(getPublicCollection('products'), p.sku), p).catch(() => {}));
+            onValue(ref(db, `${RTDB_ROOT}/products`), (snap) => {
+                const val = snap.val();
+                if (!val) {
+                    state.products.forEach(p => set(ref(db, `${RTDB_ROOT}/products/${p.sku}`), p).catch(() => {}));
                     return;
                 }
-                const cloudProducts = [];
-                snap.forEach(d => cloudProducts.push(d.data()));
+                const cloudProducts = Object.values(val).filter(Boolean);
                 if (cloudProducts.length > 0) {
                     state.products = cloudProducts;
                     saveLocalData();
@@ -2552,13 +2566,13 @@
             }, () => {});
 
             // 3. Sync Recipes (SOP Resep Minuman: Pusat -> Mitra Real-time)
-            onSnapshot(getPublicCollection('recipes'), (snap) => {
-                if (snap.empty) {
-                    state.recipes.forEach(r => setDoc(doc(getPublicCollection('recipes'), r.id), r).catch(() => {}));
+            onValue(ref(db, `${RTDB_ROOT}/recipes`), (snap) => {
+                const val = snap.val();
+                if (!val) {
+                    state.recipes.forEach(r => set(ref(db, `${RTDB_ROOT}/recipes/${r.id}`), r).catch(() => {}));
                     return;
                 }
-                const cloudRecipes = [];
-                snap.forEach(d => cloudRecipes.push(d.data()));
+                const cloudRecipes = Object.values(val).filter(Boolean);
                 if (cloudRecipes.length > 0) {
                     state.recipes = cloudRecipes;
                     saveLocalData();
@@ -2567,13 +2581,13 @@
             }, () => {});
 
             // 4. Sync Orders
-            onSnapshot(getPublicCollection('orders'), (snap) => {
-                if (snap.empty) {
-                    state.orders.forEach(o => setDoc(doc(getPublicCollection('orders'), o.id), o).catch(() => {}));
+            onValue(ref(db, `${RTDB_ROOT}/orders`), (snap) => {
+                const val = snap.val();
+                if (!val) {
+                    state.orders.forEach(o => set(ref(db, `${RTDB_ROOT}/orders/${o.id}`), o).catch(() => {}));
                     return;
                 }
-                const cloudOrders = [];
-                snap.forEach(d => cloudOrders.push(d.data()));
+                const cloudOrders = Object.values(val).filter(Boolean);
                 if (cloudOrders.length > 0) {
                     state.orders = cloudOrders;
                     saveLocalData();
@@ -2582,15 +2596,25 @@
             }, () => {});
 
             // 5. Sync Config & WA Logs
-            onSnapshot(getPublicCollection('settings'), (snap) => {
-                snap.forEach(d => {
-                    if (d.id === 'waConfig' && d.data()) {
-                        state.waConfig = d.data();
+            onValue(ref(db, `${RTDB_ROOT}/settings`), (snap) => {
+                const val = snap.val();
+                if (!val) {
+                    set(ref(db, `${RTDB_ROOT}/settings/waConfig`), state.waConfig).catch(() => {});
+                    if (state.waLogs && state.waLogs.length > 0) {
+                        set(ref(db, `${RTDB_ROOT}/settings/waLogs`), { logs: state.waLogs }).catch(() => {});
                     }
-                    if (d.id === 'waLogs' && Array.isArray(d.data().logs)) {
-                        state.waLogs = d.data().logs;
+                    return;
+                }
+                if (val.waConfig) {
+                    state.waConfig = val.waConfig;
+                }
+                if (val.waLogs) {
+                    if (Array.isArray(val.waLogs.logs)) {
+                        state.waLogs = val.waLogs.logs;
+                    } else if (Array.isArray(val.waLogs)) {
+                        state.waLogs = val.waLogs;
                     }
-                });
+                }
                 saveLocalData();
                 refreshActiveScreenUI();
             }, () => {});
@@ -2598,12 +2622,12 @@
 
         function syncDocToCloud(colName, docId, dataObj) {
             if (!cloudReady || !db) return;
-            setDoc(doc(getPublicCollection(colName), docId), dataObj).catch(err => console.warn('Sync write error:', err));
+            set(ref(db, `${RTDB_ROOT}/${colName}/${docId}`), dataObj).catch(err => console.warn('Sync write error:', err));
         }
 
         function deleteDocFromCloud(colName, docId) {
             if (!cloudReady || !db) return;
-            deleteDoc(doc(getPublicCollection(colName), docId)).catch(err => console.warn('Sync delete error:', err));
+            remove(ref(db, `${RTDB_ROOT}/${colName}/${docId}`)).catch(err => console.warn('Sync delete error:', err));
         }
 
         // ==================== 4. LOCAL STORAGE & HELPER UTILITIES ====================
