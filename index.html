@@ -4896,6 +4896,14 @@
                             <button type="button" onclick="openPartnerDetailModal('${m.id}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition">
                                 Detail &amp; Riwayat
                             </button>
+                            <button
+  type="button"
+  onclick="hapusMitra('${mitra.id}', '${mitra.nama || ''}')"
+  title="Hapus Mitra"
+  class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white transition"
+>
+  <i class="fas fa-trash"></i>
+</button>
                         </td>
                     </tr>
                 `;
@@ -5493,6 +5501,34 @@
                 enterPortalSession(state.currentUser);
             }
         });
+        async function hapusMitra(mitraId, namaMitra = '') {
+  const label = namaMitra ? `mitra "${namaMitra}"` : 'mitra ini';
+  const yakin = confirm(`Yakin ingin menghapus ${label}?`);
+  if (!yakin) return;
+
+  try {
+    if (typeof db !== 'undefined' && db.collection) {
+      await db.collection('mitra').doc(String(mitraId)).delete();
+    }
+
+    if (typeof firebase !== 'undefined' && firebase.database) {
+      await firebase.database().ref(`mitra/${mitraId}`).remove();
+    }
+
+    if (Array.isArray(window.daftarMitra)) {
+      window.daftarMitra = window.daftarMitra.filter((item) => String(item.id) !== String(mitraId));
+    }
+
+    if (typeof renderDatabaseMitra === 'function') {
+      renderDatabaseMitra();
+    } else if (typeof renderMitraList === 'function') {
+      renderMitraList();
+    }
+  } catch (err) {
+    console.error('Gagal menghapus mitra:', err);
+    alert('Terjadi kesalahan saat menghapus data mitra.');
+  }
+}
     </script>
 </body>
 </html>
