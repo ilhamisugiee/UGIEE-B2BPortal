@@ -4887,11 +4887,16 @@
                             <span class="text-[11px] font-bold text-ugiee-800 block">${zoneObj.zone}</span>
                             <p class="text-slate-500 truncate">${m.address}</p>
                         </td>
-<td class="py-3.5 px-4 text-center">
-    <button type="button" onclick="openPartnerDetailModal('${m.id}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition">
-        Detail & Riwayat
-    </button>
-</td>
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full bg-ugiee-100 text-ugiee-950 font-black">${m.orderCount}x</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-bold text-slate-900">${formatRupiah(m.totalRevenue)}</td>
+                        <td class="py-3.5 px-4 text-right font-extrabold text-emerald-700">+${formatRupiah(m.totalProfit)}</td>
+                        <td class="py-3.5 px-4 text-center">
+                            <button type="button" onclick="openPartnerDetailModal('${m.id}')" class="px-3 py-1.5 rounded-xl bg-ugiee-600 hover:bg-ugiee-700 text-white font-bold text-[11px] transition">
+                                Detail &amp; Riwayat
+                            </button>
+                        </td>
                     </tr>
                 `;
             }).join('');
